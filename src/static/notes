@@ -1,0 +1,58 @@
+  //  <table className="problem-table w-full border-collapse bg-white shadow-md overflow-hidden">
+  //                   <thead className="bg-secondary/20 text-secondary">
+  //                     <tr>
+  //                       <th className="px-4 py-3 text-start">S.No.</th>
+  //                       <th className="px-4 py-3 text-start">Company</th>
+  //                       <th className="px-4 py-3 text-start">Problem</th>
+  //                       <th className="px-4 py-3 text-start">Date & Time</th>
+  //                       <th className="px-4 py-3 text-start">Action</th>
+  //                     </tr>
+  //                   </thead>
+
+  //                   <tbody className="text-gray-700">
+  //                     {problems.map((item: any) => (
+  //                       <tr className="border-b border-secondary/20 hover:bg-gray-300/20 transition">
+  //                         {/* S.No */}
+  //                         <td className="px-4 py-3 text-start counter"></td>
+
+  //                         {/* Company */}
+  //                         <td className="px-4 py-3 text-start">
+  //                           {item.company}
+  //                         </td>
+
+  //                         {/* Problem */}
+  //                         <td className="px-4 py-3 max-w-lg wrap-break-words text-start">
+  //                           <span className="[&_p]:line-clamp-1 inline-flex">
+  //                             <p className="flex-2">{item.problem}</p>
+  //                             <a
+  //                               href="#content"
+  //                               className="flex-1 underline hover:no-underline"
+  //                               data-fancybox
+  //                             >
+  //                               {" "}
+  //                               view more
+  //                             </a>
+  //                           </span>
+  //                           <span
+  //                             id="content"
+  //                             className="hidden max-w-4xl rounded"
+  //                           >
+  //                             <p>{item.problem}</p>
+  //                           </span>
+  //                         </td>
+  //                         {/* Date and Time */}
+  //                         <td>{new Date(item.createdAt).toLocaleString()}</td>
+  //                         {/* Action Buttons */}
+  //                         <td className="px-4 py-3 flex gap-2">
+  //                           <a href={"#"} className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+  //                             Update
+  //                           </a>
+
+  //                           <a href={``} className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition">
+  //                             Delete
+  //                           </a>
+  //                         </td>
+  //                       </tr>
+  //                     ))}
+  //                   </tbody>
+  //                 </table>

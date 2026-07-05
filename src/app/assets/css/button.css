@@ -1,0 +1,189 @@
+@layer components {
+  .btn {
+    @apply inline-flex 
+		items-center 
+		justify-center 
+		cursor-pointer 
+		px-4
+    lg:px-6 
+		py-3 
+		text-base 
+		lg:text-lg 
+		text-center 
+		leading-none 
+		font-medium 
+		no-underline 
+		select-none 
+		border 
+    rounded-md
+		border-solid 
+		transition 
+		ease-in-out 
+		duration-500 
+		focus:outline-none 
+		focus:ring-2 
+		focus:ring-offset-1 
+		disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply bg-primary 
+    text-white 
+    border-primary 
+    hover:bg-transparent 
+    hover:text-primary 
+    hover:border-primary
+    focus:bg-transparent
+    focus:text-primary 
+    focus:border-primary
+    focus:ring-primary/75
+    active:bg-transparent
+    active:border-primary;
+  }
+  .btn-white {
+    @apply 
+    bg-white 
+    text-primary 
+    border-white 
+    hover:bg-primary 
+    hover:text-white 
+    hover:border-primary
+    focus:bg-primary
+    focus:text-white 
+    focus:border-primary
+    focus:ring-primary/75
+    active:bg-primary
+    active:text-white 
+    active:border-primary;
+  }
+  .btn-outline {
+    @apply 
+    bg-transparent 
+    text-primary 
+    border-primary 
+    hover:bg-primary 
+    hover:text-white 
+    hover:border-primary
+    focus:bg-primary
+    focus:text-white 
+    focus:border-primary
+    focus:ring-primary/75
+    active:bg-primary
+    active:text-white 
+    active:border-primary;
+  }
+
+    .btn-blue {
+    @apply 
+    bg-secondary 
+    text-white 
+    border-secondary/10 
+    hover:bg-transparent 
+    hover:text-secondary 
+    hover:border-secondary
+    focus:bg-transparent
+    focus:text-secondary 
+    focus:border-secondary
+    focus:ring-secondary/75
+    active:bg-transparent
+    [&.active]:bg-secondary
+    [&.active]:text-white
+    active:border-secondary;
+  }
+
+  .icon {
+    @apply pl-10!
+  max-sm:rounded-full
+  /* max-sm:size-11 */
+  max-sm:flex
+  max-sm:justify-center
+  max-sm:items-center
+  /* max-sm:p-0! */
+  relative
+  before:absolute
+  before:left-3
+  /* max-sm:before:left-1/2
+  max-sm:before:-translate-x-1/2 */
+  before:top-1/2
+  before:-translate-y-1/2
+  before:content-['\e942']
+  before:font-icomoon;
+  }
+
+  .learn-more {
+    @apply pr-6!
+  max-sm:rounded-full
+  relative
+  before:transition-all
+  before:duration-300
+  hover:before:translate-x-1
+  before:absolute
+  before:right-0
+  before:top-1/2
+  before:-translate-y-1/2
+  before:content-['\ea3c']
+  before:font-icomoon;
+  }
+
+  .btn-block {
+    @apply block w-full;
+  }
+
+  .btn-green{
+    @apply
+    bg-green
+    border-green    
+    hover:text-green
+    hover:bg-transparent
+    text-white;
+  }
+
+  .stretched-link {
+    @apply before:absolute
+    before:inset-0;
+  }
+
+  button{
+    @apply
+    cursor-pointer
+    text-secondary
+    hover:text-secondary/60
+  }
+
+  .delete-btn{
+    @apply
+    bg-red
+    border
+    border-red
+    transition-all
+    duration-300
+    hover:bg-transparent
+    hover:text-red
+    text-white
+    font-semibold
+    min-w-20
+    text-center
+    rounded
+    px-2
+    py-1
+    text-sm
+    inline-block;
+  }
+  .update-btn{
+    @apply
+    min-w-20
+    text-center
+    border
+    border-secondary
+    bg-secondary
+    hover:bg-transparent
+    hover:text-secondary
+    text-white
+    font-semibold
+    rounded
+    px-2
+    py-1
+    text-sm
+    inline-block;
+  }
+}

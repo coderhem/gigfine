@@ -1,0 +1,59 @@
+.form-control {
+  @apply block 
+  w-full 
+  h-12 
+  lg:h-14 
+  p-4
+  font-normal 
+  leading-tight 
+  text-base
+  text-black
+  bg-transparent
+  border
+  border-secondary/20
+  bg-clip-padding 
+  rounded-sm
+  placeholder:text-black/50
+  transition 
+  ease-in-out 
+  duration-500 
+  focus:text-black 
+  focus:border-primary 
+  focus:outline-none 
+  focus:shadow-lg;
+}
+
+.problem-form label{
+  @apply
+  inline-block
+  mb-3;
+}
+
+
+select.form-control {
+  @apply focus:text-black focus:bg-white;
+}
+
+textarea.form-control {
+  @apply h-8 resize-none overflow-hidden;
+}
+
+.login-form label{
+@apply
+mb-3
+font-semibold
+inline-block;
+}
+
+.form-group {
+  @apply mb-4 w-full;
+}
+
+.field-wrapper{
+  @apply
+  flex flex-wrap -mx-3;
+}
+.field-wrapper .form-group{
+  @apply
+  w-full md:w-1/2 px-3;
+}

@@ -1,0 +1,32 @@
+@layer base {
+html,
+body {
+  @apply h-full w-full text-base font-montserrat font-medium;
+}
+
+.container {
+  @apply mx-auto px-5;
+}
+a {
+  @apply font-medium
+  transition-all
+ duration-300
+ text-primary
+ hover:text-primary/70;
+}
+
+figure {
+  @apply w-full block;
+}
+
+p {
+  @apply mb-4;
+}
+
+.stretched-link{
+  @apply
+  before:absolute
+  before:inset-0;
+}
+
+}

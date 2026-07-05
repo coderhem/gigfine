@@ -1,0 +1,11 @@
+.counter-wrapper {
+  counter-reset: conter-inc;
+}
+
+.counter {
+  counter-increment: conter-inc;
+}
+
+.counter::before {
+  content: counter(conter-inc) ".";
+}
