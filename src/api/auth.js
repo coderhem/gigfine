@@ -83,6 +83,7 @@ export async function updateUser(id, data) {
   );
   return response.data;
 }
+
 export async function deleteUser(id) {
   const response = await axios.delete(
     `https://gigfine-api.vercel.app/api/users/${id}`,
