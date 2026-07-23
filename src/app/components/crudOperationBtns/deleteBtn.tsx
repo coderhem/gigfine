@@ -1,42 +1,33 @@
 "use client";
-import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import { useState } from "react";
 import { MdDelete } from "react-icons/md";
 
 type Props = {
-  deleteText?: String;
   deleteIcon?: boolean;
-  id?: String;
+  deleteText?: string;
+  className?: string;
+  onConfirm: () => void;
 };
 
-const DeleteBtn = ({ deleteIcon, deleteText, id }: Props) => {
+const DeleteBtn = ({ deleteIcon, deleteText, className, onConfirm }: Props) => {
   const [showPopup, setShowPopup] = useState(false);
-  const [confirmed, setConfirmed] = useState("");
-  const router = useRouter();
-  
-  const deleteProblem = (id: any) => {
-    setConfirmed(id);
+
+  const openPopup = () => {
     setShowPopup(true);
   };
-  const confirmDelete = async () => {
-    await fetch(`/api/problems?id=${id}`, {
-      method: "DELETE",
-    });
+
+  const confirmDelete = () => {
+    onConfirm();
     setShowPopup(false);
-    router.refresh();
   };
 
   return (
     <>
-      {deleteIcon && (
-        <a href="#" onClick={deleteProblem}>
-          <MdDelete size={24} />
-        </a>
-      )}
+      {deleteIcon && <MdDelete className={`text-red hover:text-red/70 transition-all duration-300 cursor-pointer inline-block text-4xl ${className}`} size={24} onClick={openPopup} />}
       {deleteText && (
-        <a href="#" className="delete-btn" onClick={deleteProblem}>
+        <div className={`delete-btn ${className} cursor-pointer`} onClick={openPopup}>
           {deleteText}
-        </a>
+        </div>
       )}
       {showPopup && (
         <div className="fixed inset-0 w-full bg-black/80 flex items-center justify-center">
@@ -44,7 +35,7 @@ const DeleteBtn = ({ deleteIcon, deleteText, id }: Props) => {
             <h2 className="h4 text-red"> Delete Problem?</h2>
             <p className="text-black/60 mt-2">
               This action cannot be undone. Are you sure you want to permanently
-              delete this problem?
+              delete this?
             </p>
             <div className="flex justify-center gap-3 mt-4">
               <button onClick={confirmDelete} className="btn btn-green">

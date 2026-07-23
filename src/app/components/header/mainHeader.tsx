@@ -4,14 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 
 const MainHeader = () => {
-  const router = useRouter();
-  const logout = async () => {
-    await fetch("/api/logout", {
-      method: "POST",
-    });
-    router.push("/");
-    router.refresh();
-  };
+
   return (
     <>
       <div className="container">

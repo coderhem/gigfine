@@ -4,6 +4,9 @@ import "./globals.css";
 import Footer from "@/app/components/footer/footer";
 import Fancybox from "@/app/components/fancybox/popup";
 import HeaderSwitcher from "@/app/components/header/headerSwitcher";
+import { Toaster } from "react-hot-toast";
+import Providers from "@/providers/reduxProvider";
+import AuthGuard from "@/redux/auth/authGuard";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -16,7 +19,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "ChiyaCut",
+  title: "Gigfine",
   description: "Nepals First Query Company",
 };
 
@@ -30,12 +33,22 @@ export default function RootLayout({
       lang="en"
       className={`${outfit.variable} ${montserrat.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col relative before:absolute before:inset-0 before:bg-[url('/assets/images/bg-img.png')] before:object-center before:object-cover before:-z-1 before:bg-bottom">
-        <Fancybox>
-          <HeaderSwitcher />
-          <main className="grow">{children}</main>
-          <Footer />
-        </Fancybox>
+      <body className="min-h-full flex flex-col relative before:absolute before:inset-0 before:bg-[url('./assets/images/bg-img.png')] before:object-center before:object-cover before:-z-1 before:bg-bottom">
+        <Providers>
+          <Fancybox>
+            <AuthGuard>
+              <HeaderSwitcher />
+              <main className="grow">{children}</main>
+              <Footer />
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  className: "!min-w-max !max-w-max",
+                }}
+              />
+            </AuthGuard>
+          </Fancybox>
+        </Providers>
       </body>
     </html>
   );

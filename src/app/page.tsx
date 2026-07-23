@@ -1,6 +1,18 @@
+"use client";
 import LoginForm from "@/app/components/forms/loginForm";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
 
 const Login = () => {
+  const { user } = useSelector((state: any) => state.auth);
+  const router = useRouter();
+  useEffect(() => {
+    if (user) {
+      router.push("/home");
+    }
+  }, [user, router]);
+
   return (
     <div className="h-full flex justify-center items-center">
       <div className="container">

@@ -1,10 +1,52 @@
-// 'use client'
+"use client";
+import { deleteProblem, getAllProblem, getProblem } from "@/api/problem";
 import DeleteBtn from "@/app/components/crudOperationBtns/deleteBtn";
 import UpdateBtn from "@/app/components/crudOperationBtns/updateBtn";
 import ProblemForm from "@/app/components/forms/problemForm";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { FaCalendarAlt } from "react-icons/fa";
+import { useSelector } from "react-redux";
+import LoadingSvg from "../components/loader/loadingSvg";
 
-const Home = async () => {
+const Home = () => {
+  const { loading, error, user } = useSelector((state: any) => state.auth);
+  const router = useRouter();
+  const [problems, setProblems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchProblems = async () => {
+    try {
+      const data = await getProblem();
+      setProblems(data.problems || data);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProblems();
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/");
+    }
+  }, [user, router]);
+
+  const handleDelete = async (id: any) => {
+    try {
+      await deleteProblem(id);
+      toast.success("Problem deleted successfully.");
+      await fetchProblems();
+    } catch (error: any) {
+      toast.error(error);
+    }
+  };
+
   return (
     <>
       <section className="h-full flex justify-center items-center max-w-4xl mx-auto">
@@ -20,42 +62,58 @@ const Home = async () => {
                   <p>
                     Lorem ipsum dolor sit amet consectetur adipisicing elit.
                   </p>
-                  <ProblemForm />
+                  <ProblemForm onSuccess={fetchProblems} />
                 </div>
               </div>
               <h1 className="h3 text-secondary text-center mb-7">
                 Recent Problems
               </h1>
-              <div className="border border-dashed border-secondary px-4 py-7 [&_p]:mb-0 text-secondary font-medium">
-                <div className="text-center">
-                  <p>No problems have been posted yet. Bet the first</p>
-                </div>
-                <div className="overflow-x-auto max-w-4xl mx-auto max-h-80 overflow-y-auto">
-                  <div className="border border-secondary/20 mb-5 rounded">
-                    <span className="text-secondary text-sm flex items-center gap-1 justify-end px-5 py-3">
-                      <FaCalendarAlt />
-                    </span>
-                    <div className="mb-0 px-5 pb-5">
-                      <strong>problem</strong>
-                    </div>
-                    <div className="mt-2 bg-secondary/20 py-2 px-3 flex gap-5 justify-between items-center">
-                      {/* <div className="flex justify-between gap-4 items-center p-5"> */}
-                      <div className="flex items-center gap-2 bg-">
-                        <span className="font-bold capitalize bg-secondary text-white mb-0 px-2 py-1 rounded ca">
-                          company
-                        </span>
-                        <span className="text-secondary font-medium p-1 rounded">
-                          Submitted
-                        </span>
-                      </div>
-                      <div className="flex gap-3 items-center">
-                        <DeleteBtn deleteText={"Delete"} />
-                        <UpdateBtn updateText={"Edit"} btnLink={``} />
-                      </div>
-                    </div>
-                    {/* </div> */}
+              <div className="relative border border-dashed border-secondary px-4 py-7 [&_p]:mb-0 text-secondary font-medium">
+                {isLoading ? (
+                  <LoadingSvg
+                    className={"absolute left-1/2 top-1/2 -translate-1/2"}
+                  />
+                ) : problems.length === 0 ? (
+                  <div className="text-center">
+                    <p>No problems have been posted yet. Bet the first</p>
                   </div>
-                </div>
+                ) : (
+                  <div className="overflow-x-auto max-w-4xl mx-auto max-h-80 overflow-y-auto">
+                    {problems.map((item: any) => (
+                      <div
+                        className="border border-secondary/20 mb-5 rounded"
+                        key={item._id}
+                      >
+                        <span className="text-secondary text-sm flex items-center gap-1 justify-end px-5 py-3">
+                          <FaCalendarAlt />
+                          {new Date(item.createdAt).toLocaleString()}
+                        </span>
+                        <div className="mb-0 px-5 pb-5">
+                          <strong>{item.problem}</strong>
+                        </div>
+                        <div className="mt-2 bg-secondary/20 py-2 px-3 flex gap-5 justify-between items-center">
+                          {/* <div className="flex justify-between gap-4 items-center p-5"> */}
+                          <div className="flex items-center gap-2 bg-">
+                            <span className="font-bold capitalize bg-secondary text-white mb-0 px-2 py-1 rounded ca">
+                              {item.company}
+                            </span>
+                            <span className="text-secondary font-medium p-1 rounded">
+                              Submitted
+                            </span>
+                          </div>
+                          <div className="flex gap-3 items-center">
+                            <DeleteBtn
+                              deleteText={"Delete"}
+                              onConfirm={() => handleDelete(item._id)}
+                            />
+                            <UpdateBtn updateText={"Edit"} btnLink={`/client/problem-management/edit/${item._id}`} />
+                          </div>
+                        </div>
+                        {/* </div> */}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="mt-6">
                 <a

@@ -1,82 +1,94 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import problemValidation from "@/validation/problem.schema.js";
+import { useDispatch } from "react-redux";
+import { addProblemApi, updateProblemApi } from "@/redux/auth/authActions";
+import toast from "react-hot-toast";
+import { Fancybox as NativeFancybox } from "@fancyapps/ui";
+import { useState } from "react";
+import LoadingSvg from "../loader/loadingSvg";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
 
-// Countdown + auto-redirect logic modal vitra
-const SuccessModal = ({ onClose }: { onClose: () => void }) => {
-  const [countdown, setCountdown] = useState(3);
+const ProblemForm = ({ onSuccess, problem }: any) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  // useCallback — stable reference
-  const stableClose = useCallback(onClose, []);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(problemValidation),
+    defaultValues: {
+      company: problem?.company || "",
+      problem: problem?.problem || "",
+    },
+  });
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          stableClose();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+  const dispatch = useDispatch<any>();
 
-    return () => clearInterval(timer);
-  }, [stableClose]);
+  // async function submitForm(data: any) {
+  //   setIsLoading(true);
+  //   try {
+  //     await dispatch(addProblemApi(data)).unwrap();
+  //     await onSuccess();
+  //     NativeFancybox.close();
+  //     toast.success("Problem added successfully!");
+  //   } catch (err: any) {
+  //     toast.error(err);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full mx-4 text-center">
-        {/* Success Icon */}
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg
-            className="w-8 h-8 text-green-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        </div>
+  async function submitForm(data: any) {
+    setIsLoading(true);
 
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">
-          Problem Submitted!
-        </h2>
-        <p className="text-gray-500 mb-2">
-          Thank you for your submission. Your problem has been received
-          successfully and is currently under review. Our team will reach out to
-          you shortly.{" "}
-        </p>
+    try {
+      if (problem?._id) {
+        // UPDATE
+        await dispatch(
+          updateProblemApi({
+            id: problem._id,
+            ...data,
+          }),
+        ).unwrap();
 
-        <p className="text-sm text-gray-400 mb-6">
-          You will be automatically redirected in a few seconds. You will be
-          automatically redirected in {countdown} seconds...{" "}
-        </p>
+        toast.success("Problem updated successfully!");
+        router.push("/home");
+      } else {
+        // ADD
+        await dispatch(addProblemApi(data)).unwrap();
 
-        <button onClick={onClose} className="btn btn-primary w-full">
-          OK
-        </button>
-      </div>
-    </div>
-  );
-};
+        toast.success("Problem added successfully!");
+      }
 
-const ProblemForm = () => {
+      if (onSuccess) {
+        await onSuccess();
+      }
+
+      NativeFancybox.close();
+    } catch (err: any) {
+      toast.error(err?.message || "Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <>
-      {/* {showModal && <SuccessModal onClose={handleModalClose} />} */}
-
-      <form className="problem-form text-start">
+      <form
+        className="problem-form text-start"
+        onSubmit={handleSubmit(submitForm)}
+      >
         <div className="form-group">
           <label htmlFor="company">Which company is this regarding?</label>
-          <select id="company" className="form-control py-3!">
+          <select
+            id="company"
+            className="form-control py-3!"
+            {...register("company")}
+          >
             <option value="">Select Company</option>
             <option value="Pathao">Pathao</option>
             <option value="inDrive">Indrive</option>
@@ -86,15 +98,11 @@ const ProblemForm = () => {
             <option value="JunJum">JunJum</option>
             <option value="Other">Other</option>
           </select>
-        </div>
-
-        {/* {selectedCompany === "Other" && ( */}
-        <div className="form-group">
-          <input
-            type="text"
-            placeholder="Please Enter Company Name"
-            className="form-control mt-3"
-          />
+          {errors.company && (
+            <p className="text-red text-sm  mt-1">
+              {String(errors.company.message)}
+            </p>
+          )}
         </div>
 
         <div className="form-group">
@@ -103,11 +111,24 @@ const ProblemForm = () => {
             id="message"
             className="form-control min-h-30"
             placeholder="Describe Problem Here"
+            {...register("problem")}
           />
+          {errors.problem && (
+            <p className="text-red text-sm mt-1">
+              {String(errors.problem.message)}
+            </p>
+          )}
         </div>
 
         <button type="submit" className="btn btn-primary w-full">
-          Submit
+          {isLoading ? (
+            <>
+              Submitting &nbsp;
+              <LoadingSvg />
+            </>
+          ) : (
+            problem ? "Update Problem " : "Add Problem +"
+          )}
         </button>
       </form>
     </>

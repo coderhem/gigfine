@@ -1,23 +1,58 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { registerUser } from "@/api/auth.js";
+import { registerUserApi } from "@/redux/auth/authActions.js";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerValidation } from "@/validation/register.schema.js";
+import toast from "react-hot-toast";
+import { useDispatch, useSelector } from "react-redux";
+import LoadingSvg from "../loader/loadingSvg";
 
 const RegisterForm = () => {
-  const [selectedRole, setSelectedRole] = useState("rider");
+  const [selectedRole, setSelectedRole] = useState<"rider" | "passenger">(
+    "rider",
+  );
   const [show, setShow] = useState(false);
-  const { register, handleSubmit } = useForm();
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(registerValidation),
+    defaultValues: {
+      role: "rider",
+    },
+    shouldUnregister: true,
+  });
+  
+  useEffect(() => {
+    setValue("role", selectedRole, { shouldValidate: true });
+  }, [selectedRole, setValue]);
+  const [loading, setLoading] = useState(false);
+  // const { loading, error, user } = useSelector((state: any) => state.auth);
+
+  const dispatch = useDispatch<any>();
 
   async function submitForm(data: any) {
+    
+    setLoading(true);
     try {
-      const formData = {...data, role: selectedRole}
-      await registerUser(formData);
-      console.log("Created Success")
-    } catch (error) {
-      console.log(error)
+      const result = await dispatch(registerUserApi(data)).unwrap();
+      console.log(result);
+      toast.success("Registered successfully!");
+      setTimeout(() => {
+        router.push("/");
+      }, 1000);
+    } catch (err: any) {
+      toast.error(err);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -37,7 +72,7 @@ const RegisterForm = () => {
           >
             <input
               type="radio"
-              name="role"
+              name="roles"
               className="hidden"
               checked={selectedRole === "rider"}
               onChange={() => setSelectedRole("rider")}
@@ -71,8 +106,13 @@ const RegisterForm = () => {
               type="text"
               placeholder="Enter Full Name"
               className="form-control"
-              {...register("fullName")}
+              {...register("name")}
             />
+            {errors.name && (
+              <p className="text-red text-sm px-1 mt-1">
+                {String(errors.name?.message)}
+              </p>
+            )}
           </div>
 
           {/* Phone */}
@@ -81,10 +121,22 @@ const RegisterForm = () => {
               type="text"
               placeholder="Enter Phone Number"
               className="form-control"
-              {...register("phone", {
-                required: true,
-              })}
+              {...register("phone")}
             />
+            {errors.phone && (
+              <p className="text-red text-sm mt-1">{errors.phone.message}</p>
+            )}
+          </div>
+          <div className="form-group mb-4">
+            <input
+              type="text"
+              placeholder="Enter Email Address"
+              className="form-control"
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="text-red text-sm mt-1">{errors.email.message}</p>
+            )}
           </div>
 
           {/* Vehicle Number */}
@@ -96,14 +148,22 @@ const RegisterForm = () => {
                 className="form-control"
                 {...register("vehicleNumber")}
               />
+              <p className="text-xs px-1 text-gray-300 mb-0">
+                e.g. su-pa-pra-001-001-2155 or ba-2-pa-1234
+              </p>
+              {errors.vehicleNumber && (
+                <p className="text-red text-sm mt-1">
+                  {errors.vehicleNumber.message}
+                </p>
+              )}
             </div>
           )}
 
           {/* Password */}
-          <div className="form-group mb-4">
+          <div className="form-group mb-4 w-full!">
             <div className="relative">
               <input
-                type={show ? "text " : "password"}
+                type={show ? "text" : "password"}
                 placeholder="Enter Password"
                 className="form-control"
                 {...register("password")}
@@ -121,17 +181,31 @@ const RegisterForm = () => {
                 />
               )}
             </div>
+            {errors.password && (
+              <p className="text-red text-sm mt-1">{errors.password.message}</p>
+            )}
           </div>
         </div>
 
         {/* Submit */}
-        <button className="btn btn-primary w-full" type="submit">
-          Register
+        <button
+          className="btn btn-primary w-full flex items-center justify-center gap-2"
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              {"Submitting"}
+              <LoadingSvg />{" "}
+            </>
+          ) : (
+            "Register"
+          )}
         </button>
       </form>
       <div className="pt-5 pb-1 text-center">
         <p>
-          Already have an account? <Link href="/login">Login</Link>
+          Already have an account? <Link href="/">Login</Link>
         </p>
       </div>
     </>
