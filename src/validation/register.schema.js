@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-const vehicleRegex =
-  /^([a-z]{2}-[a-z]{2}-[a-z]{3}-\d{3}-\d{3}-\d{4}|[a-z]{2}-\d{1,2}-[a-z]{1,3}-\d{1,4})$/i;
+// const vehicleRegex =
+//   /^([a-z]{2}-[a-z]{2}-[a-z]{3}-\d{3}-\d{3}-\d{4}|[a-z]{2}-\d{1,2}-[a-z]{1,3}-\d{1,4})$/i;
 
 export const registerValidation = z
   .object({
@@ -28,7 +28,7 @@ export const registerValidation = z
       ),
     role: z.enum(["rider", "passenger"]),
 
-    vehicleNumber: z.string().trim().optional(),
+    vehicleNumber: z.string().trim().min(1, "Vehicle number is required").optional(),
 
     password: z
       .string()
@@ -40,26 +40,26 @@ export const registerValidation = z
         "Use uppercase, lowercase, number & symbol.",
       ),
   })
-  .superRefine((data, ctx) => {
-    if (data.role === "rider") {
-      if (!data.vehicleNumber || data.vehicleNumber.trim() === "") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["vehicleNumber"],
-          message: "Vehicle number is required",
-        });
-        return;
-      }
+  // .superRefine((data, ctx) => {
+  //   if (data.role === "rider") {
+  //     if (!data.vehicleNumber || data.vehicleNumber.trim() === "") {
+  //       ctx.addIssue({
+  //         code: z.ZodIssueCode.custom,
+  //         path: ["vehicleNumber"],
+  //         message: "Vehicle number is required",
+  //       });
+  //       return;
+  //     }
 
-      if (!vehicleRegex.test(data.vehicleNumber)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["vehicleNumber"],
-          message: "Enter a valid vehicle number",
-        });
-      }
-    }
-  });
+  //     if (!vehicleRegex.test(data.vehicleNumber)) {
+  //       ctx.addIssue({
+  //         code: z.ZodIssueCode.custom,
+  //         path: ["vehicleNumber"],
+  //         message: "Enter a valid vehicle number",
+  //       });
+  //     }
+  //   }
+  // });
 
 export const loginValidation = z.object({
   phone: z

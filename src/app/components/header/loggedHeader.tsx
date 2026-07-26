@@ -35,8 +35,8 @@ const LoggedHeader = () => {
   return (
     <>
       <div className="container">
-        <div className="py-4 flex flex-wrap gap-2 justify-between items-center">
-          <Link href="/" className="max-w-54">
+        <div className="py-4 flex flex-wrap -mx-1 justify-between items-center">
+          <Link href="/" className="px-1 w-5/12 max-w-30 md:max-w-54">
             <Image
               src={headerLogo}
               width={600}
@@ -45,19 +45,19 @@ const LoggedHeader = () => {
               loading="lazy"
             />
           </Link>
-          <div className="flex gap-7 items-center">
+          <div className="w-7/12 px-1 flex flex-1 gap-2 sm:gap-7 items-center justify-end max-sm:text-sm">
             <div
               className="group relative cursor-pointer"
               onClick={() => setActive(!active)}
               ref={dropdown}
             >
               <div className="flex gap-2 items-center">
-                <span className="bg-secondary flex justify-center items-center size-13 rounded-full font-bold text-white">
+                <span className="bg-secondary flex justify-center items-center size-10 sm:size-13 rounded-full font-bold text-white">
                   {user?.name?.trim().split(" ").at(0)?.[0]}
                   {user?.name?.trim().split(" ").at(-1)?.[0]}
                 </span>
 
-                <span className="font-bold text-secondary">
+                <span className="font-bold text-secondary flex-1">
                   👋 {user?.name?.split(" ")[0]}
                 </span>
                 <MdArrowDropDown
@@ -88,7 +88,7 @@ const LoggedHeader = () => {
               className="btn btn-primary flex gap-2 items-center"
               onClick={handleLogout}
             >
-              Logout
+              <span className="max-sm:hidden">Logout</span>
               <MdLogout />
             </button>
           </div>

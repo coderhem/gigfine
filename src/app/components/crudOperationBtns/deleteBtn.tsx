@@ -25,9 +25,9 @@ const DeleteBtn = ({ deleteIcon, deleteText, className, onConfirm }: Props) => {
     <>
       {deleteIcon && <MdDelete className={`text-red hover:text-red/70 transition-all duration-300 cursor-pointer inline-block text-4xl ${className}`} size={24} onClick={openPopup} />}
       {deleteText && (
-        <div className={`delete-btn ${className} cursor-pointer`} onClick={openPopup}>
+        <button className={`delete-btn ${className} cursor-pointer`} onClick={openPopup}>
           {deleteText}
-        </div>
+        </button>
       )}
       {showPopup && (
         <div className="fixed inset-0 w-full bg-black/80 flex items-center justify-center">

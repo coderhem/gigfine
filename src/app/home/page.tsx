@@ -52,7 +52,7 @@ const Home = () => {
       <section className="h-full flex justify-center items-center max-w-4xl mx-auto">
         <div className="container">
           <div className="flex flex-col mt-10">
-            <div className="flex-1 overflow-y-auto bg-secondary/1 backdrop-blur-sm rounded px-3 py-4 h-full">
+            <div className="flex-1 overflow-y-auto bg-secondary/1 backdrop-blur-sm rounded sm:px-3 py-4 h-full">
               <div
                 id="popup"
                 className="hidden rounded-2xl p-3! sm:p-7! w-full max-w-11/12 md:max-w-4/5 lg:max-w-3/5 xl:max-w-2/5"
@@ -70,7 +70,7 @@ const Home = () => {
               <h1 className="h3 text-secondary text-center mb-7">
                 Recent Problems
               </h1>
-              <div className="relative border border-dashed border-secondary px-4 py-7 [&_p]:mb-0 text-secondary font-medium">
+              <div className="relative border border-dashed border-secondary px-2 sm:px-4 py-7 [&_p]:mb-0 text-secondary font-medium">
                 {isLoading ? (
                   <LoadingSvg
                     className={"absolute left-1/2 top-1/2 -translate-1/2"}
@@ -93,7 +93,7 @@ const Home = () => {
                         <div className="mb-0 px-5 pb-5">
                           <strong>{item.problem}</strong>
                         </div>
-                        <div className="mt-2 bg-secondary/20 py-2 px-3 flex gap-5 justify-between items-center">
+                        <div className="mt-2 bg-secondary/20 py-2 px-3 flex gap-1 sm:gap-5 justify-between items-center max-sm:text-sm">
                           {/* <div className="flex justify-between gap-4 items-center p-5"> */}
                           <div className="flex items-center gap-2 bg-">
                             <span className="font-bold capitalize bg-secondary text-white mb-0 px-2 py-1 rounded ca">
@@ -103,12 +103,14 @@ const Home = () => {
                               Submitted
                             </span>
                           </div>
-                          <div className="flex gap-3 items-center">
+                          <div className="flex flex-wrap gap-1 sm:gap-3 items-center">
                             <DeleteBtn
+                              className="max-sm:w-full"
                               deleteText={"Delete"}
                               onConfirm={() => handleDelete(item._id)}
                             />
                             <UpdateBtn
+                            customClass="max-sm:w-full"
                               updateText={"Edit"}
                               btnLink={`/client/problem-management/edit/${item._id}`}
                             />

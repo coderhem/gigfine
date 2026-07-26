@@ -81,7 +81,7 @@ const RegisterForm = () => {
           </label>
 
           {/* Passenger */}
-          <label
+          {/* <label
             className={`px-5 py-2 rounded-full border cursor-pointer transition-all
               ${
                 selectedRole === "passenger"
@@ -97,7 +97,7 @@ const RegisterForm = () => {
               onChange={() => setSelectedRole("passenger")}
             />
             Passenger
-          </label>
+          </label> */}
         </div>
         <div className="field-wrapper">
           {/* Full Name */}
@@ -148,7 +148,7 @@ const RegisterForm = () => {
                 className="form-control"
                 {...register("vehicleNumber")}
               />
-              <p className="text-xs px-1 text-gray-300 mb-0">
+              <p className="text-xs px-1 text-secondary/70 mb-0">
                 e.g. su-pa-pra-001-001-2155 or ba-2-pa-1234
               </p>
               {errors.vehicleNumber && (
