@@ -33,12 +33,12 @@ export default function RootLayout({
       lang="en"
       className={`${outfit.variable} ${montserrat.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col relative before:absolute before:inset-0 before:bg-[url('./assets/images/bg-img.png')] before:object-center before:object-cover before:-z-1 before:bg-bottom">
+      <body className="min-h-full flex flex-col relative before:absolute before:inset-0 before:bg-[url('./assets/images/bg-img.png')] before:object-center before:object-cover before:-z-1 before:bg-bottom before:bg-cover before:bg-no-repeat">
         <Providers>
           <Fancybox>
             <AuthGuard>
               <HeaderSwitcher />
-              <main className="grow">{children}</main>
+              <main className="grow max-md:pt-20">{children}</main>
               <Footer />
               <Toaster
                 position="top-center"

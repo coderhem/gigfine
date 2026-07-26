@@ -105,7 +105,7 @@ const LoginForm = () => {
             Forgot Password
           </Link>
         </div>{" "}
-        <p>
+        <p className="mb-0 max-sm:text-sm">
           Don't have an account? <Link href="/register">Register</Link>
         </p>
       </div>

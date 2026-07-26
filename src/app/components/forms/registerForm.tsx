@@ -203,8 +203,8 @@ const RegisterForm = () => {
           )}
         </button>
       </form>
-      <div className="pt-5 pb-1 text-center">
-        <p>
+      <div className="pt-5 pb-1 max-sm:text-sm text-center">
+        <p className="mb-0 max-sm:text-sm">
           Already have an account? <Link href="/">Login</Link>
         </p>
       </div>

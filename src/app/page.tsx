@@ -16,8 +16,8 @@ const Login = () => {
   return (
     <div className="h-full flex justify-center items-center">
       <div className="container">
-        <div className="max-w-3xl mx-auto flex justify-center border border-secondary/5 bg-white rounded-lg shadow-xl">
-          <div className="w-1/2 p-5 overflow-hidden relative z-1 before:absolute before:rounded-full before:size-23 before:bg-white/20 before:-bottom-5 before:-left-7 bg-secondary text-white rounded-tl-xl rounded-bl-xl">
+        <div className="max-w-3xl mx-auto flex flex-wrap justify-center border border-secondary/5 bg-white rounded-lg shadow-xl">
+          <div className="w-full md:w-1/2 p-5 overflow-hidden relative z-1 before:absolute before:rounded-full before:size-23 before:bg-white/20 before:-bottom-5 before:-left-7 bg-secondary text-white rounded-tl-xl max-md:rounded-tr-xl md:rounded-bl-xl">
             <h2>Report ride-sharing issues with ease.</h2>
             <p>
               Report ride-sharing issues quickly and get the support you need.
@@ -26,7 +26,7 @@ const Login = () => {
               services across Nepal.{" "}
             </p>
           </div>
-          <div className="py-6 px-7 rounded-md max-w-sm">
+          <div className="w-full md:w-1/2 py-6 px-4 md:px-7 md:rounded-md md:max-w-sm">
             <h3 className="normal-case">
               Login to
               <span className="text-primary"> GIGFINE</span>
