@@ -17,6 +17,7 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(problemValidation),
@@ -27,20 +28,6 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
   });
 
   const dispatch = useDispatch<any>();
-
-  // async function submitForm(data: any) {
-  //   setIsLoading(true);
-  //   try {
-  //     await dispatch(addProblemApi(data)).unwrap();
-  //     await onSuccess();
-  //     NativeFancybox.close();
-  //     toast.success("Problem added successfully!");
-  //   } catch (err: any) {
-  //     toast.error(err);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // }
 
   async function submitForm(data: any) {
     setIsLoading(true);
@@ -62,6 +49,7 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
         await dispatch(addProblemApi(data)).unwrap();
 
         toast.success("Problem added successfully!");
+        reset();
       }
 
       if (onSuccess) {
@@ -126,8 +114,10 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
               Submitting &nbsp;
               <LoadingSvg />
             </>
+          ) : problem ? (
+            "Update Problem "
           ) : (
-            problem ? "Update Problem " : "Add Problem +"
+            "Add Problem +"
           )}
         </button>
       </form>

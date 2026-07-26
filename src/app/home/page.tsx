@@ -57,11 +57,13 @@ const Home = () => {
                 id="popup"
                 className="hidden rounded-2xl p-3! sm:p-7! w-full max-w-11/12 md:max-w-4/5 lg:max-w-3/5 xl:max-w-2/5"
               >
-                <div className="bg-secondary/10 p-4 rounded w-full text-center">
-                  <h2 className="h4 mb-0">Share your problem</h2>
-                  <p>
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                  </p>
+                <div className="bg-secondary/10 p-4 rounded w-full">
+                  <div className="mb-5 text-secondary text-center">
+                    <h2 className="h3 mb-2">Share your problem</h2>
+                    <p className="font-medium">
+                      Tell us about your ride-sharing issue.
+                    </p>
+                  </div>
                   <ProblemForm onSuccess={fetchProblems} />
                 </div>
               </div>
@@ -106,7 +108,10 @@ const Home = () => {
                               deleteText={"Delete"}
                               onConfirm={() => handleDelete(item._id)}
                             />
-                            <UpdateBtn updateText={"Edit"} btnLink={`/client/problem-management/edit/${item._id}`} />
+                            <UpdateBtn
+                              updateText={"Edit"}
+                              btnLink={`/client/problem-management/edit/${item._id}`}
+                            />
                           </div>
                         </div>
                         {/* </div> */}

@@ -18,21 +18,22 @@ const Login = () => {
       <div className="container">
         <div className="max-w-3xl mx-auto flex justify-center border border-secondary/5 bg-white rounded-lg shadow-xl">
           <div className="w-1/2 p-5 overflow-hidden relative z-1 before:absolute before:rounded-full before:size-23 before:bg-white/20 before:-bottom-5 before:-left-7 bg-secondary text-white rounded-tl-xl rounded-bl-xl">
-            <h2 className="h3">Join Us</h2>
+            <h2>Report ride-sharing issues with ease.</h2>
             <p>
-              {" "}
-              Become a part of our growing community. Connect with like-minded
-              people, share your challenges, exchange ideas, and find solutions
-              together.
+              Report ride-sharing issues quickly and get the support you need.
+              GIGFINE connects passengers and drivers with a simple platform to
+              submit complaints, track updates, and help improve ride-sharing
+              services across Nepal.{" "}
             </p>
           </div>
           <div className="py-6 px-7 rounded-md max-w-sm">
-            <h3>
-              <span className="text-primary">Welcome</span> Back
+            <h3 className="normal-case">
+              Login to
+              <span className="text-primary"> GIGFINE</span>
             </h3>
             <p>
-              Sign in to continue exploring beautiful frames and elegant
-              interior designs.
+              A trusted platform for passengers and drivers in Nepal to report
+              ride-sharing problems and track their resolutions.
             </p>
             <LoginForm />
           </div>

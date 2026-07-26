@@ -31,7 +31,7 @@ const LoginForm = () => {
   async function submitForm(data: any) {
     try {
       await dispatch(loggedUser(data)).unwrap();
-      toast.success("Login successful! Redirecting in 3s ...");
+      toast.success("Login successful!");
       setTimeout(() => {
         router.push("/home");
       }, 3000);

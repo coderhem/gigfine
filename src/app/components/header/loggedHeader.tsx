@@ -5,6 +5,8 @@ import { MdArrowDropDown, MdLogout } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/redux/auth/authSlice.js";
 import Link from "next/link";
+import Image from "next/image";
+import headerLogo from "@/public/images/gigfine-logo-img.png";
 
 const LoggedHeader = () => {
   const router = useRouter();
@@ -34,12 +36,15 @@ const LoggedHeader = () => {
     <>
       <div className="container">
         <div className="py-4 flex flex-wrap gap-2 justify-between items-center">
-          <h2 className="mb-0">
-            <a href="/" className="text-secondary font-bold">
-              GIG<span className="text-primary">Fine</span>
-              {/* gigfine */}
-            </a>
-          </h2>
+          <Link href="/" className="max-w-54">
+            <Image
+              src={headerLogo}
+              width={600}
+              height={200}
+              alt="Gigfine Logo"
+              loading="lazy"
+            />
+          </Link>
           <div className="flex gap-7 items-center">
             <div
               className="group relative cursor-pointer"
@@ -62,7 +67,10 @@ const LoggedHeader = () => {
               <div
                 className={`bg-white mt-2 p-3 rounded shadow flex-col gap-3 ${active ? "flex" : "hidden"} absolute left-1/2 -translate-x-1/2 right-0 top-full z-20 min-w-55 w-full`}
               >
-                <Link href="/client/profile" className="text-secondary hover:text-primary">
+                <Link
+                  href="/client/profile"
+                  className="text-secondary hover:text-primary"
+                >
                   Profile
                 </Link>
                 {/* <Link href="/client/change-password" className="text-secondary hover:text-primary">
