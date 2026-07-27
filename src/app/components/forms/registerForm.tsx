@@ -30,7 +30,7 @@ const RegisterForm = () => {
     },
     shouldUnregister: true,
   });
-  
+
   useEffect(() => {
     setValue("role", selectedRole, { shouldValidate: true });
   }, [selectedRole, setValue]);
@@ -40,10 +40,9 @@ const RegisterForm = () => {
   const dispatch = useDispatch<any>();
 
   async function submitForm(data: any) {
-    
     setLoading(true);
     try {
-      const result = await dispatch(registerUserApi(data)).unwrap();
+      await dispatch(registerUserApi(data)).unwrap();
       toast.success("Registered successfully!");
       setTimeout(() => {
         router.push("/");
