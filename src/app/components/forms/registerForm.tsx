@@ -44,7 +44,6 @@ const RegisterForm = () => {
     setLoading(true);
     try {
       const result = await dispatch(registerUserApi(data)).unwrap();
-      console.log(result);
       toast.success("Registered successfully!");
       setTimeout(() => {
         router.push("/");

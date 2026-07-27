@@ -46,9 +46,6 @@ export default function Dashboard() {
   useEffect(() => {
     getAllProblem()
       .then((data) => {
-        console.log(data);
-        console.log("Problems:", data);
-
         setProblems(data.problems || data);
       })
       .catch((err) => {
