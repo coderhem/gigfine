@@ -36,7 +36,7 @@ export default function Dashboard() {
       });
   }, []);
 
-   const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
   const handleLogout = () => {
     dispatch(logout());
@@ -82,6 +82,23 @@ export default function Dashboard() {
 
   const [activeMenu, setActiveMenu] = useState<MenuType>("users");
 
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+
+    if (!token) {
+      router.replace("/admin-area");
+      return;
+    }
+
+    setAuthorized(true);
+  }, []);
+
+  if (!authorized) {
+    return <LoadingSvg className={"absolute left-1/2 top-1/2 -translate-1/2 size-20"}/>; // वा Loading...
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
@@ -114,7 +131,9 @@ export default function Dashboard() {
         </nav>
 
         <div className="absolute bottom-5 left-0 w-full px-4">
-          <button className="w-full btn btn-primary" onClick={handleLogout}>Logout</button>
+          <button className="w-full btn btn-primary" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
       </aside>
 
