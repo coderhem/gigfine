@@ -20,8 +20,15 @@
 import MainHeader from "./mainHeader";
 import LoggedHeader from "./loggedHeader";
 import { useSelector } from "react-redux";
+import { usePathname } from "next/navigation";
 
 export default function HeaderSwitcher() {
+  const pathname = usePathname();
+  
+  // Admin pages मा header नै नदेखाउने
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
   const user = useSelector((state: any) => state.auth.user);
 
   return user ? <LoggedHeader /> : <MainHeader />;

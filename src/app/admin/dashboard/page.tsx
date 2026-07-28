@@ -7,11 +7,12 @@ import { useEffect, useState } from "react";
 import { FaUser } from "react-icons/fa";
 import { MdOutlineReportProblem } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
-import LoadingSvg from "../components/loader/loadingSvg";
-import UpdateBtn from "../components/crudOperationBtns/updateBtn";
-import DeleteBtn from "../components/crudOperationBtns/deleteBtn";
+import LoadingSvg from "../../components/loader/loadingSvg";
+import UpdateBtn from "../../components/crudOperationBtns/updateBtn";
+import DeleteBtn from "../../components/crudOperationBtns/deleteBtn";
 import toast from "react-hot-toast";
 import { logout } from "@/redux/auth/authSlice";
+import { HiShieldCheck } from "react-icons/hi2";
 
 type MenuType = "users" | "problems" | "riders";
 
@@ -88,7 +89,7 @@ export default function Dashboard() {
     const token = localStorage.getItem("adminToken");
 
     if (!token) {
-      router.replace("/admin-area");
+      router.replace("/admin/login");
       return;
     }
 
@@ -102,10 +103,15 @@ export default function Dashboard() {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-screen w-72 bg-[#0C589C] text-white shadow-lg">
+      <aside className="fixed z-100 left-0 top-0 h-screen w-72 bg-secondary text-white shadow-lg">
         <div className="border-b border-white/20 p-6">
-          <h2 className="text-2xl font-bold">Admin Panel</h2>
-          <p className="text-sm text-gray-200">Welcome Back {user?.name} 👋</p>
+          <div className="flex items-center gap-2 mb-2">
+            <HiShieldCheck className="text-3xl text-white" />
+            <h2 className="text-2xl font-bold mb-0">Admin Dashboard</h2>
+          </div>
+          <p className="mt-1 text-sm text-gray-200 pl-9">
+            Welcome back! Manage users, reports, and system operations.
+          </p>
         </div>
 
         <nav className="p-4 space-y-3">
@@ -138,15 +144,16 @@ export default function Dashboard() {
       </aside>
 
       {/* Content */}
-      <main className="ml-72 flex-1 p-8">
+      <div className="ml-72 flex-1 p-4 overflow-hidden">
         {activeMenu === "users" && (
           <>
-            <h1 className="mb-6 text-3xl font-bold text-[#0C589C]">
+            <h1 className="h2 pt-2 mb-6 text-3xl font-bold text-secondary">
               User Details
             </h1>
 
             <div className="relative rounded-xl bg-white px-6 pt-6 pb-14 shadow counter-wrapper">
-              <table className="w-full">
+            <div className="overflow-x-auto">
+                <table className="min-w-full">
                 <thead>
                   <tr className="border-b">
                     <th className="p-3 text-start">S.No.</th>
@@ -202,6 +209,7 @@ export default function Dashboard() {
                 </tbody>
               </table>
             </div>
+            </div>
           </>
         )}
         {activeMenu === "users" && (
@@ -211,7 +219,8 @@ export default function Dashboard() {
             </h1>
 
             <div className="rounded-xl bg-white p-6 shadow">
-              <table className="w-full">
+            <div className="overflow-x-auto">
+                <table className="min-w-full">
                 <thead>
                   <tr className="border-b">
                     <th className="px-4 py-3 text-start">S.No.</th>
@@ -253,6 +262,7 @@ export default function Dashboard() {
                   ))}
                 </tbody>
               </table>
+            </div>
             </div>
           </div>
         )}
@@ -363,7 +373,7 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }
