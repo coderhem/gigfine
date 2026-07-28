@@ -37,13 +37,6 @@ export default function Dashboard() {
       });
   }, []);
 
-  const dispatch = useDispatch();
-
-  const handleLogout = () => {
-    dispatch(logout());
-    router.push("/");
-  };
-
   useEffect(() => {
     getAllProblem()
       .then((data) => {
@@ -99,6 +92,12 @@ export default function Dashboard() {
   if (!authorized) {
     return <LoadingSvg className={"absolute left-1/2 top-1/2 -translate-1/2 size-20"}/>; // वा Loading...
   }
+
+
+const handleLogout = () => {
+  localStorage.removeItem("adminToken");
+  router.replace("/admin/login");
+};
 
   return (
     <div className="flex min-h-screen bg-gray-100">
