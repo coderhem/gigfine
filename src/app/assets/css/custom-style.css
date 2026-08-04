@@ -9,3 +9,13 @@
 .counter::before {
   content: counter(conter-inc) ".";
 }
+
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-rotate-slow {
+  animation: rotate 30s linear infinite;
+}

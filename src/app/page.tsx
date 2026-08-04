@@ -3,6 +3,9 @@ import LoginForm from "@/app/components/forms/loginForm";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
+import ProtestFancyBox from "./components/fancybox/protestFancyBox";
+import Fancybox from "./components/fancybox/popup";
+import { Fancybox as NativeFancybox } from "@fancyapps/ui";
 
 const Login = () => {
   const { user } = useSelector((state: any) => state.auth);
@@ -13,6 +16,21 @@ const Login = () => {
     }
   }, [user, router]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      NativeFancybox.show([
+        {
+          src: "#protest-popup",
+          type: "inline",
+        },
+      ]);
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+      NativeFancybox.close();
+    };
+  }, []);
   return (
     <div className="h-full flex justify-center items-center">
       <div className="container">
@@ -36,6 +54,9 @@ const Login = () => {
             <LoginForm />
           </div>
         </div>
+      </div>
+      <div id="protest-popup" className="hidden p-0! rounded-xl max-w-11/12 lg:max-w-1/2">
+        <ProtestFancyBox />
       </div>
     </div>
   );

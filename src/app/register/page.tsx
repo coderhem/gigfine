@@ -1,7 +1,7 @@
 "use client";
 import RegisterForm from "@/app/components/forms/registerForm";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
 const Register = () => {
@@ -19,7 +19,9 @@ const Register = () => {
       <div className="container">
         <div className="bg-white p-4 sm:px-7 sm:py-6 max-w-2xl mx-auto shadow-2xl rounded-md">
           <div className="mb-8">
-            <h3 className="normal-case">Register to <span className="text-primary">GIGFINE</span></h3>
+            <h3 className="normal-case">
+              Register to <span className="text-primary">GIGFINE</span>
+            </h3>
             <p className="mb-0">
               Join GIGFINE to report issues and get support.
             </p>

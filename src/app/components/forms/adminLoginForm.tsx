@@ -27,10 +27,10 @@ const AdminLoginForm = () => {
   });
 
   async function submitForm(data: any) {
+    setLoading(true);
     try {
       const res = await adminLogin(data);
-      setLoading(true);
-
+      
       localStorage.setItem("adminToken", res.token);
 
       toast.success("Admin Login Successful!");

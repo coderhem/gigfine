@@ -30,11 +30,10 @@ const UpdateProblemPage = ({ params }: Props) => {
     <section className="flex h-full items-center max-w-2xl mx-auto">
       <div className="container">
         <div className="bg-white shadow-lg p-10 rounded">
-          <div className="mb-5">
-            <h2>Update Problem</h2>
+          <div className="mb-5 text-secondary text-center">
+            <h2 className="h3">Update Problem</h2>
             <p>
-              Lorem ipsum dolor sit amet consectetur, adipisicing elit. Eligendi
-              reprehenderit sit
+              Update your ride-sharing issues.
             </p>
           </div>
           {!problem ? (

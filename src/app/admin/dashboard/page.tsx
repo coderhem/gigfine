@@ -23,11 +23,16 @@ export default function Dashboard() {
   const [problems, setProblems] = useState([]);
   const [userLoading, setUserLoading] = useState(true);
   const [problemLoading, setProblemLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const limit = 10;
 
   useEffect(() => {
     getAllUser()
       .then((data) => {
         setUsers(data.users || data);
+        setTotalPages(data.totalPages);
       })
       .catch((err) => {
         console.log(err);
@@ -35,7 +40,7 @@ export default function Dashboard() {
       .finally(() => {
         setUserLoading(false);
       });
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     getAllProblem()
@@ -90,14 +95,17 @@ export default function Dashboard() {
   }, []);
 
   if (!authorized) {
-    return <LoadingSvg className={"absolute left-1/2 top-1/2 -translate-1/2 size-20"}/>; // वा Loading...
+    return (
+      <LoadingSvg
+        className={"absolute left-1/2 top-1/2 -translate-1/2 size-20"}
+      />
+    ); // वा Loading...
   }
 
-
-const handleLogout = () => {
-  localStorage.removeItem("adminToken");
-  router.replace("/admin/login");
-};
+  const handleLogout = () => {
+    localStorage.removeItem("adminToken");
+    router.replace("/admin/login");
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -151,63 +159,72 @@ const handleLogout = () => {
             </h1>
 
             <div className="relative rounded-xl bg-white px-6 pt-6 pb-14 shadow counter-wrapper">
-            <div className="overflow-x-auto">
+              <div className="overflow-x-auto">
                 <table className="min-w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="p-3 text-start">S.No.</th>
-                    <th className="p-3 text-left">Name</th>
-                    <th className="px-4 py-3 text-start">Email</th>
-                    <th className="p-3 text-left">Phone</th>
-                    <th className="p-3 text-left">Status</th>
-                    <th className="p-3 text-left">Created Date</th>
-                    <th className="p-3 text-left">Actions</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {userLoading ? (
-                    <tr>
-                      <LoadingSvg
-                        className={
-                          "absolute bottom-5 left-1/2 -translate-x-1/2"
-                        }
-                      />
+                  <thead>
+                    <tr className="border-b">
+                      <th className="p-3 text-start">S.No.</th>
+                      <th className="p-3 text-left">Name</th>
+                      <th className="px-4 py-3 text-start">Email</th>
+                      <th className="p-3 text-left">Phone</th>
+                      <th className="p-3 text-left">Status</th>
+                      <th className="p-3 text-left">Created Date</th>
+                      <th className="p-3 text-left">Actions</th>
                     </tr>
-                  ) : (
-                    users.map((item: any) => (
-                      <tr key={item._id}>
-                        <td className="counter p-3"></td>
-                        <td className="p-3">{item.name}</td>
-                        <td className="p-3">{item.email}</td>
-                        <td className="p-3">{item.phone}</td>
+                  </thead>
+
+                  <tbody>
+                    {userLoading ? (
+                      <tr>
+                        <LoadingSvg
+                          className={
+                            "absolute bottom-5 left-1/2 -translate-x-1/2"
+                          }
+                        />
+                      </tr>
+                    ) : users?.length > 0 ? (
+                      users.map((item: any) => (
+                        <tr key={item._id}>
+                          <td className="counter p-3"></td>
+                          <td className="p-3">{item.name}</td>
+                          <td className="p-3">{item.email}</td>
+                          <td className="p-3">{item.phone}</td>
+                          <td
+                            className={`${item.isActive ? "text-green-600" : "text-red"} p-3 `}
+                          >
+                            {user?.isActive ? "Active" : "Inactive"}
+                          </td>
+                          <td className="p-3">
+                            {" "}
+                            {new Date(item.createdAt).toLocaleString()}
+                          </td>
+                          <td className="p-3">
+                            <div className="flex gap-2">
+                              <DeleteBtn
+                                deleteIcon
+                                onConfirm={() => handleDelete(item._id)}
+                              />
+                              <UpdateBtn
+                                updateIcon
+                                btnLink={`/admin/user-management/${item.id}`}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
                         <td
-                          className={`${item.isActive ? "text-green-600" : "text-red"} p-3 `}
+                          colSpan={7}
+                          className="pt-6 text-center text-gray-500"
                         >
-                          {user?.isActive ? "Active" : "Inactive"}
-                        </td>
-                        <td className="p-3">
-                          {" "}
-                          {new Date(item.createdAt).toLocaleString()}
-                        </td>
-                        <td className="p-3">
-                          <div className="flex gap-2">
-                            <DeleteBtn
-                              deleteIcon
-                              onConfirm={() => handleDelete(item._id)}
-                            />
-                            <UpdateBtn
-                              updateIcon
-                              btnLink={`/admin/user-management/${item.id}`}
-                            />
-                          </div>
+                          There are no users at this time.
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </>
         )}
@@ -218,50 +235,50 @@ const handleLogout = () => {
             </h1>
 
             <div className="rounded-xl bg-white p-6 shadow">
-            <div className="overflow-x-auto">
+              <div className="overflow-x-auto">
                 <table className="min-w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="px-4 py-3 text-start">S.No.</th>
-                    <th className="p-3 text-left">Name</th>
-                    <th className="p-3 text-left">Phone</th>
-                    <th className="p-3 text-left">Vechile Number</th>
-                    <th className="p-3 text-left">Created Date</th>
-                    <th className="p-3 text-left">Actions</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {users.map((user: any) => (
-                    <tr key={user._id}>
-                      <td className="p-3 counter"></td>
-                      <td className="p-3">{user.name}</td>
-                      <td className="p-3">{user.phone}</td>
-                      <td className="p-3 text-green-600">
-                        {user.vehicleNumber}
-                      </td>
-                      <td className="p-3">
-                        {" "}
-                        {new Date(user.createdAt).toLocaleString()}
-                      </td>
-                      <td className="p-3">
-                        <tr>
-                          <td className="pr-5">
-                            <DeleteBtn
-                              deleteIcon
-                              onConfirm={() => handleDelete(user._id)}
-                            />
-                          </td>
-                          <td>
-                            <UpdateBtn updateIcon customClass="min-w-full" />
-                          </td>
-                        </tr>
-                      </td>
+                  <thead>
+                    <tr className="border-b">
+                      <th className="px-4 py-3 text-start">S.No.</th>
+                      <th className="p-3 text-left">Name</th>
+                      <th className="p-3 text-left">Phone</th>
+                      <th className="p-3 text-left">Vechile Number</th>
+                      <th className="p-3 text-left">Created Date</th>
+                      <th className="p-3 text-left">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+
+                  <tbody>
+                    {users.map((user: any) => (
+                      <tr key={user._id}>
+                        <td className="p-3 counter"></td>
+                        <td className="p-3">{user.name}</td>
+                        <td className="p-3">{user.phone}</td>
+                        <td className="p-3 text-green-600">
+                          {user.vehicleNumber}
+                        </td>
+                        <td className="p-3">
+                          {" "}
+                          {new Date(user.createdAt).toLocaleString()}
+                        </td>
+                        <td className="p-3">
+                          <tr>
+                            <td className="pr-5">
+                              <DeleteBtn
+                                deleteIcon
+                                onConfirm={() => handleDelete(user._id)}
+                              />
+                            </td>
+                            <td>
+                              <UpdateBtn updateIcon customClass="min-w-full" />
+                            </td>
+                          </tr>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
@@ -272,89 +289,95 @@ const handleLogout = () => {
               User Problems
             </h1>
 
-            <table className="w-full border-collapse bg-white shadow-md overflow-hidden counter-wrapper">
-              <thead className="bg-secondary/20 text-secondary">
-                <tr>
-                  <th className="px-4 py-3 text-start">S.No.</th>
-                  <th className="px-4 py-3 text-start">Name</th>
-                  <th className="px-4 py-3 text-start">Phone</th>
-                  <th className="px-4 py-3 text-start">Company</th>
-                  <th className="px-4 py-3 text-start">Vechile No</th>
-                  <th className="px-4 py-3 text-start">Problem</th>
-                  <th className="px-4 py-3 text-start">Date</th>
-                  <th className="px-4 py-3 text-start">Actions</th>
-                </tr>
-              </thead>
+            <div className="overflow-x-auto">
+              <table className="min-w-full w-full border-collapse bg-white shadow-md overflow-hidden counter-wrapper">
+                <thead className="bg-secondary/20 text-secondary">
+                  <tr>
+                    <th className="px-4 py-3 text-start">S.No.</th>
+                    <th className="px-4 py-3 text-start">Name</th>
+                    <th className="px-4 py-3 text-start">Phone</th>
+                    <th className="px-4 py-3 text-start">Company</th>
+                    <th className="px-4 py-3 text-start">Vechile No</th>
+                    <th className="px-4 py-3 text-start">Problem</th>
+                    <th className="px-4 py-3 text-start">Date</th>
+                    <th className="px-4 py-3 text-start">Actions</th>
+                  </tr>
+                </thead>
 
-              <tbody className="text-gray-700 text-sm">
-                {problemLoading ? (
-                  <td>
-                    <LoadingSvg
-                      className={"absolute bottom-5 left-1/2 -translate-x-1/2"}
-                    />
-                  </td>
-                ) : (
-                  problems.map((problem: any, index: number) => {
-                    return (
-                      <tr
-                        className="border-b border-secondary/20  transition-all duration-300 hover:bg-gray-300/20"
-                        key={problem._id}
-                      >
-                        <td className="px-4 py-3 counter"></td>
-                        <td className="px-4 py-3">{problem.user?.name}</td>
-                        <td className="px-4 py-3">{problem.user?.phone}</td>
-                        <td className="px-4 py-3">{problem.company}</td>
-                        <td className="px-4 py-3">
-                          {problem.user?.vehicleNumber}
-                        </td>
-                        <td className="px-4 py-3 max-w-xs wrap-break-words text-start">
-                          <div className="flex gap-1">
-                            <p>
-                              {problem.problem.length > 20
-                                ? problem.problem.slice(0, 20) + "..."
-                                : problem.problem}
-                            </p>
+                <tbody className="text-gray-700 text-sm">
+                  {problemLoading ? (
+                    <td>
+                      <LoadingSvg
+                        className={
+                          "absolute bottom-5 left-1/2 -translate-x-1/2"
+                        }
+                      />
+                    </td>
+                  ) : (
+                    problems.map((problem: any, index: number) => {
+                      return (
+                        <tr
+                          className="border-b border-secondary/20  transition-all duration-300 hover:bg-gray-300/20"
+                          key={problem._id}
+                        >
+                          <td className="px-4 py-3 counter"></td>
+                          <td className="px-4 py-3">{problem.user?.name}</td>
+                          <td className="px-4 py-3">{problem.user?.phone}</td>
+                          <td className="px-4 py-3">{problem.company}</td>
+                          <td className="px-4 py-3">
+                            {problem.user?.vehicleNumber}
+                          </td>
+                          <td className="px-4 py-3 max-w-xs wrap-break-words text-start">
+                            <div className="flex gap-1">
+                              <p>
+                                {problem.problem.length > 20
+                                  ? problem.problem.slice(0, 20) + "..."
+                                  : problem.problem}
+                              </p>
 
-                            {problem.problem.length > 20 && (
-                              <a href={`#problemPopup-${index}`} data-fancybox>
-                                show
-                              </a>
-                            )}
-                          </div>
-                          <div
-                            id={`problemPopup-${index}`}
-                            className="hidden max-w-2xl"
-                          >
-                            {problem.problem}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 max-w-xs wrap-break-words text-start">
-                          {new Date(problem.createdAt).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex gap-2">
-                            {/* <Link
+                              {problem.problem.length > 20 && (
+                                <a
+                                  href={`#problemPopup-${index}`}
+                                  data-fancybox
+                                >
+                                  show
+                                </a>
+                              )}
+                            </div>
+                            <div
+                              id={`problemPopup-${index}`}
+                              className="hidden max-w-2xl"
+                            >
+                              {problem.problem}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 max-w-xs wrap-break-words text-start">
+                            {new Date(problem.createdAt).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex gap-2">
+                              {/* <Link
                               href={`/admin/user-management/edit/${user._id}`}
                             > */}
-                            <button onClick={handleDelete}>
-                              <DeleteBtn
-                                deleteIcon
-                                onConfirm={() => handleDelete(problem._id)}
-                              />
-                            </button>
-                            {/* </Link> */}
-                            <button>
-                              <UpdateBtn updateIcon />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-
+                              <button onClick={handleDelete}>
+                                <DeleteBtn
+                                  deleteIcon
+                                  onConfirm={() => handleDelete(problem._id)}
+                                />
+                              </button>
+                              {/* </Link> */}
+                              <button>
+                                <UpdateBtn updateIcon />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
             <div className="rounded-xl bg-white p-6 shadow">
               <div className="mb-4 rounded-lg border-l-4 border-[#FD5340] bg-gray-50 p-4">
                 <h3 className="font-semibold">Login Issue</h3>

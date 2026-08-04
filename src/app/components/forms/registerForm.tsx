@@ -10,6 +10,7 @@ import { registerValidation } from "@/validation/register.schema.js";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import LoadingSvg from "../loader/loadingSvg";
+import Confetti from "react-confetti";
 
 const RegisterForm = () => {
   const [selectedRole, setSelectedRole] = useState<"rider" | "passenger">(
@@ -38,15 +39,18 @@ const RegisterForm = () => {
   // const { loading, error, user } = useSelector((state: any) => state.auth);
 
   const dispatch = useDispatch<any>();
+  const [animateMessage, setAnimateMessage] = useState(false);
 
   async function submitForm(data: any) {
     setLoading(true);
     try {
       await dispatch(registerUserApi(data)).unwrap();
       toast.success("Registered successfully!");
+      setAnimateMessage(true);
+
       setTimeout(() => {
         router.push("/");
-      }, 1000);
+      }, 8000);
     } catch (err: any) {
       toast.error(err);
     } finally {
@@ -206,6 +210,19 @@ const RegisterForm = () => {
           Already have an account? <Link href="/">Login</Link>
         </p>
       </div>
+      {animateMessage && (
+        <div className="">
+          <Confetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            recycle={false}
+            numberOfPieces={600}
+          />
+          {/* <h1 className="text-3xl font-bold text-center mt-20">
+            🎉 Congratulations!
+          </h1> */}
+        </div>
+      )}
     </>
   );
 };

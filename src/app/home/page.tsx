@@ -9,7 +9,8 @@ import toast from "react-hot-toast";
 import { FaCalendarAlt } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import LoadingSvg from "../components/loader/loadingSvg";
-
+import Image from "next/image";
+import protestImg from "@/public/images/protest-image-home.jpeg";
 const Home = () => {
   const { loading, error, user } = useSelector((state: any) => state.auth);
   const router = useRouter();
@@ -51,6 +52,26 @@ const Home = () => {
     <>
       <section className="h-full flex justify-center items-center max-w-4xl mx-auto">
         <div className="container">
+          <div className="p-0.5 relative overflow-hidden max-w-120 mx-auto">
+            <div className="bg-white shadow-secondary/5 p-4 overflow-hidden text-center relative before:absolute before:-left-5 before:size-20 before:rounded-full before:bg-primary/30 before:-bottom-5 after:absolute after:inset-0 after:bg-[conic-gradient(#ef4444,#f97316,#eab308,#ef4444)] after:animate-spin after:-z-1">
+              <h1 className="h3 text-primary mb-0">Join Protest✊</h1>
+
+              <Image
+                src={protestImg}
+                width={600}
+                height={400}
+                alt="Protest Image"
+                loading="lazy"
+                className="w-full"
+              />
+            </div>
+            {/* Animated gradient */}
+            <div className="absolute inset-0 bg-[conic-gradient(from_0deg,#4285F4,#34A853,#FBBC05,#EA4335,#4285F4)] animate-[spin_3s_linear_infinite] -z-1" />
+
+            {/* Blur glow */}
+            <div className="absolute -z-1 inset-0 blur-xl opacity-60 bg-[conic-gradient(from_0deg,#4285F4,#34A853,#FBBC05,#EA4335,#4285F4)] animate-[spin_3s_linear_infinite]" />
+          </div>
+
           <div className="flex flex-col mt-10">
             <div className="flex-1 overflow-y-auto bg-secondary/1 backdrop-blur-sm rounded sm:px-3 py-4 h-full">
               <div
@@ -61,7 +82,7 @@ const Home = () => {
                   <div className="mb-5 text-secondary text-center">
                     <h2 className="h3 mb-2">Share your problem</h2>
                     <p className="font-medium">
-                      Tell us about your ride-sharing issue.
+                      Tell us about your ride-sharing issues.
                     </p>
                   </div>
                   <ProblemForm onSuccess={fetchProblems} />
@@ -110,7 +131,7 @@ const Home = () => {
                               onConfirm={() => handleDelete(item._id)}
                             />
                             <UpdateBtn
-                            customClass="max-sm:w-full"
+                              customClass="max-sm:w-full"
                               updateText={"Edit"}
                               btnLink={`/client/problem-management/edit/${item._id}`}
                             />
@@ -128,7 +149,7 @@ const Home = () => {
                   className="text-end btn btn-primary w-full py-4 focus:ring-0 focus:ring-transparent focus:bg-primary focus:text-white focus:border-primary"
                   data-fancybox
                 >
-                  + Share Your Problem
+                  Share Your Problem +
                 </a>
               </div>
             </div>

@@ -81,10 +81,10 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
             <option value="Pathao">Pathao</option>
             <option value="inDrive">Indrive</option>
             <option value="Yango">Yango</option>
-            <option value="Tootle">Tootle</option>
             <option value="Sajilo">Sajilo</option>
-            <option value="JunJum">JunJum</option>
-            <option value="Other">Other</option>
+            <option value="Firiri">Firiri</option>
+            <option value="IDF">IDF</option>
+            <option value="ChiyaCut">ChiyaCut</option>
           </select>
           {errors.company && (
             <p className="text-red text-sm  mt-1">
