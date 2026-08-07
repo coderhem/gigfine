@@ -7,6 +7,7 @@ import HeaderSwitcher from "@/app/components/header/headerSwitcher";
 import { Toaster } from "react-hot-toast";
 import Providers from "@/providers/reduxProvider";
 import AuthGuard from "@/redux/auth/authGuard";
+import Script from "next/script";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -50,6 +51,21 @@ export default function RootLayout({
           </Fancybox>
         </Providers>
       </body>
+      {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-MT82L4ZY95"
+          strategy="afterInteractive"
+        />
+
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-MT82L4ZY95');
+          `}
+        </Script>
     </html>
   );
 }
