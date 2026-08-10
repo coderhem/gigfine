@@ -80,7 +80,7 @@ const Home = () => {
                 modules={[Autoplay]}
                 className="mySwiper"
               >
-                <SwiperSlide>
+                <SwiperSlide className="h-auto!">
                   {" "}
                   <Image
                     src={protestImg}
@@ -88,17 +88,17 @@ const Home = () => {
                     height={400}
                     alt="Protest Image"
                     loading="lazy"
-                    className="w-full object-cover max-h-130"
+                    className="w-full object-cover object-center max-h-130 h-full"
                   />
                 </SwiperSlide>
-                <SwiperSlide>
+                <SwiperSlide className="h-auto!">
                   <Image
                     src={protestImg1}
                     width={600}
                     height={400}
                     alt="Protest Image"
                     loading="lazy"
-                    className="w-full max-h-130 object-cover object-center"
+                    className="w-full max-h-130 object-cover object-center h-full"
                   />
                 </SwiperSlide>
               </Swiper>
