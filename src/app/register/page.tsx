@@ -3,10 +3,13 @@ import RegisterForm from "@/app/components/forms/registerForm";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import PassengerRegisterForm from "../components/forms/passengerForm";
 
 const Register = () => {
   const { user } = useSelector((state: any) => state.auth);
   const router = useRouter();
+
+  const [showForm, setFormShow] = useState("active");
 
   useEffect(() => {
     if (user) {
@@ -25,8 +28,26 @@ const Register = () => {
             <p className="mb-0">
               Join GIGFINE to report issues and get support.
             </p>
+            <div className="flex gap-5 mt-5">
+              <button
+                // onClick={() => {
+                //   setFormShow;
+                // }}
+                className="btn btn-primary rounded-full text-sm"
+              >
+                Rider
+              </button>
+              {/* <button
+                onClick={() => {
+                  setFormShow;
+                }}
+                className="btn btn-primary rounded-full text-sm"
+              >
+                Passenger
+              </button> */}
+            </div>
           </div>
-          <RegisterForm />
+          {showForm === "active" ? <RegisterForm /> : <PassengerRegisterForm />}
         </div>
       </div>
     </div>

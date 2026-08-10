@@ -35,10 +35,10 @@ export const registerValidation = z
       .trim()
       .min(1, "Password is required.")
       .min(8, "Password must be at least 8 characters.")
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_\-+=])[A-Za-z\d@$!%*?&#^()_\-+=]+$/,
-        "Use uppercase, lowercase, number & symbol.",
-      ),
+      // .regex(
+      //   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_\-+=])[A-Za-z\d@$!%*?&#^()_\-+=]+$/,
+      //   "Use uppercase, lowercase, number & symbol.",
+      // ),
   })
   // .superRefine((data, ctx) => {
   //   if (data.role === "rider") {

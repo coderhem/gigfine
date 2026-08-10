@@ -15,6 +15,7 @@ import LoadingSvg from "../loader/loadingSvg";
 const LoginForm = () => {
   const router = useRouter();
   const [show, setShow] = useState(false);
+  const [formShow, setFormShow] = useState("active");
 
   const {
     register,
@@ -42,6 +43,7 @@ const LoginForm = () => {
 
   return (
     <>
+    {formShow === "active" ? (
       <form className="login-form" onSubmit={handleSubmit(submitForm)}>
         {/* Username */}
         <div className="form-group mb-4">
@@ -96,6 +98,63 @@ const LoginForm = () => {
           )}
         </button>
       </form>
+        ) : (
+      <form className="login-form" onSubmit={handleSubmit(submitForm)}>
+        {/* Username */}
+        <div className="form-group mb-4">
+          <input
+            type="text"
+            placeholder="Enter phone number"
+            className="form-control"
+            {...register("phone")}
+          />
+          {errors.phone && (
+            <p className="text-red text-sm mt-1">{errors.phone.message}</p>
+          )}
+        </div>
+
+        {/* Password */}
+        <div className="form-group mb-4">
+          <div className="relative">
+            <input
+              type={`${show ? "text" : "password"}`}
+              placeholder="Enter password"
+              className="form-control"
+              {...register("password")}
+            />
+            {show ? (
+              <FaEye
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-black/60 text-xl cursor-pointer"
+                onClick={() => setShow(!show)}
+              />
+            ) : (
+              <FaEyeSlash
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-black/60 text-xl cursor-pointer"
+                onClick={() => setShow(!show)}
+              />
+            )}
+          </div>
+          {errors.password && (
+            <p className="text-red text-sm mt-1">{errors.password.message}</p>
+          )}
+        </div>
+
+        {/* Submit */}
+        <button
+          className="btn btn-primary w-full flex gap-2 items-center"
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              Submitting <LoadingSvg />
+            </>
+          ) : (
+            "Login"
+          )}
+        </button>
+      </form>
+        )
+        }
       <div className="pt-5 pb-1 text-center">
         <div className="text-end mb-3">
           <Link

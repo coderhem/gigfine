@@ -10,7 +10,8 @@ import { FaCalendarAlt } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import LoadingSvg from "../components/loader/loadingSvg";
 import Image from "next/image";
-import protestImg from "@/public/images/protest-image-home.jpeg";
+import protestImg from "@/public/images/admin-protest-photo.jpeg";
+import protestImg1 from "@/public/images/admin-protest-photo-1.jpeg";
 const Home = () => {
   const { loading, error, user } = useSelector((state: any) => state.auth);
   const router = useRouter();
@@ -52,18 +53,28 @@ const Home = () => {
     <>
       <section className="h-full flex justify-center items-center max-w-4xl mx-auto">
         <div className="container">
-          <div className="p-0.5 relative overflow-hidden max-w-120 mx-auto">
-            <div className="bg-white shadow-secondary/5 p-4 overflow-hidden text-center relative before:absolute before:-left-5 before:size-20 before:rounded-full before:bg-primary/30 before:-bottom-5 after:absolute after:inset-0 after:bg-[conic-gradient(#ef4444,#f97316,#eab308,#ef4444)] after:animate-spin after:-z-1">
-              <h1 className="h3 text-primary mb-0">Join Protest✊</h1>
+          <div className="p-0.5 relative overflow-hidden max-w-170 mx-auto">
+            <div className="bg-white shadow-secondary/5 p-4 œtext-center relative before:absolute before:-left-5 before:size-20 before:rounded-full before:bg-primary/30 before:-bottom-5 after:absolute after:inset-0 after:bg-[conic-gradient(#ef4444,#f97316,#eab308,#ef4444)] after:animate-spin after:-z-1">
+              <h1 className="h3 text-primary mb-5 text-center">Join Protest✊</h1>
 
-              <Image
-                src={protestImg}
-                width={600}
-                height={400}
-                alt="Protest Image"
-                loading="lazy"
-                className="w-full"
-              />
+              <div className="flex gap-1">
+                <Image
+                  src={protestImg}
+                  width={600}
+                  height={400}
+                  alt="Protest Image"
+                  loading="lazy"
+                  className="w-full max-w-80 object-cover max-h-90"
+                />
+                <Image
+                  src={protestImg1}
+                  width={600}
+                  height={400}
+                  alt="Protest Image"
+                  loading="lazy"
+                  className="w-full max-w-80 max-h-90 object-cover"
+                />
+              </div>
             </div>
             {/* Animated gradient */}
             <div className="absolute inset-0 bg-[conic-gradient(from_0deg,#4285F4,#34A853,#FBBC05,#EA4335,#4285F4)] animate-[spin_3s_linear_infinite] -z-1" />

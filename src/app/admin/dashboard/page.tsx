@@ -13,6 +13,7 @@ import DeleteBtn from "../../components/crudOperationBtns/deleteBtn";
 import toast from "react-hot-toast";
 import { logout } from "@/redux/auth/authSlice";
 import { HiShieldCheck } from "react-icons/hi2";
+import Pagination from "@/app/components/paginationUI/pagination";
 
 type MenuType = "users" | "problems" | "riders";
 
@@ -24,15 +25,18 @@ export default function Dashboard() {
   const [userLoading, setUserLoading] = useState(true);
   const [problemLoading, setProblemLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
-  const limit = 10;
+  const usersPerPage = 10;
 
+  const totalPages = Math.ceil(users.length / usersPerPage);
+  const startIndex = (page - 1) * usersPerPage;
+  const endIndex = startIndex + usersPerPage;
+
+  const currentUsers = users.slice(startIndex, endIndex);
   useEffect(() => {
     getAllUser()
       .then((data) => {
         setUsers(data.users || data);
-        setTotalPages(data.totalPages);
       })
       .catch((err) => {
         console.log(err);
@@ -40,7 +44,7 @@ export default function Dashboard() {
       .finally(() => {
         setUserLoading(false);
       });
-  }, [page]);
+  }, []);
 
   useEffect(() => {
     getAllProblem()
@@ -182,8 +186,8 @@ export default function Dashboard() {
                           }
                         />
                       </tr>
-                    ) : users?.length > 0 ? (
-                      users.map((item: any) => (
+                    ) : currentUsers?.length > 0 ? (
+                      currentUsers.map((item: any) => (
                         <tr key={item._id}>
                           <td className="counter p-3"></td>
                           <td className="p-3">{item.name}</td>
@@ -224,6 +228,11 @@ export default function Dashboard() {
                     )}
                   </tbody>
                 </table>
+                <Pagination
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                />
               </div>
             </div>
           </>

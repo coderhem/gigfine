@@ -8,11 +8,11 @@ import { registerUserApi } from "@/redux/auth/authActions.js";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerValidation } from "@/validation/register.schema.js";
 import toast from "react-hot-toast";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import LoadingSvg from "../loader/loadingSvg";
 import Confetti from "react-confetti";
 
-const RegisterForm = () => {
+const PassengerRegisterForm = () => {
   const [selectedRole, setSelectedRole] = useState<"rider" | "passenger">(
     "rider",
   );
@@ -101,26 +101,6 @@ const RegisterForm = () => {
             )}
           </div>
 
-          {/* Vehicle Number */}
-          {selectedRole === "rider" && (
-            <div className="form-group mb-4">
-              <input
-                type="text"
-                placeholder="Enter Vehicle Number Plate"
-                className="form-control"
-                {...register("vehicleNumber")}
-              />
-              <p className="text-xs px-1 text-secondary/70 mb-0">
-                e.g. su-pa-pra-001-001-2155 or ba-2-pa-1234
-              </p>
-              {errors.vehicleNumber && (
-                <p className="text-red text-sm mt-1">
-                  {errors.vehicleNumber.message}
-                </p>
-              )}
-            </div>
-          )}
-
           {/* Password */}
           <div className="form-group mb-4 w-full!">
             <div className="relative">
@@ -187,4 +167,4 @@ const RegisterForm = () => {
   );
 };
 
-export default RegisterForm;
+export default PassengerRegisterForm;

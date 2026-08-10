@@ -55,9 +55,9 @@ export async function resetPassword({ userId, token, password }) {
   return response.data;
 }
 
-export async function getAllUser() {
+export async function getAllUser(page, limit=10) {
   const response = await axios.get(
-    "https://gigfine-api.vercel.app/api/auth/users",
+    `https://gigfine-api.vercel.app/api/auth/users?page=${page}&limit=${limit}`,
   );
   return response.data;
 }
