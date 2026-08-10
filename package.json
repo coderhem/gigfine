@@ -34,6 +34,7 @@
     "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "router": "^2.2.0",
+    "swiper": "^14.1.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

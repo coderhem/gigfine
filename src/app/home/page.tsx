@@ -12,6 +12,12 @@ import LoadingSvg from "../components/loader/loadingSvg";
 import Image from "next/image";
 import protestImg from "@/public/images/admin-protest-photo.jpeg";
 import protestImg1 from "@/public/images/admin-protest-photo-1.jpeg";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination, Navigation } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/pagination";
+
 const Home = () => {
   const { loading, error, user } = useSelector((state: any) => state.auth);
   const router = useRouter();
@@ -55,26 +61,47 @@ const Home = () => {
         <div className="container">
           <div className="p-0.5 relative overflow-hidden max-w-170 mx-auto">
             <div className="bg-white shadow-secondary/5 p-4 œtext-center relative before:absolute before:-left-5 before:size-20 before:rounded-full before:bg-primary/30 before:-bottom-5 after:absolute after:inset-0 after:bg-[conic-gradient(#ef4444,#f97316,#eab308,#ef4444)] after:animate-spin after:-z-1">
-              <h1 className="h3 text-primary mb-5 text-center">Join Protest✊</h1>
+              <h1 className="h3 text-primary mb-5 text-center">
+                Join Protest✊
+              </h1>
 
-              <div className="flex gap-1">
-                <Image
-                  src={protestImg}
-                  width={600}
-                  height={400}
-                  alt="Protest Image"
-                  loading="lazy"
-                  className="w-full max-w-80 object-cover max-h-90"
-                />
-                <Image
-                  src={protestImg1}
-                  width={600}
-                  height={400}
-                  alt="Protest Image"
-                  loading="lazy"
-                  className="w-full max-w-80 max-h-90 object-cover"
-                />
-              </div>
+              <Swiper
+                slidesPerView={1}
+                centeredSlides={true}
+                autoplay={{
+                  delay: 2500,
+                  disableOnInteraction: false,
+                }}
+                pagination={{
+                  clickable: true,
+                }}
+                loop={true}
+                navigation={true}
+                modules={[Autoplay]}
+                className="mySwiper"
+              >
+                <SwiperSlide>
+                  {" "}
+                  <Image
+                    src={protestImg}
+                    width={600}
+                    height={400}
+                    alt="Protest Image"
+                    loading="lazy"
+                    className="w-full object-cover max-h-130"
+                  />
+                </SwiperSlide>
+                <SwiperSlide>
+                  <Image
+                    src={protestImg1}
+                    width={600}
+                    height={400}
+                    alt="Protest Image"
+                    loading="lazy"
+                    className="w-full max-h-130 object-cover object-center"
+                  />
+                </SwiperSlide>
+              </Swiper>
             </div>
             {/* Animated gradient */}
             <div className="absolute inset-0 bg-[conic-gradient(from_0deg,#4285F4,#34A853,#FBBC05,#EA4335,#4285F4)] animate-[spin_3s_linear_infinite] -z-1" />
