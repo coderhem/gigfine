@@ -25,14 +25,32 @@ export default function Dashboard() {
   const [userLoading, setUserLoading] = useState(true);
   const [problemLoading, setProblemLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
 
   const usersPerPage = 10;
 
-  const totalPages = Math.ceil(users.length / usersPerPage);
+  // const totalPages = Math.ceil(users.length / usersPerPage);
+  // const startIndex = (page - 1) * usersPerPage;
+  // const endIndex = startIndex + usersPerPage;
+
+  // const currentUsers = users.slice(startIndex, endIndex);
+  const filteredUsers = users.filter((user) => {
+    const searchTerm = search.toLowerCase();
+
+    return (
+      user.name?.toLowerCase().includes(searchTerm) ||
+      user.email?.toLowerCase().includes(searchTerm) ||
+      user.phone?.toLowerCase().includes(searchTerm) ||
+      user.vehicleNumber?.toLowerCase().includes(searchTerm)
+    );
+  });
+
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+
   const startIndex = (page - 1) * usersPerPage;
   const endIndex = startIndex + usersPerPage;
 
-  const currentUsers = users.slice(startIndex, endIndex);
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
   useEffect(() => {
     getAllUser()
       .then((data) => {
@@ -156,9 +174,31 @@ export default function Dashboard() {
 
       {/* Content */}
       <div className="ml-72 flex-1 p-4 overflow-hidden">
+        <div className="mb-5 fixed z-20 left-72 p-5 bg-white shadow right-0 top-0 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <h2 className="text-xl font-semibold text-secondary">
+            Total Users <span className="text-primary">({filteredUsers.length})</span>
+          </h2>
+
+          <div className="relative w-full md:w-80">
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 pr-10 outline-none transition focus:border-secondary"
+            />
+
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+              🔍
+            </span>
+          </div>
+        </div>
         {activeMenu === "users" && (
           <>
-            <h1 className="h2 pt-2 mb-6 text-3xl font-bold text-secondary">
+            <h1 className="h2 pt-24 mb-6 text-3xl font-bold text-secondary">
               User Details
             </h1>
 

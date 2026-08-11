@@ -50,7 +50,7 @@ const RegisterForm = () => {
 
       setTimeout(() => {
         router.push("/");
-      }, 8000);
+      }, 4000);
     } catch (err: any) {
       toast.error(err);
     } finally {

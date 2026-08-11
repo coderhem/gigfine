@@ -10,7 +10,7 @@ import { FaCalendarAlt } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import LoadingSvg from "../components/loader/loadingSvg";
 import Image from "next/image";
-import protestImg from "@/public/images/admin-protest-photo.jpeg";
+import protestImg from "@/public/images/protest-image-home.jpeg";
 import protestImg1 from "@/public/images/admin-protest-photo-1.jpeg";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
@@ -88,10 +88,10 @@ const Home = () => {
                     height={400}
                     alt="Protest Image"
                     loading="lazy"
-                    className="w-full object-cover object-center max-h-130 h-full"
+                    className="w-full h-full"
                   />
                 </SwiperSlide>
-                <SwiperSlide className="h-auto!">
+                {/* <SwiperSlide className="h-auto!">
                   <Image
                     src={protestImg1}
                     width={600}
@@ -100,7 +100,7 @@ const Home = () => {
                     loading="lazy"
                     className="w-full max-h-130 object-cover object-center h-full"
                   />
-                </SwiperSlide>
+                </SwiperSlide> */}
               </Swiper>
             </div>
             {/* Animated gradient */}
