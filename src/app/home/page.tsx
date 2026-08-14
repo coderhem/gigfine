@@ -59,7 +59,7 @@ const Home = () => {
     <>
       <section className="h-full flex justify-center items-center max-w-4xl mx-auto">
         <div className="container">
-          <div className="p-0.5 relative overflow-hidden max-w-170 mx-auto">
+          {/* <div className="p-0.5 relative overflow-hidden max-w-170 mx-auto">
             <div className="bg-white shadow-secondary/5 p-4 œtext-center relative before:absolute before:-left-5 before:size-20 before:rounded-full before:bg-primary/30 before:-bottom-5 after:absolute after:inset-0 after:bg-[conic-gradient(#ef4444,#f97316,#eab308,#ef4444)] after:animate-spin after:-z-1">
               <h1 className="h3 text-primary mb-5 text-center">
                 Join Protest✊
@@ -91,24 +91,12 @@ const Home = () => {
                     className="w-full h-full"
                   />
                 </SwiperSlide>
-                {/* <SwiperSlide className="h-auto!">
-                  <Image
-                    src={protestImg1}
-                    width={600}
-                    height={400}
-                    alt="Protest Image"
-                    loading="lazy"
-                    className="w-full max-h-130 object-cover object-center h-full"
-                  />
-                </SwiperSlide> */}
               </Swiper>
             </div>
-            {/* Animated gradient */}
             <div className="absolute inset-0 bg-[conic-gradient(from_0deg,#4285F4,#34A853,#FBBC05,#EA4335,#4285F4)] animate-[spin_3s_linear_infinite] -z-1" />
 
-            {/* Blur glow */}
             <div className="absolute -z-1 inset-0 blur-xl opacity-60 bg-[conic-gradient(from_0deg,#4285F4,#34A853,#FBBC05,#EA4335,#4285F4)] animate-[spin_3s_linear_infinite]" />
-          </div>
+          </div> */}
 
           <div className="flex flex-col mt-10">
             <div className="flex-1 overflow-y-auto bg-secondary/1 backdrop-blur-sm rounded sm:px-3 py-4 h-full">
@@ -163,11 +151,11 @@ const Home = () => {
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-1 sm:gap-3 items-center">
-                            <DeleteBtn
+                            {/* <DeleteBtn
                               className="max-sm:w-full"
                               deleteText={"Delete"}
                               onConfirm={() => handleDelete(item._id)}
-                            />
+                            /> */}
                             <UpdateBtn
                               customClass="max-sm:w-full"
                               updateText={"Edit"}

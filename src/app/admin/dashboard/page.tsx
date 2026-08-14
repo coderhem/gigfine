@@ -4,24 +4,24 @@ import { deleteUser, getAllUser } from "@/api/auth";
 import { getAllProblem } from "@/api/problem";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FaUser } from "react-icons/fa";
+import { FaBiking, FaUser } from "react-icons/fa";
 import { MdOutlineReportProblem } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import LoadingSvg from "../../components/loader/loadingSvg";
 import UpdateBtn from "../../components/crudOperationBtns/updateBtn";
 import DeleteBtn from "../../components/crudOperationBtns/deleteBtn";
 import toast from "react-hot-toast";
-import { logout } from "@/redux/auth/authSlice";
 import { HiShieldCheck } from "react-icons/hi2";
 import Pagination from "@/app/components/paginationUI/pagination";
 
-type MenuType = "users" | "problems" | "riders";
+type MenuType = "users" | "problems" | "riders" | "passenger";
 
 export default function Dashboard() {
-  const { loading, error, user } = useSelector((state: any) => state.auth);
+  const { user } = useSelector((state: any) => state.auth);
   const router = useRouter();
   const [users, setUsers] = useState<any[]>([]);
   const [problems, setProblems] = useState([]);
+  const [passenger, setPassenger] = useState([]);
   const [userLoading, setUserLoading] = useState(true);
   const [problemLoading, setProblemLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -34,16 +34,33 @@ export default function Dashboard() {
   // const endIndex = startIndex + usersPerPage;
 
   // const currentUsers = users.slice(startIndex, endIndex);
-  const filteredUsers = users.filter((user) => {
-    const searchTerm = search.toLowerCase();
+  // const filteredUsers = users.filter((user, setProblems) => {
+  //   const searchTerm = search.toLowerCase();
 
-    return (
-      user.name?.toLowerCase().includes(searchTerm) ||
-      user.email?.toLowerCase().includes(searchTerm) ||
-      user.phone?.toLowerCase().includes(searchTerm) ||
-      user.vehicleNumber?.toLowerCase().includes(searchTerm)
-    );
-  });
+  //   return (
+  //     user.name?.toLowerCase().includes(searchTerm) ||
+  //     user.email?.toLowerCase().includes(searchTerm) ||
+  //     user.phone?.toLowerCase().includes(searchTerm) ||
+  //     user.vehicleNumber?.toLowerCase().includes(searchTerm)
+  //   );
+  // });
+
+  const searchTerm = search.toLowerCase();
+
+const filteredUsers = users.filter((user) =>
+  user.name?.toLowerCase().includes(searchTerm) ||
+  user.email?.toLowerCase().includes(searchTerm) ||
+  user.phone?.toLowerCase().includes(searchTerm) ||
+  user.vehicleNumber?.toLowerCase().includes(searchTerm)
+);
+
+const filteredProblems = problems.filter((problem:any) =>
+  problem.company?.toLowerCase().includes(searchTerm) ||
+  problem.problem?.toLowerCase().includes(searchTerm) ||
+  problem.user?.vehicleNumber?.toLowerCase().includes(searchTerm) ||
+  problem.user?.name?.toLowerCase().includes(searchTerm) ||
+  problem.user?.email?.toLowerCase().includes(searchTerm)
+);
 
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
@@ -102,7 +119,6 @@ export default function Dashboard() {
   };
 
   const [activeMenu, setActiveMenu] = useState<MenuType>("users");
-
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
@@ -121,12 +137,60 @@ export default function Dashboard() {
       <LoadingSvg
         className={"absolute left-1/2 top-1/2 -translate-1/2 size-20"}
       />
-    ); // वा Loading...
+    ); // Loading...
   }
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     router.replace("/admin/login");
+  };
+
+  const openWhatsApp = (phone: string) => {
+    if (!phone) return;
+
+    let cleanPhone = String(phone).replace(/\D/g, "");
+
+    // Remove country code if already present
+    if (cleanPhone.startsWith("977")) {
+      cleanPhone = cleanPhone.slice(3);
+    }
+
+    // Remove leading zero
+    cleanPhone = cleanPhone.replace(/^0+/, "");
+
+    const whatsappNumber = `977${cleanPhone}`;
+
+    const message = `Hello, ${user.name} sir, gigfine.com सँग जोडिनु भएकोमा धन्यवाद। Ride Sharing सम्बन्धि समस्या/गुनासो राख्नुहोला, हामी तपाईंको कुरालाई सम्बन्धित ठाउँमा पुर्याउने कोशिस गर्छौं।`;
+
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+      message,
+    )}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const openWhatsAppProblem = (phone: string) => {
+    if (!phone) return;
+
+    let cleanPhone = String(phone).replace(/\D/g, "");
+
+    // Remove country code if already present
+    if (cleanPhone.startsWith("977")) {
+      cleanPhone = cleanPhone.slice(3);
+    }
+
+    // Remove leading zero
+    cleanPhone = cleanPhone.replace(/^0+/, "");
+
+    const whatsappNumber = `977${cleanPhone}`;
+
+    const message = `धन्यवाद, ${user.name} तपाईंले आफ्नो समस्या/गुनासो gigfine.com सँग राख्नु भयो।
+हामी तपाईंको कुरालाई सम्बन्धित ठाउँमा पुर्याउने कोशिस गर्दैछौं।`;
+
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+      message,
+    )}`;
+
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -150,8 +214,17 @@ export default function Dashboard() {
               activeMenu === "users" ? "bg-primary" : "hover:bg-white/10"
             }`}
           >
+            <FaBiking />
+            <span>Rider Details</span>
+          </button>
+          <button
+            onClick={() => setActiveMenu("passenger")}
+            className={`w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex gap-2 items-center ${
+              activeMenu === "passenger" ? "bg-primary" : "hover:bg-white/10"
+            }`}
+          >
             <FaUser />
-            <span>User Details</span>
+            <span>Passenger Details</span>
           </button>
 
           <button
@@ -176,7 +249,8 @@ export default function Dashboard() {
       <div className="ml-72 flex-1 p-4 overflow-hidden">
         <div className="mb-5 fixed z-20 left-72 p-5 bg-white shadow right-0 top-0 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <h2 className="text-xl font-semibold text-secondary">
-            Total Users <span className="text-primary">({filteredUsers.length})</span>
+            Total Users{" "}
+            <span className="text-primary">({filteredUsers.length})</span>
           </h2>
 
           <div className="relative w-full md:w-80">
@@ -190,7 +264,6 @@ export default function Dashboard() {
               }}
               className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 pr-10 outline-none transition focus:border-secondary"
             />
-
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
               🔍
             </span>
@@ -209,6 +282,7 @@ export default function Dashboard() {
                     <tr className="border-b">
                       <th className="p-3 text-start">S.No.</th>
                       <th className="p-3 text-left">Name</th>
+                      <th className="p-3 text-left">Vehicle No.</th>
                       <th className="px-4 py-3 text-start">Email</th>
                       <th className="p-3 text-left">Phone</th>
                       <th className="p-3 text-left">Status</th>
@@ -231,8 +305,13 @@ export default function Dashboard() {
                         <tr key={item._id}>
                           <td className="counter p-3"></td>
                           <td className="p-3">{item.name}</td>
+                          <td className="p-3">{item.vehicleNumber}</td>
                           <td className="p-3">{item.email}</td>
-                          <td className="p-3">{item.phone}</td>
+                          <td className="p-3">
+                            <button onClick={() => openWhatsApp(item.phone)}>
+                              {item.phone}
+                            </button>
+                          </td>
                           <td
                             className={`${item.isActive ? "text-green-600" : "text-red"} p-3 `}
                           >
@@ -277,10 +356,11 @@ export default function Dashboard() {
             </div>
           </>
         )}
-        {activeMenu === "users" && (
+
+        {activeMenu === "passenger" && (
           <div className="pt-8 counter-wrapper">
-            <h1 className="mb-6 text-3xl font-bold text-[#0C589C]">
-              User Details Rider
+            <h1 className="mb-6 pt-18 text-3xl font-bold text-[#0C589C]">
+              Passenger Details
             </h1>
 
             <div className="rounded-xl bg-white p-6 shadow">
@@ -291,14 +371,14 @@ export default function Dashboard() {
                       <th className="px-4 py-3 text-start">S.No.</th>
                       <th className="p-3 text-left">Name</th>
                       <th className="p-3 text-left">Phone</th>
-                      <th className="p-3 text-left">Vechile Number</th>
+                      {/* <th className="p-3 text-left">Vechile Number</th> */}
                       <th className="p-3 text-left">Created Date</th>
                       <th className="p-3 text-left">Actions</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {users.map((user: any) => (
+                    {/* {users.map((user: any) => (
                       <tr key={user._id}>
                         <td className="p-3 counter"></td>
                         <td className="p-3">{user.name}</td>
@@ -324,7 +404,15 @@ export default function Dashboard() {
                           </tr>
                         </td>
                       </tr>
-                    ))}
+                    ))} */}
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="pt-6 text-center text-gray-500"
+                      >
+                        There are no users at this time.
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -334,7 +422,7 @@ export default function Dashboard() {
 
         {activeMenu === "problems" && (
           <div>
-            <h1 className="mb-6 text-3xl font-bold text-secondary">
+            <h1 className="mb-6 pt-24 text-3xl font-bold text-secondary">
               User Problems
             </h1>
 
@@ -363,7 +451,7 @@ export default function Dashboard() {
                       />
                     </td>
                   ) : (
-                    problems.map((problem: any, index: number) => {
+                    filteredProblems.map((problem: any, index: number) => {
                       return (
                         <tr
                           className="border-b border-secondary/20  transition-all duration-300 hover:bg-gray-300/20"
@@ -371,7 +459,15 @@ export default function Dashboard() {
                         >
                           <td className="px-4 py-3 counter"></td>
                           <td className="px-4 py-3">{problem.user?.name}</td>
-                          <td className="px-4 py-3">{problem.user?.phone}</td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() =>
+                                openWhatsAppProblem(problem.user?.phone)
+                              }
+                            >
+                              {problem.user?.phone}
+                            </button>
+                          </td>
                           <td className="px-4 py-3">{problem.company}</td>
                           <td className="px-4 py-3">
                             {problem.user?.vehicleNumber}

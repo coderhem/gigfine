@@ -20,8 +20,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Gigfine",
-  description: "Nepals First Query Company",
+  title: "GIGFINE - Report ride sharing issues with ease.",
+  description: "Report ride sharing issues with ease.",
 };
 
 export default function RootLayout({

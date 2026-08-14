@@ -111,7 +111,7 @@ const RegisterForm = () => {
                 {...register("vehicleNumber")}
               />
               <p className="text-xs px-1 text-secondary/70 mb-0">
-                e.g. su-pa-pra-001-001-2155 or ba-2-pa-1234
+                e.g. ba 2 pa 1234
               </p>
               {errors.vehicleNumber && (
                 <p className="text-red text-sm mt-1">
@@ -143,6 +143,9 @@ const RegisterForm = () => {
                 />
               )}
             </div>
+            <p className="text-xs px-1 text-secondary/70 mb-0">
+              Minimun 8 character is required.
+            </p>
             {errors.password && (
               <p className="text-red text-sm mt-1">{errors.password.message}</p>
             )}
