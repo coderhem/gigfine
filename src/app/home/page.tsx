@@ -9,17 +9,16 @@ import toast from "react-hot-toast";
 import { FaCalendarAlt } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import LoadingSvg from "../components/loader/loadingSvg";
-import Image from "next/image";
-import protestImg from "@/public/images/protest-image-home.jpeg";
-import protestImg1 from "@/public/images/admin-protest-photo-1.jpeg";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, Navigation } from "swiper/modules";
-
+// import Image from "next/image";
+// import protestImg from "@/public/images/protest-image-home.jpeg";
+// import protestImg1 from "@/public/images/admin-protest-photo-1.jpeg";
+// import { Swiper, SwiperSlide } from "swiper/react";
+// import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
 const Home = () => {
-  const { loading, error, user } = useSelector((state: any) => state.auth);
+  const { user } = useSelector((state: any) => state.auth);
   const router = useRouter();
   const [problems, setProblems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);

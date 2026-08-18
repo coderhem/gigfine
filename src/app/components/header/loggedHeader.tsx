@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MdArrowDropDown, MdLogout } from "react-icons/md";
+import { MdArrowDropDown, MdDoorbell, MdLogout } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/redux/auth/authSlice.js";
 import Link from "next/link";
 import Image from "next/image";
 import headerLogo from "@/public/images/gigfine-logo-img.png";
+import { FaBell } from "react-icons/fa";
+import { getAllNotification } from "@/api/notification";
 
 const LoggedHeader = () => {
   const router = useRouter();
@@ -19,6 +21,8 @@ const LoggedHeader = () => {
 
   const [active, setActive] = useState(false);
   const dropdown = useRef<HTMLDivElement>(null);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const { user } = useSelector((state: any) => state.auth);
 
   useEffect(() => {
     if (!dropdown.current) return;
@@ -30,7 +34,24 @@ const LoggedHeader = () => {
     }
   }, [active]);
 
-  const { user } = useSelector((state: any) => state.auth);
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      try {
+        const data = await getAllNotification();
+
+        console.log("Notifications:", data);
+
+        setNotificationCount(data.notification?.length || 0);
+      } catch (error) {
+        console.error("Failed to fetch notification count:", error);
+        setNotificationCount(0);
+      }
+    };
+
+    if (user) {
+      fetchNotificationCount();
+    }
+  }, [user]);
 
   return (
     <>
@@ -46,6 +67,17 @@ const LoggedHeader = () => {
             />
           </Link>
           <div className="w-7/12 px-1 flex flex-1 gap-2 sm:gap-7 items-center justify-end max-sm:text-sm">
+            <Link
+              href="/notifications"
+              className="text-xl relative text-secondary group"
+            >
+              <FaBell />
+              {notificationCount > 0 && (
+                <span className="absolute animate-pulse group-hover:animate-none -top-2.5 -right-1 min-w-4 h-4 px-1 flex justify-center items-center rounded-full bg-primary text-white text-xs">
+                  {notificationCount > 99 ? "99+" : notificationCount}
+                </span>
+              )}
+            </Link>
             <div
               className="group relative cursor-pointer"
               onClick={() => setActive(!active)}

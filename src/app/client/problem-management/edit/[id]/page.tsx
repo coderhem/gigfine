@@ -29,7 +29,7 @@ const UpdateProblemPage = ({ params }: Props) => {
   return (
     <section className="flex h-full items-center max-w-2xl mx-auto">
       <div className="container">
-        <div className="bg-white shadow-lg p-10 rounded">
+        <div className="bg-secondary/10 shadow-lg p-10 rounded">
           <div className="mb-5 text-secondary text-center">
             <h2 className="h3">Update Problem</h2>
             <p>

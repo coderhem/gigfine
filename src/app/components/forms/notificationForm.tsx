@@ -1,16 +1,16 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import problemValidation from "@/validation/problem.schema.js";
+import notificationValidation from "@/validation/notification.schema.js";
 import { useDispatch } from "react-redux";
-import { addProblemApi, updateProblemApi } from "@/redux/auth/authActions";
+import { addNotificationAPI, updateProblemApi } from "@/redux/auth/authActions";
 import toast from "react-hot-toast";
 import { Fancybox as NativeFancybox } from "@fancyapps/ui";
 import { useState } from "react";
 import LoadingSvg from "../loader/loadingSvg";
 import { useRouter } from "next/navigation";
 
-const ProblemForm = ({ onSuccess, problem }: any) => {
+const AdminNotificationsForm = ({ onSuccess, problem }: any) => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -20,11 +20,7 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
     reset,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(problemValidation),
-    defaultValues: {
-      company: problem?.company || "",
-      problem: problem?.problem || "",
-    },
+    resolver: zodResolver(notificationValidation),
   });
 
   const dispatch = useDispatch<any>();
@@ -46,9 +42,9 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
         router.push("/home");
       } else {
         // ADD
-        await dispatch(addProblemApi(data)).unwrap();
+        await dispatch(addNotificationAPI(data)).unwrap();
 
-        toast.success("Problem added successfully!");
+        toast.success("Notification added successfully!");
         reset();
       }
 
@@ -56,7 +52,7 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
         await onSuccess();
       }
 
-      NativeFancybox.close();
+      // NativeFancybox.close();
     } catch (err: any) {
       toast.error(err?.message || "Something went wrong");
     } finally {
@@ -71,39 +67,16 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
         onSubmit={handleSubmit(submitForm)}
       >
         <div className="form-group">
-          <label htmlFor="company">Which company is this regarding?</label>
-          <select
-            id="company"
-            className="form-control py-3!"
-            {...register("company")}
-          >
-            <option value="">Select Company</option>
-            <option value="Pathao">Pathao</option>
-            <option value="inDrive">Indrive</option>
-            <option value="Yango">Yango</option>
-            <option value="Sajilo">Sajilo</option>
-            <option value="Firiri">Firiri</option>
-            {/* <option value="IDF">IDF</option>
-            <option value="ChiyaCut">ChiyaCut</option> */}
-          </select>
-          {errors.company && (
-            <p className="text-red text-sm  mt-1">
-              {String(errors.company.message)}
-            </p>
-          )}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="message">What problem are you facing?</label>
+          <label htmlFor="message">Notifications</label>
           <textarea
             id="message"
             className="form-control min-h-30"
-            placeholder="Describe Problem Here"
-            {...register("problem")}
+            placeholder="Describe Notifications Here"
+            {...register("notification")}
           />
-          {errors.problem && (
+          {errors.notification && (
             <p className="text-red text-sm mt-1">
-              {String(errors.problem.message)}
+              {String(errors.notification.message)}
             </p>
           )}
         </div>
@@ -117,7 +90,7 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
           ) : problem ? (
             "Update Problem "
           ) : (
-            "Add Problem +"
+            "Add Notifications +"
           )}
         </button>
       </form>
@@ -125,4 +98,4 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
   );
 };
 
-export default ProblemForm;
+export default AdminNotificationsForm;

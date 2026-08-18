@@ -1,6 +1,5 @@
 import { getUserById } from "@/api/auth";
 import RegisterForm from "@/app/components/forms/registerForm";
-import React from "react";
 
 const UpdateProduct = async ({ params }: any) => {
   const id = (await params).id;
