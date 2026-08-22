@@ -19,7 +19,15 @@ interface NotificationType {
   updatedAt: string;
 }
 
-const AdminNotificationsForm = ({ onSuccess, problem }: any) => {
+type Props = {
+  refreshNotifications: () => void;
+};
+
+const AdminNotificationsForm = ({
+  onSuccess,
+  problem,
+  refreshNotifications,
+}: any) => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
@@ -55,6 +63,9 @@ const AdminNotificationsForm = ({ onSuccess, problem }: any) => {
 
         toast.success("Notification added successfully!");
         reset();
+        if (refreshNotifications) {
+          await refreshNotifications();
+        }
       }
 
       if (onSuccess) {

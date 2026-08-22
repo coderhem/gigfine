@@ -221,7 +221,7 @@ const filteredProblems = problems.filter((problem:any) =>
             <MdOutlineReportProblem />
             <span> User Problems</span>
           </button>
-          <Link href={"/notifications"} className="w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex flex-wrap gap-2 items-center hover:bg-primary">+ Add Notificatin</Link>
+          <Link href={"/admin/notifications/add"} className="w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex flex-wrap gap-2 items-center hover:bg-primary">+ Add Notifications</Link>
         </nav>
 
         <div className="absolute bottom-5 left-0 w-full px-4">

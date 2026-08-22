@@ -16,12 +16,12 @@ const Notifications = (props: Props) => {
   const [notification, setNotification] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) {
-      router.push("/");
-    }
-    fetchNotification();
-  }, [user, router]);
+  // useEffect(() => {
+  //   if (!a) {
+  //     router.push("/");
+  //   }
+  //   fetchNotification();
+  // }, [user, router]);
 
   const fetchNotification = async () => {
     setIsLoading(true);
