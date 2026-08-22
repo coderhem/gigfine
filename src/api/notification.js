@@ -26,3 +26,11 @@ export async function deleteNotification(id) {
   );
   return response.data;
 }
+
+export async function readNotification(id) {
+  const response = await axios.patch(
+    `https://gigfine-api.vercel.app/api/notification/${id}/read`
+  );
+
+  return response.data;
+}

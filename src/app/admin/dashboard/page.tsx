@@ -5,7 +5,7 @@ import { getAllProblem } from "@/api/problem";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaBiking, FaUser } from "react-icons/fa";
-import { MdOutlineReportProblem } from "react-icons/md";
+import { MdOutlineReportProblem, MdPlusOne } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import LoadingSvg from "../../components/loader/loadingSvg";
 import UpdateBtn from "../../components/crudOperationBtns/updateBtn";
@@ -13,6 +13,7 @@ import DeleteBtn from "../../components/crudOperationBtns/deleteBtn";
 import toast from "react-hot-toast";
 import { HiShieldCheck } from "react-icons/hi2";
 import Pagination from "@/app/components/paginationUI/pagination";
+import Link from "next/link";
 
 type MenuType = "users" | "problems" | "riders" | "passenger";
 
@@ -28,22 +29,6 @@ export default function Dashboard() {
   const [search, setSearch] = useState("");
 
   const usersPerPage = 10;
-
-  // const totalPages = Math.ceil(users.length / usersPerPage);
-  // const startIndex = (page - 1) * usersPerPage;
-  // const endIndex = startIndex + usersPerPage;
-
-  // const currentUsers = users.slice(startIndex, endIndex);
-  // const filteredUsers = users.filter((user, setProblems) => {
-  //   const searchTerm = search.toLowerCase();
-
-  //   return (
-  //     user.name?.toLowerCase().includes(searchTerm) ||
-  //     user.email?.toLowerCase().includes(searchTerm) ||
-  //     user.phone?.toLowerCase().includes(searchTerm) ||
-  //     user.vehicleNumber?.toLowerCase().includes(searchTerm)
-  //   );
-  // });
 
   const searchTerm = search.toLowerCase();
 
@@ -196,13 +181,13 @@ const filteredProblems = problems.filter((problem:any) =>
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside className="fixed z-100 left-0 top-0 h-screen w-72 bg-secondary text-white shadow-lg">
-        <div className="border-b border-white/20 p-6">
+      <aside className="fixed z-100 left-0 top-0 h-screen w-40 lg:w-72 bg-secondary text-white shadow-lg">
+        <div className="border-b border-white/20 p-3 md:p-6">
           <div className="flex items-center gap-2 mb-2">
-            <HiShieldCheck className="text-3xl text-white" />
-            <h2 className="text-2xl font-bold mb-0">Admin Dashboard</h2>
+            <HiShieldCheck className="text-xl md:text-3xl text-white" />
+            <h2 className="text-lg md:text-2xl font-bold mb-0">Admin Dashboard</h2>
           </div>
-          <p className="mt-1 text-sm text-gray-200 pl-9">
+          <p className="mt-1 text-sm text-gray-200 pl-5 md:pl-9">
             Welcome back! Manage users, reports, and system operations.
           </p>
         </div>
@@ -210,7 +195,7 @@ const filteredProblems = problems.filter((problem:any) =>
         <nav className="p-4 space-y-3">
           <button
             onClick={() => setActiveMenu("users")}
-            className={`w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex gap-2 items-center ${
+            className={`w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex flex-wrap gap-2 items-center ${
               activeMenu === "users" ? "bg-primary" : "hover:bg-white/10"
             }`}
           >
@@ -219,7 +204,7 @@ const filteredProblems = problems.filter((problem:any) =>
           </button>
           <button
             onClick={() => setActiveMenu("passenger")}
-            className={`w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex gap-2 items-center ${
+            className={`w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex flex-wrap gap-2 items-center ${
               activeMenu === "passenger" ? "bg-primary" : "hover:bg-white/10"
             }`}
           >
@@ -229,13 +214,14 @@ const filteredProblems = problems.filter((problem:any) =>
 
           <button
             onClick={() => setActiveMenu("problems")}
-            className={`w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex gap-2 items-center ${
+            className={`w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex flex-wrap gap-2 items-center ${
               activeMenu === "problems" ? "bg-primary" : "hover:bg-white/10"
             }`}
           >
             <MdOutlineReportProblem />
             <span> User Problems</span>
           </button>
+          <Link href={"/notifications"} className="w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex flex-wrap gap-2 items-center hover:bg-primary">+ Add Notificatin</Link>
         </nav>
 
         <div className="absolute bottom-5 left-0 w-full px-4">
@@ -246,8 +232,8 @@ const filteredProblems = problems.filter((problem:any) =>
       </aside>
 
       {/* Content */}
-      <div className="ml-72 flex-1 p-4 overflow-hidden">
-        <div className="mb-5 fixed z-20 left-72 p-5 bg-white shadow right-0 top-0 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="ml-40 lg:ml-72 flex-1 p-4 overflow-hidden">
+        <div className="mb-5 fixed z-20 left-40 lg:left-72 p-5 bg-white shadow right-0 top-0 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <h2 className="text-xl font-semibold text-secondary">
             Total Users{" "}
             <span className="text-primary">({filteredUsers.length})</span>
@@ -275,19 +261,19 @@ const filteredProblems = problems.filter((problem:any) =>
               User Details
             </h1>
 
-            <div className="relative rounded-xl bg-white px-6 pt-6 pb-14 shadow counter-wrapper">
+            <div className="relative rounded-xl bg-white px-3 lg:px-6 pt-6 pb-14 shadow counter-wrapper">
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="p-3 text-start">S.No.</th>
-                      <th className="p-3 text-left">Name</th>
-                      <th className="p-3 text-left">Vehicle No.</th>
+                      <th className="p-2 lg:p-3 text-start">S.No.</th>
+                      <th className="p-2 lg:p-3 text-left">Name</th>
+                      <th className="p-2 lg:p-3 text-left">Vehicle No.</th>
                       <th className="px-4 py-3 text-start">Email</th>
-                      <th className="p-3 text-left">Phone</th>
-                      <th className="p-3 text-left">Status</th>
-                      <th className="p-3 text-left">Created Date</th>
-                      <th className="p-3 text-left">Actions</th>
+                      <th className="p-2 lg:p-3 text-left">Phone</th>
+                      <th className="p-2 lg:p-3 text-left">Status</th>
+                      <th className="p-2 lg:p-3 text-left">Created Date</th>
+                      <th className="p-2 lg:p-3 text-left">Actions</th>
                     </tr>
                   </thead>
 
@@ -303,25 +289,25 @@ const filteredProblems = problems.filter((problem:any) =>
                     ) : currentUsers?.length > 0 ? (
                       currentUsers.map((item: any) => (
                         <tr key={item._id}>
-                          <td className="counter p-3"></td>
-                          <td className="p-3">{item.name}</td>
-                          <td className="p-3">{item.vehicleNumber}</td>
-                          <td className="p-3">{item.email}</td>
-                          <td className="p-3">
+                          <td className="counter p-2 lg:p-3"></td>
+                          <td className="p-2 lg:p-3">{item.name}</td>
+                          <td className="p-2 lg:p-3">{item.vehicleNumber}</td>
+                          <td className="p-2 lg:p-3">{item.email}</td>
+                          <td className="p-2 lg:p-3">
                             <button onClick={() => openWhatsApp(item.phone)}>
                               {item.phone}
                             </button>
                           </td>
                           <td
-                            className={`${item.isActive ? "text-green-600" : "text-red"} p-3 `}
+                            className={`${item.isActive ? "text-green-600" : "text-red"} p-2 lg:p-3 `}
                           >
                             {user?.isActive ? "Active" : "Inactive"}
                           </td>
-                          <td className="p-3">
+                          <td className="p-2 lg:p-3">
                             {" "}
                             {new Date(item.createdAt).toLocaleString()}
                           </td>
-                          <td className="p-3">
+                          <td className="p-2 lg:p-3">
                             <div className="flex gap-2">
                               <DeleteBtn
                                 deleteIcon

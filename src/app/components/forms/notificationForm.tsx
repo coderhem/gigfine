@@ -9,11 +9,20 @@ import { Fancybox as NativeFancybox } from "@fancyapps/ui";
 import { useState } from "react";
 import LoadingSvg from "../loader/loadingSvg";
 import { useRouter } from "next/navigation";
+import { readNotification } from "@/api/notification";
+
+interface NotificationType {
+  _id: string;
+  notification: string;
+  read: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const AdminNotificationsForm = ({ onSuccess, problem }: any) => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-
+  const [notifications, setNotifications] = useState<NotificationType[]>([]);
   const {
     register,
     handleSubmit,
@@ -59,6 +68,20 @@ const AdminNotificationsForm = ({ onSuccess, problem }: any) => {
       setIsLoading(false);
     }
   }
+
+  const handleRead = async (id: string) => {
+    try {
+      await readNotification(id);
+
+      setNotifications((prev) =>
+        prev.map((item) => (item._id === id ? { ...item, read: true } : item)),
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const unreadCount = notifications.filter((item) => !item.read).length;
 
   return (
     <>

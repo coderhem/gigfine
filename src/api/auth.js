@@ -9,7 +9,7 @@ export async function registerUser({
   roles,
 }) {
   const response = await axios.post(
-    "https://gigfine-api.vercel.app/api/auth/register",
+    "https://api.gigfine.com/api/auth/register",
     {
       name,
       email,
@@ -24,7 +24,7 @@ export async function registerUser({
 
 export async function loginUser({ phone, password, email }) {
   const response = await axios.post(
-    "https://gigfine-api.vercel.app/api/auth/login",
+    "https://api.gigfine.com/api/auth/login",
     {
       phone,
       password,
@@ -37,7 +37,7 @@ export async function loginUser({ phone, password, email }) {
 
 export async function forgotPassword({ email }) {
   const response = await axios.post(
-    "https://gigfine-api.vercel.app/api/auth/forgot-password",
+    "https://api.gigfine.com/api/auth/forgot-password",
     {
       email,
     },
@@ -47,7 +47,7 @@ export async function forgotPassword({ email }) {
 
 export async function resetPassword({ userId, token, password }) {
   const response = await axios.post(
-    `https://gigfine-api.vercel.app/api/auth/reset-password?userId=${userId}&token=${token}`,
+    `https://api.gigfine.com/api/auth/reset-password?userId=${userId}&token=${token}`,
     {
       password,
     },
@@ -57,14 +57,14 @@ export async function resetPassword({ userId, token, password }) {
 
 export async function getAllUser(page, limit=10) {
   const response = await axios.get(
-    `https://gigfine-api.vercel.app/api/auth/users?page=${page}&limit=${limit}`,
+    `https://api.gigfine.com/api/auth/users?page=${page}&limit=${limit}`,
   );
   return response.data;
 }
 
 export async function getUserById(id) {
   const response = await axios.get(
-    `https://gigfine-api.vercel.app/api/auth/users/${id}`,
+    `https://api.gigfine.com/api/auth/users/${id}`,
   );
   localStorage.setItem("token", response.data.token);
 
@@ -73,7 +73,7 @@ export async function getUserById(id) {
 
 export async function updateUser(id, data) {
   const response = await axios.put(
-    `https://gigfine-api.vercel.app/api/users/${id}`,
+    `https://api.gigfine.com/api/users/${id}`,
     data,
     {
       headers: {
@@ -86,7 +86,7 @@ export async function updateUser(id, data) {
 
 export async function deleteUser(id) {
   const response = await axios.delete(
-    `https://gigfine-api.vercel.app/api/users/${id}`,
+    `https://api.gigfine.com/api/users/${id}`,
     {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
