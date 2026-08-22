@@ -32,17 +32,17 @@ const AdminNotifications = (props: Props) => {
   };
   return (
     <>
-      <section className="pt-5 h-full flex justify-center items-center">
-        <div className="container w-[40%]">
+      <section className="pt-5 h-full max-md:flex-wrap gap-3 flex justify-center items-center">
+        <div className="container md:w-[40%]">
           <h1 className="h3 mb-5">Add Notifications Here</h1>
           <AdminNotificationsForm refreshNotifications={fetchNotification}/>
         </div>
-        <div className="w-[60%] pt-5 mt-5 bg-secondary/10 h-full">
+        <div className="md:w-[60%] pt-5 mt-5 bg-secondary/10 h-full">
           <div className="container">
             <h1 className="h4 text-secondary">Notifications</h1>
 
             <div className="bg-secondary/40 p-3">
-              <div className="text-lg max-h-120 scrollbar-none overflow-scroll  p-3 rounded">
+              <div className="text-lg max-h-dvh scrollbar-none overflow-scroll  p-3 rounded">
                 {isLoading ? (
                   <LoadingSvg />
                 ) : notification.length === 0 ? (
