@@ -13,9 +13,7 @@ import LoadingSvg from "../loader/loadingSvg";
 import Confetti from "react-confetti";
 
 const RegisterForm = () => {
-  const [selectedRole, setSelectedRole] = useState<"rider" | "passenger">(
-    "rider",
-  );
+  const [selectedRole] = useState<"rider" | "passenger">("rider");
   const [show, setShow] = useState(false);
   const router = useRouter();
 
@@ -179,7 +177,7 @@ const RegisterForm = () => {
             width={window.innerWidth}
             height={window.innerHeight}
             recycle={false}
-            numberOfPieces={600}
+            numberOfPieces={10}
           />
           {/* <h1 className="text-3xl font-bold text-center mt-20">
             🎉 Congratulations!

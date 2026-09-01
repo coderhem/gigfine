@@ -4,7 +4,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { registerUserApi } from "@/redux/auth/authActions.js";
+import {
+  registerPassengerApi,
+  updatePassengerApi,
+} from "@/redux/auth/authActions.js";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerValidation } from "@/validation/register.schema.js";
 import toast from "react-hot-toast";
@@ -12,10 +15,8 @@ import { useDispatch } from "react-redux";
 import LoadingSvg from "../loader/loadingSvg";
 import Confetti from "react-confetti";
 
-const PassengerRegisterForm = () => {
-  const [selectedRole, setSelectedRole] = useState<"rider" | "passenger">(
-    "rider",
-  );
+const PassengerRegisterForm = ({ passenger }: any) => {
+  const [selectedRole] = useState<"rider" | "passenger">("rider");
   const [show, setShow] = useState(false);
   const router = useRouter();
 
@@ -28,6 +29,10 @@ const PassengerRegisterForm = () => {
     resolver: zodResolver(registerValidation),
     defaultValues: {
       role: "rider",
+      name: passenger?.name || "",
+      phone: passenger?.phone || "",
+      email: passenger?.email || "",
+      password: passenger?.password || "",
     },
     shouldUnregister: true,
   });
@@ -35,22 +40,37 @@ const PassengerRegisterForm = () => {
   useEffect(() => {
     setValue("role", selectedRole, { shouldValidate: true });
   }, [selectedRole, setValue]);
+
   const [loading, setLoading] = useState(false);
   // const { loading, error, user } = useSelector((state: any) => state.auth);
 
   const dispatch = useDispatch<any>();
+
   const [animateMessage, setAnimateMessage] = useState(false);
 
   async function submitForm(data: any) {
     setLoading(true);
     try {
-      await dispatch(registerUserApi(data)).unwrap();
-      toast.success("Registered successfully!");
-      setAnimateMessage(true);
+      if (passenger?._id) {
+        await dispatch(
+          updatePassengerApi({
+            id: passenger._id,
+            ...data,
+          }),
+        ).unwrap();
+        toast.success("Passenger updated successfully!");
+        router.push("/admin/dashboard");
+      } else {
+        await dispatch(registerPassengerApi(data)).unwrap();
 
-      setTimeout(() => {
-        router.push("/");
-      }, 8000);
+        toast.success("Registered successfully!");
+
+        setAnimateMessage(true);
+
+        setTimeout(() => {
+          router.push("/");
+        }, 4000);
+      }
     } catch (err: any) {
       toast.error(err);
     } finally {
@@ -89,6 +109,7 @@ const PassengerRegisterForm = () => {
               <p className="text-red text-sm mt-1">{errors.phone.message}</p>
             )}
           </div>
+          {/* Email */}
           <div className="form-group mb-4">
             <input
               type="text"
@@ -102,7 +123,7 @@ const PassengerRegisterForm = () => {
           </div>
 
           {/* Password */}
-          <div className="form-group mb-4 w-full!">
+          <div className="form-group mb-4">
             <div className="relative">
               <input
                 type={show ? "text" : "password"}
@@ -110,7 +131,6 @@ const PassengerRegisterForm = () => {
                 className="form-control"
                 {...register("password")}
               />
-
               {show ? (
                 <FaEye
                   className={`absolute right-4 top-1/2 -translate-y-1/2 text-black/60 text-xl cursor-pointer`}
@@ -123,6 +143,9 @@ const PassengerRegisterForm = () => {
                 />
               )}
             </div>
+            <p className="text-xs px-1 text-secondary/70 mb-0">
+              Minimun 8 character is required.
+            </p>
             {errors.password && (
               <p className="text-red text-sm mt-1">{errors.password.message}</p>
             )}
@@ -137,9 +160,11 @@ const PassengerRegisterForm = () => {
         >
           {loading ? (
             <>
-              {"Submitting"}
-              <LoadingSvg />{" "}
+              {passenger?._id ? "Updating" : "Submitting"}
+              <LoadingSvg />
             </>
+          ) : passenger?._id ? (
+            "Update Passenger"
           ) : (
             "Register"
           )}

@@ -9,8 +9,7 @@ const Register = () => {
   const { user } = useSelector((state: any) => state.auth);
   const router = useRouter();
 
-  const [showForm, setFormShow] = useState("active");
-
+  // const [showForm, setShowForm] = useState("rider");
   useEffect(() => {
     if (user) {
       router.push("/home");
@@ -29,25 +28,35 @@ const Register = () => {
               Join GIGFINE to report issues and get support.
             </p>
             <div className="flex gap-5 mt-5">
+              {/* <button
+                onClick={() => setShowForm("rider")}
+                className={`btn rounded-full text-sm focus:ring-0 focus:bg-primary focus:text-white ${
+                  showForm === "rider" ? "btn-primary" : "btn-outline"
+                }`}
+              >
+                Rider
+              </button> */}
               <button
-                // onClick={() => {
-                //   setFormShow;
-                // }}
-                className="btn btn-primary rounded-full text-sm"
+                // onClick={() => setShowForm("rider")}
+                className={`btn btn-primary rounded-full text-sm focus:ring-0 focus:bg-primary focus:text-white 
+                  `}
               >
                 Rider
               </button>
+
               {/* <button
-                onClick={() => {
-                  setFormShow;
-                }}
-                className="btn btn-primary rounded-full text-sm"
+                onClick={() => setShowForm("passenger")}
+                className={`btn rounded-full text-sm focus:ring-0 focus:bg-primary focus:text-white ${
+                  showForm === "passenger" ? "btn-primary" : "btn-outline"
+                }`}
               >
                 Passenger
               </button> */}
+   
             </div>
           </div>
-          {showForm === "active" ? <RegisterForm /> : <PassengerRegisterForm />}
+          <RegisterForm />
+          {/* {showForm === "rider" ? <RegisterForm /> : <PassengerRegisterForm />} */}
         </div>
       </div>
     </div>

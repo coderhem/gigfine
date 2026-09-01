@@ -1,11 +1,18 @@
 import axios from "axios";
 
-export async function addProblem({ company, problem }) {
+export async function addPassengerProblem({
+  driverName,
+  vehicleNumber,
+  company,
+  problem,
+}) {
   const token = localStorage.getItem("token");
 
   const response = await axios.post(
-    "https://gigfine-api.vercel.app/api/problem",
+    "https://gigfine-api.vercel.app/api/passenger/problems/add",
     {
+      driverName,
+      vehicleNumber,
       company,
       problem,
     },
@@ -18,37 +25,32 @@ export async function addProblem({ company, problem }) {
   return response.data;
 }
 
-export async function getAllProblem() {
-  const token = localStorage.getItem("token");
+export async function getAllPassengerProblem() {
   const response = await axios.get(
-    "https://gigfine-api.vercel.app/api/problem/all",
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
+    "https://gigfine-api.vercel.app/api/passenger/problems/all",
   );
   return response.data;
 }
 
-export async function getProblem() {
-  const token = localStorage.getItem("token");
+// export async function getPassengerProblemById(id) {
+//   const token = localStorage.getItem("token");
 
-  const response = await axios.get(
-    "https://gigfine-api.vercel.app/api/problem",
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  );
-  return response.data;
-}
+//   const response = await axios.get(
+//     `https://gigfine-api.vercel.app/api/passenger/problems/${id}`,
+//     {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//     },
+//   );
+//   return response.data;
+// }
+
 export async function deleteProblem(id) {
   const token = localStorage.getItem("token");
 
   const response = await axios.delete(
-    `https://gigfine-api.vercel.app/api/problem/${id}`,
+    `https://gigfine-api.vercel.app/api/passenger/problems/${id}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -58,11 +60,11 @@ export async function deleteProblem(id) {
   return response.data;
 }
 
-export async function getProblemById(id) {
+export async function getPassengerProblemById(id) {
   const token = localStorage.getItem("token");
 
   const response = await axios.get(
-    `https://gigfine-api.vercel.app/api/problem/${id}`,
+    `https://gigfine-api.vercel.app/api/passenger/problems/${id}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -72,11 +74,11 @@ export async function getProblemById(id) {
   return response.data;
 }
 
-export async function updateProblem(id, data) {
+export async function updatePassengerProblem(id, data) {
   const token = localStorage.getItem("token");
 
   const response = await axios.put(
-    `https://gigfine-api.vercel.app/api/problem/${id}`,
+    `https://gigfine-api.vercel.app/api/passenger/problems/${id}`,
     data,
     {
       headers: {

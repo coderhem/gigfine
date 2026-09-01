@@ -14,6 +14,8 @@ import toast from "react-hot-toast";
 import { HiShieldCheck } from "react-icons/hi2";
 import Pagination from "@/app/components/paginationUI/pagination";
 import Link from "next/link";
+import { getAllPassenger } from "@/api/passenger";
+import PassengerDetails from "../components/pasanger";
 
 type MenuType = "users" | "problems" | "riders" | "passenger";
 
@@ -22,7 +24,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [users, setUsers] = useState<any[]>([]);
   const [problems, setProblems] = useState([]);
-  const [passenger, setPassenger] = useState([]);
+  const [passenger, setPassenger] = useState<any[]>([]);
   const [userLoading, setUserLoading] = useState(true);
   const [problemLoading, setProblemLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -32,20 +34,22 @@ export default function Dashboard() {
 
   const searchTerm = search.toLowerCase();
 
-const filteredUsers = users.filter((user) =>
-  user.name?.toLowerCase().includes(searchTerm) ||
-  user.email?.toLowerCase().includes(searchTerm) ||
-  user.phone?.toLowerCase().includes(searchTerm) ||
-  user.vehicleNumber?.toLowerCase().includes(searchTerm)
-);
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name?.toLowerCase().includes(searchTerm) ||
+      user.email?.toLowerCase().includes(searchTerm) ||
+      user.phone?.toLowerCase().includes(searchTerm) ||
+      user.vehicleNumber?.toLowerCase().includes(searchTerm),
+  );
 
-const filteredProblems = problems.filter((problem:any) =>
-  problem.company?.toLowerCase().includes(searchTerm) ||
-  problem.problem?.toLowerCase().includes(searchTerm) ||
-  problem.user?.vehicleNumber?.toLowerCase().includes(searchTerm) ||
-  problem.user?.name?.toLowerCase().includes(searchTerm) ||
-  problem.user?.email?.toLowerCase().includes(searchTerm)
-);
+  const filteredProblems = problems.filter(
+    (problem: any) =>
+      problem.company?.toLowerCase().includes(searchTerm) ||
+      problem.problem?.toLowerCase().includes(searchTerm) ||
+      problem.user?.vehicleNumber?.toLowerCase().includes(searchTerm) ||
+      problem.user?.name?.toLowerCase().includes(searchTerm) ||
+      problem.user?.email?.toLowerCase().includes(searchTerm),
+  );
 
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
@@ -57,6 +61,19 @@ const filteredProblems = problems.filter((problem:any) =>
     getAllUser()
       .then((data) => {
         setUsers(data.users || data);
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+      .finally(() => {
+        setUserLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    getAllPassenger()
+      .then((data) => {
+        setPassenger(data.passenger || data);
       })
       .catch((err) => {
         console.log(err);
@@ -185,7 +202,9 @@ const filteredProblems = problems.filter((problem:any) =>
         <div className="border-b border-white/20 p-3 md:p-6">
           <div className="flex items-center gap-2 mb-2">
             <HiShieldCheck className="text-xl md:text-3xl text-white" />
-            <h2 className="text-lg md:text-2xl font-bold mb-0">Admin Dashboard</h2>
+            <h2 className="text-lg md:text-2xl font-bold mb-0">
+              Admin Dashboard
+            </h2>
           </div>
           <p className="mt-1 text-sm text-gray-200 pl-5 md:pl-9">
             Welcome back! Manage users, reports, and system operations.
@@ -221,7 +240,12 @@ const filteredProblems = problems.filter((problem:any) =>
             <MdOutlineReportProblem />
             <span> User Problems</span>
           </button>
-          <Link href={"/admin/notifications/add"} className="w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex flex-wrap gap-2 items-center hover:bg-primary">+ Add Notifications</Link>
+          <Link
+            href={"/admin/notifications/add"}
+            className="w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex flex-wrap gap-2 items-center hover:bg-primary"
+          >
+            + Add Notifications
+          </Link>
         </nav>
 
         <div className="absolute bottom-5 left-0 w-full px-4">
@@ -308,7 +332,7 @@ const filteredProblems = problems.filter((problem:any) =>
                             {new Date(item.createdAt).toLocaleString()}
                           </td>
                           <td className="p-2 lg:p-3">
-                            <div className="flex gap-2">
+                            <td className="flex gap-2">
                               <DeleteBtn
                                 deleteIcon
                                 onConfirm={() => handleDelete(item._id)}
@@ -317,7 +341,7 @@ const filteredProblems = problems.filter((problem:any) =>
                                 updateIcon
                                 btnLink={`/admin/user-management/${item.id}`}
                               />
-                            </div>
+                            </td>
                           </td>
                         </tr>
                       ))
@@ -343,73 +367,18 @@ const filteredProblems = problems.filter((problem:any) =>
           </>
         )}
 
+        {/* Passenger Details */}
         {activeMenu === "passenger" && (
           <div className="pt-8 counter-wrapper">
-            <h1 className="mb-6 pt-18 text-3xl font-bold text-[#0C589C]">
-              Passenger Details
-            </h1>
-
-            <div className="rounded-xl bg-white p-6 shadow">
-              <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="px-4 py-3 text-start">S.No.</th>
-                      <th className="p-3 text-left">Name</th>
-                      <th className="p-3 text-left">Phone</th>
-                      {/* <th className="p-3 text-left">Vechile Number</th> */}
-                      <th className="p-3 text-left">Created Date</th>
-                      <th className="p-3 text-left">Actions</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {/* {users.map((user: any) => (
-                      <tr key={user._id}>
-                        <td className="p-3 counter"></td>
-                        <td className="p-3">{user.name}</td>
-                        <td className="p-3">{user.phone}</td>
-                        <td className="p-3 text-green-600">
-                          {user.vehicleNumber}
-                        </td>
-                        <td className="p-3">
-                          {" "}
-                          {new Date(user.createdAt).toLocaleString()}
-                        </td>
-                        <td className="p-3">
-                          <tr>
-                            <td className="pr-5">
-                              <DeleteBtn
-                                deleteIcon
-                                onConfirm={() => handleDelete(user._id)}
-                              />
-                            </td>
-                            <td>
-                              <UpdateBtn updateIcon customClass="min-w-full" />
-                            </td>
-                          </tr>
-                        </td>
-                      </tr>
-                    ))} */}
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="pt-6 text-center text-gray-500"
-                      >
-                        There are no users at this time.
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <PassengerDetails />
           </div>
         )}
 
+        {/* Problems */}
         {activeMenu === "problems" && (
           <div>
             <h1 className="mb-6 pt-24 text-3xl font-bold text-secondary">
-              User Problems
+              Rider Problems
             </h1>
 
             <div className="overflow-x-auto">
@@ -418,6 +387,7 @@ const filteredProblems = problems.filter((problem:any) =>
                   <tr>
                     <th className="px-4 py-3 text-start">S.No.</th>
                     <th className="px-4 py-3 text-start">Name</th>
+                    {/* <th className="px-4 py-3 text-start">Role</th> */}
                     <th className="px-4 py-3 text-start">Phone</th>
                     <th className="px-4 py-3 text-start">Company</th>
                     <th className="px-4 py-3 text-start">Vechile No</th>
@@ -445,6 +415,7 @@ const filteredProblems = problems.filter((problem:any) =>
                         >
                           <td className="px-4 py-3 counter"></td>
                           <td className="px-4 py-3">{problem.user?.name}</td>
+                          {/* <td className="px-4 py-3">{problem.user?.roles}</td> */}
                           <td className="px-4 py-3">
                             <button
                               onClick={() =>

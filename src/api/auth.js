@@ -23,17 +23,23 @@ export async function registerUser({
 }
 
 export async function loginUser({ phone, password, email }) {
-  const response = await axios.post(
-    "https://api.gigfine.com/api/auth/login",
-    {
-      phone,
-      password,
-      email,
-    },
-  );
+  const response = await axios.post("https://api.gigfine.com/api/auth/login", {
+    phone,
+    password,
+    email,
+  });
   localStorage.setItem("token", response.data.token);
   return response.data;
 }
+
+export const selectRole = async (data) => {
+  const response = await axios.post(
+    "https://api.gigfine.com/api/auth/select-role",
+    data,
+  );
+
+  return response.data;
+};
 
 export async function forgotPassword({ email }) {
   const response = await axios.post(
@@ -55,7 +61,7 @@ export async function resetPassword({ userId, token, password }) {
   return response.data;
 }
 
-export async function getAllUser(page, limit=10) {
+export async function getAllUser(page, limit = 10) {
   const response = await axios.get(
     `https://api.gigfine.com/api/auth/users?page=${page}&limit=${limit}`,
   );

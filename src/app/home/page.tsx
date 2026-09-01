@@ -16,6 +16,7 @@ import LoadingSvg from "../components/loader/loadingSvg";
 // import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import PassengerProblemForm from "../components/forms/passengerProblemForm";
 
 const Home = () => {
   const { user } = useSelector((state: any) => state.auth);
@@ -181,6 +182,12 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* <section className="">
+        <div className="container">
+          <PassengerProblemForm/>
+        </div>
+      </section> */}
     </>
   );
 };
