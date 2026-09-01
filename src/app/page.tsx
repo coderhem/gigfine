@@ -2,16 +2,24 @@
 import LoginForm from "@/app/components/forms/loginForm";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import ProtestFancyBox from "./components/fancybox/protestFancyBox";
+import { logout } from "@/redux/auth/authSlice";
 // import Fancybox from "./components/fancybox/popup";
 // import { Fancybox as NativeFancybox } from "@fancyapps/ui";
 
 const Login = () => {
   const { user } = useSelector((state: any) => state.auth);
   const router = useRouter();
+  const dispatch = useDispatch();
+
   useEffect(() => {
-    if (user) {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      dispatch(logout());
+      return;
+    }
+    if (user && token) {
       router.push("/home");
     }
   }, [user, router]);

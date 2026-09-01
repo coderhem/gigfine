@@ -1,9 +1,10 @@
-import axios from "axios";
+// import axios from "axios";
+import api from "./axios.js";
 
 export async function addProblem({ company, problem }) {
   const token = localStorage.getItem("token");
 
-  const response = await axios.post(
+  const response = await api.post(
     "https://gigfine-api.vercel.app/api/problem",
     {
       company,
@@ -20,7 +21,7 @@ export async function addProblem({ company, problem }) {
 
 export async function getAllProblem() {
   const token = localStorage.getItem("token");
-  const response = await axios.get(
+  const response = await api.get(
     "https://gigfine-api.vercel.app/api/problem/all",
     {
       headers: {
@@ -34,7 +35,7 @@ export async function getAllProblem() {
 export async function getProblem() {
   const token = localStorage.getItem("token");
 
-  const response = await axios.get(
+  const response = await api.get(
     "https://gigfine-api.vercel.app/api/problem",
     {
       headers: {
@@ -47,7 +48,7 @@ export async function getProblem() {
 export async function deleteProblem(id) {
   const token = localStorage.getItem("token");
 
-  const response = await axios.delete(
+  const response = await api.delete(
     `https://gigfine-api.vercel.app/api/problem/${id}`,
     {
       headers: {
@@ -61,7 +62,7 @@ export async function deleteProblem(id) {
 export async function getProblemById(id) {
   const token = localStorage.getItem("token");
 
-  const response = await axios.get(
+  const response = await api.get(
     `https://gigfine-api.vercel.app/api/problem/${id}`,
     {
       headers: {
@@ -75,7 +76,7 @@ export async function getProblemById(id) {
 export async function updateProblem(id, data) {
   const token = localStorage.getItem("token");
 
-  const response = await axios.put(
+  const response = await api.put(
     `https://gigfine-api.vercel.app/api/problem/${id}`,
     data,
     {
