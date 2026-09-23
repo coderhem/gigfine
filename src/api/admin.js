@@ -44,7 +44,7 @@ export const adminLogin = async ({ phone, password }) => {
 
 // Validates a token handed over from the user site and stores it if it belongs to an admin
 export const adminLoginWithToken = async (token) => {
-  const res = await axios.get(`${API_BASE_URL}/api/users/me`, {
+  const res = await axios.get(`${API_BASE_URL}/api/v1/users/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!isAdmin(res.data)) {
@@ -56,13 +56,13 @@ export const adminLoginWithToken = async (token) => {
 
 // ---------- Users / Riders ----------
 
-export const getAllUsers = async () => (await adminApi.get("/api/users")).data;
+export const getAllUsers = async () => (await adminApi.get("/api/v1/users")).data;
 
 export const getAllRiders = async () =>
-  (await adminApi.get("/api/riders")).data;
+  (await adminApi.get("/api/v1/riders")).data;
 
 export const deleteUser = async (id) =>
-  (await adminApi.delete(`/api/users/${id}`)).data;
+  (await adminApi.delete(`/api/v1/users/${id}`)).data;
 
 // ---------- Reports ----------
 
@@ -73,11 +73,11 @@ export const getReports = async ({ userId, status, from, to } = {}) => {
   if (status) params.status = status;
   if (from) params.from = `${from}T00:00:00`;
   if (to) params.to = `${to}T23:59:59`;
-  return (await adminApi.get("/api/reports", { params })).data;
+  return (await adminApi.get("/api/v1/reports", { params })).data;
 };
 
 export const updateReportStatus = async (reportId, status) =>
-  (await adminApi.put(`/api/reports/${reportId}/status`, { status })).data;
+  (await adminApi.put(`/api/v1/reports/${reportId}/status`, { status })).data;
 
 // Mirrors ReportStatus.allowedNext() in the backend
 export const NEXT_STATUSES = {

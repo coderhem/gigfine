@@ -11,7 +11,7 @@ export const REPORT_STATUS_LABEL = {
 
 export async function addProblem({ service, company, problem }) {
   const response = await api.post(
-    `${API_BASE_URL}/api/reports`,
+    `${API_BASE_URL}/api/v1/reports`,
     { service, company, problem },
     { headers: authHeader() },
   );
@@ -20,7 +20,7 @@ export async function addProblem({ service, company, problem }) {
 
 // Reports submitted by one user, optionally filtered by status
 export async function getReportsByUser(userId, status) {
-  const response = await api.get(`${API_BASE_URL}/api/reports`, {
+  const response = await api.get(`${API_BASE_URL}/api/v1/reports`, {
     params: { userId, ...(status ? { status } : {}) },
     headers: authHeader(),
   });

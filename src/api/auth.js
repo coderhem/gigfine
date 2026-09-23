@@ -79,7 +79,7 @@ export async function getUserById(id) {
 
 export async function updateUser(id, data) {
   const response = await axios.put(
-    `https://api.gigfine.com/api/users/${id}`,
+    `${API_BASE_URL}/api/v1/users/${id}`,
     data,
     {
       headers: {
@@ -92,7 +92,7 @@ export async function updateUser(id, data) {
 
 export async function deleteUser(id) {
   const response = await axios.delete(
-    `https://api.gigfine.com/api/users/${id}`,
+    `${API_BASE_URL}/api/v1/users/${id}`,
     {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
