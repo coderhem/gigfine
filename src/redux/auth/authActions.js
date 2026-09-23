@@ -4,17 +4,17 @@ import { loginUser, registerUser } from "@/api/auth";
 import {addNotification} from "@/api/notification"
 import {loginPassenger, registerPassenger, updatePassenger} from "@/api/passenger"
 import {addPassengerProblem, updatePassengerProblem} from "@/api/passenger.problem"
+import { apiErrorMessage } from "@/api/config";
 
+// Stores the token and returns the user profile ({ userId, name, email, mobile, roles, ... })
 export const loggedUser = createAsyncThunk(
   "login",
   async (data, { rejectWithValue }) => {
     try {
       const result = await loginUser(data);
-      // Token Pass
-      localStorage.setItem("authToken", result.token);
-      return result;
+      return result.user;
     } catch (error) {
-      return rejectWithValue(error.response?.data);
+      return rejectWithValue(apiErrorMessage(error, "Login failed"));
     }
   },
 );
@@ -26,7 +26,7 @@ export const registerUserApi = createAsyncThunk(
       const result = await registerUser(data);
       return result;
     } catch (error) {
-      return rejectWithValue(error.response?.data);
+      return rejectWithValue(apiErrorMessage(error, "Registration failed"));
     }
   },
 );
@@ -36,11 +36,9 @@ export const addProblemApi = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const result = await addProblem(data);
-      // Token Pass
-      // localStorage.setItem("authToken", result.token);
       return result;
     } catch (error) {
-      return rejectWithValue(error.response?.data);
+      return rejectWithValue(apiErrorMessage(error));
     }
   },
 );

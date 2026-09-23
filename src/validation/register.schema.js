@@ -28,7 +28,9 @@ export const registerValidation = z
       ),
     role: z.enum(["rider", "passenger"]),
 
-    vehicleNumber: z.string().trim().min(1, "Vehicle number is required").optional(),
+    vehicleNumber: z.string().trim().min(1, "Vehicle number is required"),
+
+    licenseNumber: z.string().trim().min(1, "License number is required"),
 
     password: z
       .string()
@@ -62,12 +64,15 @@ export const registerValidation = z
   // });
 
 export const loginValidation = z.object({
+  // Backend accepts either mobile number or email as the username
   phone: z
     .string()
     .trim()
-    .min(1, "Phone number is required.")
-    .length(10, "Phone number must be exactly 10 digits.")
-    .regex(/^\d+$/, "Phone number must contain only digits"),
+    .min(1, "Phone number or email is required.")
+    .refine(
+      (v) => /^\d{10}$/.test(v) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      "Enter a 10 digit phone number or a valid email.",
+    ),
 
   password: z.string().trim().min(1, "Password is required."),
 });

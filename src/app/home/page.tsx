@@ -1,13 +1,11 @@
 "use client";
-import { deleteProblem, getAllProblem, getProblem } from "@/api/problem";
-import DeleteBtn from "@/app/components/crudOperationBtns/deleteBtn";
-import UpdateBtn from "@/app/components/crudOperationBtns/updateBtn";
+import { getReportsByUser, REPORT_STATUS_LABEL } from "@/api/problem";
 import ProblemForm from "@/app/components/forms/problemForm";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 import { FaCalendarAlt } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "@/redux/auth/authSlice";
 import LoadingSvg from "../components/loader/loadingSvg";
 // import Image from "next/image";
 // import protestImg from "@/public/images/protest-image-home.jpeg";
@@ -18,16 +16,27 @@ import "swiper/css";
 import "swiper/css/pagination";
 import PassengerProblemForm from "../components/forms/passengerProblemForm";
 
+const STATUS_BADGE: Record<string, string> = {
+  PENDING: "bg-yellow-100 text-yellow-800",
+  UNDER_REVIEW: "bg-blue-100 text-blue-800",
+  RESOLVED: "bg-green-100 text-green-800",
+  REJECTED: "bg-red-100 text-red-800",
+};
+
 const Home = () => {
   const { user } = useSelector((state: any) => state.auth);
   const router = useRouter();
-  const [problems, setProblems] = useState([]);
+  const dispatch = useDispatch();
+  const [problems, setProblems] = useState<any[]>([]);
+  const [statusFilter, setStatusFilter] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProblems = async () => {
+    if (!user?.userId) return;
+    setIsLoading(true);
     try {
-      const data = await getProblem();
-      setProblems(data.problems || data);
+      const data = await getReportsByUser(user.userId, statusFilter);
+      setProblems(Array.isArray(data) ? data : []);
     } catch (err) {
       console.log(err);
     } finally {
@@ -37,23 +46,15 @@ const Home = () => {
 
   useEffect(() => {
     fetchProblems();
-  }, []);
+  }, [user?.userId, statusFilter]);
 
   useEffect(() => {
-    if (!user) {
+    // Sessions persisted from the old backend have no userId
+    if (!user?.userId || !localStorage.getItem("token")) {
+      dispatch(logout());
       router.push("/");
     }
   }, [user, router]);
-
-  const handleDelete = async (id: any) => {
-    try {
-      await deleteProblem(id);
-      toast.success("Problem deleted successfully.");
-      await fetchProblems();
-    } catch (error: any) {
-      toast.error(error);
-    }
-  };
 
   return (
     <>
@@ -117,6 +118,20 @@ const Home = () => {
               <h1 className="h3 text-secondary text-center mb-7">
                 Recent Problems
               </h1>
+              <div className="flex justify-end mb-3">
+                <select
+                  className="form-control py-2! w-auto!"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="">All Status</option>
+                  {Object.entries(REPORT_STATUS_LABEL).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label as string}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="relative border border-dashed border-secondary px-2 sm:px-4 py-7 [&_p]:mb-0 text-secondary font-medium">
                 {isLoading ? (
                   <LoadingSvg
@@ -131,7 +146,7 @@ const Home = () => {
                     {problems.map((item: any) => (
                       <div
                         className="border border-secondary/20 mb-5 rounded"
-                        key={item._id}
+                        key={item.reportId}
                       >
                         <span className="text-secondary text-sm flex items-center gap-1 justify-end px-5 py-3">
                           <FaCalendarAlt />
@@ -146,22 +161,21 @@ const Home = () => {
                             <span className="font-bold capitalize bg-secondary text-white mb-0 px-2 py-1 rounded ca">
                               {item.company}
                             </span>
-                            <span className="text-secondary font-medium p-1 rounded">
-                              Submitted
-                            </span>
+                            {item.service && (
+                              <span className="text-secondary font-medium p-1 rounded capitalize">
+                                {item.service}
+                              </span>
+                            )}
                           </div>
-                          <div className="flex flex-wrap gap-1 sm:gap-3 items-center">
-                            {/* <DeleteBtn
-                              className="max-sm:w-full"
-                              deleteText={"Delete"}
-                              onConfirm={() => handleDelete(item._id)}
-                            /> */}
-                            <UpdateBtn
-                              customClass="max-sm:w-full"
-                              updateText={"Edit"}
-                              btnLink={`/client/problem-management/edit/${item._id}`}
-                            />
-                          </div>
+                          <span
+                            className={`text-xs sm:text-sm font-semibold px-2 py-1 rounded ${
+                              STATUS_BADGE[item.status] ?? "bg-secondary/10"
+                            }`}
+                          >
+                            {(REPORT_STATUS_LABEL as Record<string, string>)[
+                              item.status
+                            ] ?? item.status}
+                          </span>
                         </div>
                         {/* </div> */}
                       </div>

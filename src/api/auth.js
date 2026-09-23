@@ -1,35 +1,35 @@
 import axios from "axios";
+import { API_BASE_URL } from "./config.js";
 
+// Sending vehicleNumber + licenseNumber makes the backend register the user
+// as a rider and create the rider profile in the same transaction.
 export async function registerUser({
   name,
   phone,
   email,
   vehicleNumber,
+  licenseNumber,
   password,
-  roles,
 }) {
-  const response = await axios.post(
-    "https://api.gigfine.com/api/auth/register",
-    {
-      name,
-      email,
-      phone,
-      vehicleNumber,
-      password,
-      roles,
-    },
-  );
-  return response.data;
+  const response = await axios.post(`${API_BASE_URL}/api/v1/auth/register`, {
+    name,
+    email,
+    mobile: phone,
+    vehicleNumber,
+    licenseNumber,
+    password,
+  });
+  return response.data; // { token, user }
 }
 
-export async function loginUser({ phone, password, email }) {
-  const response = await axios.post("https://api.gigfine.com/api/auth/login", {
-    phone,
+// username can be email or mobile number
+export async function loginUser({ phone, password }) {
+  const response = await axios.post(`${API_BASE_URL}/api/v1/auth/login`, {
+    username: phone,
     password,
-    email,
   });
   localStorage.setItem("token", response.data.token);
-  return response.data;
+  return response.data; // { token, user }
 }
 
 export const selectRole = async (data) => {

@@ -22,6 +22,7 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
   } = useForm({
     resolver: zodResolver(problemValidation),
     defaultValues: {
+      service: problem?.service || "ride",
       company: problem?.company || "",
       problem: problem?.problem || "",
     },
@@ -58,7 +59,9 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
 
       NativeFancybox.close();
     } catch (err: any) {
-      toast.error(err?.message || "Something went wrong");
+      toast.error(
+        typeof err === "string" ? err : err?.message || "Something went wrong",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -70,6 +73,23 @@ const ProblemForm = ({ onSuccess, problem }: any) => {
         className="problem-form text-start"
         onSubmit={handleSubmit(submitForm)}
       >
+        <div className="form-group">
+          <label htmlFor="service">Which service was it?</label>
+          <select
+            id="service"
+            className="form-control py-3!"
+            {...register("service")}
+          >
+            <option value="ride">Ride</option>
+            <option value="delivery">Delivery</option>
+          </select>
+          {errors.service && (
+            <p className="text-red text-sm  mt-1">
+              {String(errors.service.message)}
+            </p>
+          )}
+        </div>
+
         <div className="form-group">
           <label htmlFor="company">Which company is this regarding?</label>
           <select

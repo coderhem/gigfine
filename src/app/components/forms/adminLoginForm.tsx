@@ -1,17 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import { loginValidation } from "@/validation/register.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
-import { useDispatch, useSelector } from "react-redux";
-import { loggedUser } from "@/redux/auth/authActions";
 import LoadingSvg from "../loader/loadingSvg";
-import { adminLogin } from "@/api/admin.js";
+import { adminLogin, adminLoginWithToken } from "@/api/admin.js";
+import { apiErrorMessage } from "@/api/config";
 
 const AdminLoginForm = () => {
   const router = useRouter();
@@ -26,23 +24,39 @@ const AdminLoginForm = () => {
     resolver: zodResolver(loginValidation),
   });
 
+  // Admin logged in on the user site gets sent here as /admin/login#token=...
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.hash.slice(1)).get(
+      "token",
+    );
+    if (!token) return;
+
+    // Remove the token from the address bar and history right away
+    window.history.replaceState(null, "", window.location.pathname);
+
+    setLoading(true);
+    adminLoginWithToken(token)
+      .then(() => {
+        toast.success("Admin Login Successful!");
+        router.replace("/admin/dashboard");
+      })
+      .catch((err: any) => {
+        toast.error(apiErrorMessage(err, "Login Failed"));
+        setLoading(false);
+      });
+  }, [router]);
+
   async function submitForm(data: any) {
     setLoading(true);
     try {
-      const res = await adminLogin(data);
-      
-      localStorage.setItem("adminToken", res.token);
-
+      await adminLogin(data);
       toast.success("Admin Login Successful!");
-
       router.push("/admin/dashboard");
-
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Login Failed");
+      toast.error(apiErrorMessage(err, "Login Failed"));
+    } finally {
+      setLoading(false);
     }
-     finally{
-        setLoading(false)
-      }
   }
 
   
@@ -53,7 +67,7 @@ const AdminLoginForm = () => {
         <div className="form-group mb-4">
           <input
             type="text"
-            placeholder="Enter phone number"
+            placeholder="Enter phone number or email"
             className="form-control"
             {...register("phone")}
           />

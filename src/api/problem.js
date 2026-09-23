@@ -1,22 +1,30 @@
 // import axios from "axios";
 import api from "./axios.js";
+import { API_BASE_URL, authHeader } from "./config.js";
 
-export async function addProblem({ company, problem }) {
-  const token = localStorage.getItem("token");
+export const REPORT_STATUS_LABEL = {
+  PENDING: "Pending",
+  UNDER_REVIEW: "Under Review",
+  RESOLVED: "Resolved",
+  REJECTED: "Rejected",
+};
 
+export async function addProblem({ service, company, problem }) {
   const response = await api.post(
-    "https://gigfine-api.vercel.app/api/problem",
-    {
-      company,
-      problem,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
+    `${API_BASE_URL}/api/reports`,
+    { service, company, problem },
+    { headers: authHeader() },
   );
   return response.data;
+}
+
+// Reports submitted by one user, optionally filtered by status
+export async function getReportsByUser(userId, status) {
+  const response = await api.get(`${API_BASE_URL}/api/reports`, {
+    params: { userId, ...(status ? { status } : {}) },
+    headers: authHeader(),
+  });
+  return response.data; // ReportDto[]
 }
 
 export async function getAllProblem() {

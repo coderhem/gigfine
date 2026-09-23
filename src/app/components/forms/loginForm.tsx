@@ -10,21 +10,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { loggedUser } from "@/redux/auth/authActions";
-import { selectRole } from "@/api/auth";
+import { logout } from "@/redux/auth/authSlice";
+import { ADMIN_URL, isAdmin } from "@/api/admin";
 import LoadingSvg from "../loader/loadingSvg";
-import RolePopup from "../fancybox/rolePopup";
 
 const LoginForm = () => {
   const router = useRouter();
   const dispatch = useDispatch<any>();
 
   const [show, setShow] = useState(false);
-  const [showRolePopup, setShowRolePopup] = useState(false);
-
-  const [loginData, setLoginData] = useState({
-    phone: "",
-    password: "",
-  });
 
   const { loading } = useSelector((state: any) => state.auth);
 
@@ -38,79 +32,32 @@ const LoginForm = () => {
 
   const submitForm = async (data: any) => {
     try {
-      const result: any = await dispatch(loggedUser(data)).unwrap();
+      const user = await dispatch(loggedUser(data)).unwrap();
 
-      // Rider + Passenger both found
-      if (result.type === "multiple") {
-        setLoginData(data);
-        setShowRolePopup(true);
+      // Admins don't use the user site — hand the session over to the admin panel
+      if (isAdmin(user)) {
+        const token = localStorage.getItem("token") ?? "";
+        dispatch(logout());
+        toast.success("Redirecting to admin panel...");
+        window.location.href = `${ADMIN_URL}/admin/login#token=${encodeURIComponent(token)}`;
         return;
       }
 
-      // Rider only
-      if (result.type === "single" && result.roles === "Rider") {
-        toast.success("Rider login successful!");
-
-        setTimeout(() => {
-          router.push("/rider");
-        }, 2000);
-
-        return;
-      }
-
-      // Passenger only
-      if (result.type === "single" && result.roles === "Passenger") {
-        toast.success("Passenger login successful!");
-
-        setTimeout(() => {
-          router.push("/passenger");
-        }, 2000);
-
-        return;
-      }
+      toast.success("Login successful!");
+      router.push("/home");
     } catch (err: any) {
-      toast.error(err || "Login failed");
-    }
-  };
-
-  const handleRoleSelect = async (role: any) => {
-    try {
-      const result = await selectRole({
-        phone: loginData.phone,
-        password: loginData.password,
-        role,
-      });
-
-      // Save selected role token
-      localStorage.setItem("token", result.token);
-
-      setShowRolePopup(false);
-
-      toast.success(`Logged in as ${role === "Rider" ? "Rider" : "Passenger"}`);
-
-      if (role === "Rider") {
-        router.push("/rider");
-      } else {
-        router.push("/passenger");
-      }
-    } catch (error: any) {
-      toast.error(error?.response?.data || "Unable to select role");
+      toast.error(typeof err === "string" ? err : "Login failed");
     }
   };
 
   return (
     <>
-      <RolePopup
-        open={showRolePopup}
-        onSelect={handleRoleSelect}
-        onClose={() => setShowRolePopup(false)}
-      />
       <form className="login-form" onSubmit={handleSubmit(submitForm)}>
         {/* Phone */}
         <div className="form-group mb-4">
           <input
             type="text"
-            placeholder="Enter phone number"
+            placeholder="Enter phone number or email"
             className="form-control"
             {...register("phone")}
           />

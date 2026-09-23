@@ -50,7 +50,7 @@ const RegisterForm = () => {
         router.push("/");
       }, 4000);
     } catch (err: any) {
-      toast.error(err);
+      toast.error(typeof err === "string" ? err : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -114,6 +114,26 @@ const RegisterForm = () => {
               {errors.vehicleNumber && (
                 <p className="text-red text-sm mt-1">
                   {errors.vehicleNumber.message}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* License Number */}
+          {selectedRole === "rider" && (
+            <div className="form-group mb-4">
+              <input
+                type="text"
+                placeholder="Enter Driving License Number"
+                className="form-control"
+                {...register("licenseNumber")}
+              />
+              <p className="text-xs px-1 text-secondary/70 mb-0">
+                e.g. 01-06-12345678
+              </p>
+              {errors.licenseNumber && (
+                <p className="text-red text-sm mt-1">
+                  {errors.licenseNumber.message}
                 </p>
               )}
             </div>
