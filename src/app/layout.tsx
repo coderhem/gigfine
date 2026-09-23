@@ -39,7 +39,7 @@ export default function RootLayout({
           <Fancybox>
             <AuthGuard>
               <HeaderSwitcher />
-              <main className="grow max-md:pt-20">{children}</main>
+              <main className="grow max-md:pt-20 md:mt-24">{children}</main>
               <Footer />
               <Toaster
                 position="top-center"
