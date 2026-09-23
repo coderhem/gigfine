@@ -1,0 +1,23 @@
+services:
+  web:
+    build: .
+    image: gigfine:latest
+    container_name: gigfine-web
+    environment:
+      PORT: 8088
+      APP_MODE: user
+    ports:
+      - "8088:8088"
+    restart: unless-stopped
+
+  admin:
+    image: gigfine:latest
+    container_name: gigfine-admin
+    depends_on:
+      - web
+    environment:
+      PORT: 8089
+      APP_MODE: admin
+    ports:
+      - "8089:8089"
+    restart: unless-stopped
