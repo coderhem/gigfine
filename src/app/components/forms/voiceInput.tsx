@@ -1,5 +1,11 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import toast from "react-hot-toast";
 import { FaMicrophone, FaStop, FaTrash, FaUpload } from "react-icons/fa";
 import { VOICE_EXTENSIONS, VOICE_MAX_MB } from "@/api/problem";
@@ -7,11 +13,19 @@ import { VOICE_EXTENSIONS, VOICE_MAX_MB } from "@/api/problem";
 // Keeps a recording well under the backend's 10MB limit
 const MAX_RECORD_SECONDS = 180;
 
+export type VoiceInputHandle = {
+  // Stops a recording still in progress and resolves with the final file
+  // (or the current value). Call this on submit — otherwise pressing
+  // "Add Problem" mid-recording would drop the recording.
+  finish: () => Promise<File | null>;
+};
+
 type Props = {
   value: File | null;
   onChange: (file: File | null) => void;
   // Object URL of the voice note already saved on the report (edit mode)
   existingUrl?: string | null;
+  ref?: React.Ref<VoiceInputHandle>;
 };
 
 // Browsers record in different containers: Chrome/Firefox → webm, Safari → mp4
@@ -32,11 +46,31 @@ function pickRecorderType() {
 const formatTime = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
-const VoiceInput = ({ value, onChange, existingUrl }: Props) => {
+const VoiceInput = ({ value, onChange, existingUrl, ref }: Props) => {
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
+  // Resolver for a finish() call waiting on recorder.onstop
+  const pendingFinishRef = useRef<((file: File | null) => void) | null>(null);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      finish: () => {
+        const recorder = recorderRef.current;
+        if (recorder?.state === "recording") {
+          return new Promise<File | null>((resolve) => {
+            pendingFinishRef.current = resolve;
+            recorder.stop();
+          });
+        }
+        return Promise.resolve(value);
+      },
+    }),
+    [value],
+  );
+
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -88,8 +122,14 @@ const VoiceInput = ({ value, onChange, existingUrl }: Props) => {
       setRecording(false);
       const type = recorder.mimeType || mime || "audio/webm";
       const blob = new Blob(chunks, { type });
-      if (blob.size === 0) return;
-      onChange(new File([blob], `voice-${Date.now()}.${ext}`, { type }));
+      const file =
+        blob.size > 0
+          ? new File([blob], `voice-${Date.now()}.${ext}`, { type })
+          : null;
+      if (file) onChange(file);
+
+      pendingFinishRef.current?.(file);
+      pendingFinishRef.current = null;
     };
 
     streamRef.current = stream;
@@ -180,7 +220,8 @@ const VoiceInput = ({ value, onChange, existingUrl }: Props) => {
 
       {recording && (
         <p className="text-sm text-primary mt-2 mb-0">
-          ● Recording… max {formatTime(MAX_RECORD_SECONDS)}
+          ● Recording… max {formatTime(MAX_RECORD_SECONDS)}. It will be
+          attached when you submit.
         </p>
       )}
 

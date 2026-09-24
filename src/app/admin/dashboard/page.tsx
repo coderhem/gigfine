@@ -636,6 +636,7 @@ export default function Dashboard() {
                                     <ReportAttachments
                                       report={report}
                                       fetchUrl={getReportFileUrlAdmin}
+                                      autoLoad
                                       className="flex flex-col gap-2"
                                     />
                                   ) : (

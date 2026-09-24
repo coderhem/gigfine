@@ -7,7 +7,7 @@ import { Fancybox as NativeFancybox } from "@fancyapps/ui";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FaImage, FaTrash } from "react-icons/fa";
 import LoadingSvg from "../loader/loadingSvg";
-import VoiceInput from "./voiceInput";
+import VoiceInput, { type VoiceInputHandle } from "./voiceInput";
 import { useRouter } from "next/navigation";
 import {
   addProblem,
@@ -52,6 +52,7 @@ const ProblemForm = ({ mode, problem, onSuccess }: Props) => {
   const [voiceFile, setVoiceFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const voiceRef = useRef<VoiceInputHandle>(null);
   const router = useRouter();
 
   const isEdit = !!problem?.reportId;
@@ -106,7 +107,9 @@ const ProblemForm = ({ mode, problem, onSuccess }: Props) => {
   }
 
   async function submitForm(data: any) {
-    const hasVoice = !!voiceFile || !!problem?.voice;
+    // Includes a recording that is still running when "Add Problem" is pressed
+    const voice = (await voiceRef.current?.finish()) ?? voiceFile;
+    const hasVoice = !!voice || !!problem?.voice;
     if (!data.problem && !hasVoice) {
       setError("problem", {
         message: "Describe the problem or add a voice note.",
@@ -126,7 +129,7 @@ const ProblemForm = ({ mode, problem, onSuccess }: Props) => {
     try {
       if (isEdit) {
         // Voice first: the backend rejects an empty description while the report has no voice
-        if (voiceFile) await uploadReportVoice(problem.reportId, voiceFile);
+        if (voice) await uploadReportVoice(problem.reportId, voice);
         if (imageFile) await uploadReportImage(problem.reportId, imageFile);
         await updateReport(problem.reportId, payload);
 
@@ -134,7 +137,7 @@ const ProblemForm = ({ mode, problem, onSuccess }: Props) => {
         router.push("/home");
       } else {
         const created = await addProblem(payload);
-        await uploadAttachments(created.reportId);
+        await uploadAttachments(created.reportId, voice);
 
         toast.success("Problem added successfully!");
         reset();
@@ -155,9 +158,9 @@ const ProblemForm = ({ mode, problem, onSuccess }: Props) => {
   }
 
   // The report already exists at this point, so report upload failures without undoing it
-  async function uploadAttachments(reportId: number) {
+  async function uploadAttachments(reportId: number, voice: File | null) {
     const uploads: [string, File | null, (id: number, f: File) => Promise<any>][] = [
-      ["Voice", voiceFile, uploadReportVoice],
+      ["Voice", voice, uploadReportVoice],
       ["Image", imageFile, uploadReportImage],
     ];
     for (const [label, file, upload] of uploads) {
@@ -176,25 +179,9 @@ const ProblemForm = ({ mode, problem, onSuccess }: Props) => {
     <>
       <form
         className="problem-form text-start"
-        onSubmit={handleSubmit(submitForm)}
+        // Wrapped so the voice ref is only read on submit, not during render
+        onSubmit={(e) => handleSubmit(submitForm)(e)}
       >
-        <div className="form-group">
-          <label htmlFor="service">Which service was it?</label>
-          <select
-            id="service"
-            className="form-control py-3!"
-            {...register("service")}
-          >
-            <option value="ride">Ride</option>
-            <option value="delivery">Delivery</option>
-          </select>
-          {errors.service && (
-            <p className="text-red text-sm  mt-1">
-              {String(errors.service.message)}
-            </p>
-          )}
-        </div>
-
         <div className="form-group">
           <label htmlFor="company">Which company is this regarding?</label>
           <select
@@ -214,6 +201,23 @@ const ProblemForm = ({ mode, problem, onSuccess }: Props) => {
           {errors.company && (
             <p className="text-red text-sm  mt-1">
               {String(errors.company.message)}
+            </p>
+          )}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="service">Which service was it?</label>
+          <select
+            id="service"
+            className="form-control py-3!"
+            {...register("service")}
+          >
+            <option value="ride">Ride</option>
+            <option value="delivery">Delivery</option>
+          </select>
+          {errors.service && (
+            <p className="text-red text-sm  mt-1">
+              {String(errors.service.message)}
             </p>
           )}
         </div>
@@ -275,6 +279,7 @@ const ProblemForm = ({ mode, problem, onSuccess }: Props) => {
             </span>
           </label>
           <VoiceInput
+            ref={voiceRef}
             value={voiceFile}
             onChange={setVoiceFile}
             existingUrl={savedVoiceUrl}

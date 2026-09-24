@@ -5,43 +5,71 @@ import { getReportFileUrl } from "@/api/problem";
 
 type FetchUrl = (kind: "image" | "voice", fileName: string) => Promise<string>;
 
-// Files need the auth header, so they are fetched only when the user asks for them
+// File requests use responseType "blob", so a JSON error body arrives as a Blob too
+async function fileErrorMessage(err: any): Promise<string> {
+  const data = err?.response?.data;
+  const status = err?.response?.status;
+  if (data instanceof Blob) {
+    try {
+      const body = JSON.parse(await data.text());
+      if (body?.message) return `${status}: ${body.message}`;
+    } catch {
+      /* not JSON */
+    }
+  }
+  return status ? `HTTP ${status}` : err?.message || "network error";
+}
+
+// Files need the auth header, so they can't be a plain src.
+// autoLoad fetches right away; otherwise the user clicks to load.
 const Attachment = ({
   kind,
   fileName,
   fetchUrl,
+  autoLoad,
 }: {
   kind: "image" | "voice";
   fileName: string;
   fetchUrl: FetchUrl;
+  autoLoad: boolean;
 }) => {
   const [url, setUrl] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [requested, setRequested] = useState(autoLoad);
 
-  useEffect(
-    () => () => {
-      if (url) URL.revokeObjectURL(url);
-    },
-    [url],
-  );
+  useEffect(() => {
+    if (!requested) return;
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    fetchUrl(kind, fileName)
+      .then((u) => {
+        objectUrl = u;
+        if (cancelled) URL.revokeObjectURL(u);
+        else setUrl(u);
+      })
+      .catch(async (err) => {
+        const message = await fileErrorMessage(err);
+        if (!cancelled) setError(message);
+      });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [requested, kind, fileName, fetchUrl]);
 
-  async function load() {
-    try {
-      setUrl(await fetchUrl(kind, fileName));
-    } catch {
-      setFailed(true);
-    }
+  if (error) {
+    return (
+      <span className="text-xs text-red" title={fileName}>
+        Could not load {kind} ({error})
+      </span>
+    );
   }
 
-  if (failed) {
-    return <span className="text-xs text-red">Could not load {kind}</span>;
-  }
-
-  if (!url) {
+  if (!requested) {
     return (
       <button
         type="button"
-        onClick={load}
+        onClick={() => setRequested(true)}
         className="text-sm flex items-center gap-1 underline hover:no-underline"
       >
         {kind === "voice" ? <FaPlay /> : <FaImage />}
@@ -50,8 +78,12 @@ const Attachment = ({
     );
   }
 
+  if (!url) {
+    return <span className="text-xs text-gray-500">Loading {kind}…</span>;
+  }
+
   return kind === "voice" ? (
-    <audio controls autoPlay src={url} className="w-full" />
+    <audio controls autoPlay={!autoLoad} src={url} className="w-full" />
   ) : (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={url} alt="Report attachment" className="max-h-48 rounded" />
@@ -62,20 +94,32 @@ const Attachment = ({
 const ReportAttachments = ({
   report,
   fetchUrl = getReportFileUrl,
+  autoLoad = false,
   className = "flex flex-col gap-3 px-5 pb-5",
 }: {
   report: any;
   fetchUrl?: FetchUrl;
+  autoLoad?: boolean;
   className?: string;
 }) => {
   if (!report.voice && !report.image) return null;
   return (
     <div className={className}>
       {report.voice && (
-        <Attachment kind="voice" fileName={report.voice} fetchUrl={fetchUrl} />
+        <Attachment
+          kind="voice"
+          fileName={report.voice}
+          fetchUrl={fetchUrl}
+          autoLoad={autoLoad}
+        />
       )}
       {report.image && (
-        <Attachment kind="image" fileName={report.image} fetchUrl={fetchUrl} />
+        <Attachment
+          kind="image"
+          fileName={report.image}
+          fetchUrl={fetchUrl}
+          autoLoad={autoLoad}
+        />
       )}
     </div>
   );
