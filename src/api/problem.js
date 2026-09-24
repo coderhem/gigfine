@@ -73,8 +73,8 @@ export async function getReportFileUrl(kind, fileName) {
 
 // Reports submitted by one user, optionally filtered by status
 export async function getReportsByUser(userId, status) {
-  const response = await api.get(`${API_BASE_URL}/api/v1/reports`, {
-    params: { userId, ...(status ? { status } : {}) },
+  const response = await api.get(`${API_BASE_URL}/api/v1/reports/user/${userId}`, {
+    params: status ? { status } : {},
     headers: authHeader(),
   });
   return response.data; // ReportDto[]
