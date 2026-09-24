@@ -3,13 +3,20 @@ import RegisterForm from "@/app/components/forms/registerForm";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import PassengerRegisterForm from "../components/forms/passengerForm";
+
+const ROLES = [
+  { value: "rider", label: "Rider" },
+  { value: "passenger", label: "Passenger" },
+] as const;
 
 const Register = () => {
   const { user } = useSelector((state: any) => state.auth);
   const router = useRouter();
 
-  // const [showForm, setShowForm] = useState("rider");
+  const [selectedRole, setSelectedRole] = useState<"rider" | "passenger">(
+    "rider",
+  );
+
   useEffect(() => {
     if (user) {
       router.push("/home");
@@ -28,35 +35,21 @@ const Register = () => {
               Join GIGFINE to report issues and get support.
             </p>
             <div className="flex gap-5 mt-5">
-              {/* <button
-                onClick={() => setShowForm("rider")}
-                className={`btn rounded-full text-sm focus:ring-0 focus:bg-primary focus:text-white ${
-                  showForm === "rider" ? "btn-primary" : "btn-outline"
-                }`}
-              >
-                Rider
-              </button> */}
-              <button
-                // onClick={() => setShowForm("rider")}
-                className={`btn btn-primary rounded-full text-sm focus:ring-0 focus:bg-primary focus:text-white 
-                  `}
-              >
-                Rider
-              </button>
-
-              {/* <button
-                onClick={() => setShowForm("passenger")}
-                className={`btn rounded-full text-sm focus:ring-0 focus:bg-primary focus:text-white ${
-                  showForm === "passenger" ? "btn-primary" : "btn-outline"
-                }`}
-              >
-                Passenger
-              </button> */}
-   
+              {ROLES.map((role) => (
+                <button
+                  key={role.value}
+                  type="button"
+                  onClick={() => setSelectedRole(role.value)}
+                  className={`btn rounded-full text-sm focus:ring-0 ${
+                    selectedRole === role.value ? "btn-primary" : "btn-outline"
+                  }`}
+                >
+                  {role.label}
+                </button>
+              ))}
             </div>
           </div>
-          <RegisterForm />
-          {/* {showForm === "rider" ? <RegisterForm /> : <PassengerRegisterForm />} */}
+          <RegisterForm selectedRole={selectedRole} />
         </div>
       </div>
     </div>

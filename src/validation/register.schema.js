@@ -28,9 +28,10 @@ export const registerValidation = z
       ),
     role: z.enum(["rider", "passenger"]),
 
-    vehicleNumber: z.string().trim().min(1, "Vehicle number is required"),
+    // Required only for riders (checked in superRefine below)
+    vehicleNumber: z.string().trim().optional(),
 
-    licenseNumber: z.string().trim().min(1, "License number is required"),
+    licenseNumber: z.string().trim().optional(),
 
     password: z
       .string()
@@ -42,6 +43,23 @@ export const registerValidation = z
       //   "Use uppercase, lowercase, number & symbol.",
       // ),
   })
+  .superRefine((data, ctx) => {
+    if (data.role !== "rider") return;
+    if (!data.vehicleNumber) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["vehicleNumber"],
+        message: "Vehicle number is required",
+      });
+    }
+    if (!data.licenseNumber) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["licenseNumber"],
+        message: "License number is required",
+      });
+    }
+  });
   // .superRefine((data, ctx) => {
   //   if (data.role === "rider") {
   //     if (!data.vehicleNumber || data.vehicleNumber.trim() === "") {

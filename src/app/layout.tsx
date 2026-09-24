@@ -1,4 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import {
+  KEYWORDS,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+} from "./seo";
 import { Outfit, Montserrat } from "next/font/google";
 import "./globals.css";
 import Footer from "@/app/components/footer/footer";
@@ -20,8 +27,39 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "GIGFINE - Report ride sharing issues with ease.",
-  description: "Report ride sharing issues with ease.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: KEYWORDS,
+  category: "transportation",
+  // canonical is set per page — a root canonical would be inherited by every route
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: "/",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
+  formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0c589c",
 };
 
 export default function RootLayout({

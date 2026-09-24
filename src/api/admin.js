@@ -66,14 +66,26 @@ export const deleteUser = async (id) =>
 
 // ---------- Reports ----------
 
-// filters: { userId, status, from, to } — from/to as "YYYY-MM-DD"
-export const getReports = async ({ userId, status, from, to } = {}) => {
+// filters: { userId, status, mode, from, to } — from/to as "YYYY-MM-DD",
+// mode "RIDER" | "PESSENGER" (the mode the reporter was in when reporting)
+export const getReports = async ({ userId, status, mode, from, to } = {}) => {
   const params = {};
   if (userId) params.userId = userId;
   if (status) params.status = status;
+  if (mode) params.mode = mode;
   if (from) params.from = `${from}T00:00:00`;
   if (to) params.to = `${to}T23:59:59`;
   return (await adminApi.get("/api/v1/reports", { params })).data;
+};
+
+// Same as getReportFileUrl in problem.js, but with the admin token.
+// kind: "image" | "voice". Returns an object URL — revoke it when done.
+export const getReportFileUrlAdmin = async (kind, fileName) => {
+  const res = await adminApi.get(
+    `/api/v1/reports/${kind}/${encodeURIComponent(fileName)}`,
+    { responseType: "blob" },
+  );
+  return URL.createObjectURL(res.data);
 };
 
 export const updateReportStatus = async (reportId, status) =>

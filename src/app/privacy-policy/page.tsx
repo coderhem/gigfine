@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "How GIGFINE collects, uses and protects the information passengers and riders share when reporting ride-sharing problems.",
+  alternates: { canonical: "/privacy-policy" },
+  openGraph: { url: "/privacy-policy" },
+};
 
 const PrivacyPolicy = () => {
   const today = new Date().toLocaleDateString("en-NP");

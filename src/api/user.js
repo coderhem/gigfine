@@ -45,3 +45,12 @@ export async function getProfileImageUrl(imageName) {
   );
   return URL.createObjectURL(response.data);
 }
+
+// "RIDER" | "PESSENGER" — the backend spells passenger mode "PESSENGER".
+// Older sessions have no `modes`, so fall back to the role.
+export function getUserMode(user) {
+  if (user?.modes) return user.modes;
+  return user?.roles?.includes("ROLE_RIDER") ? "RIDER" : "PESSENGER";
+}
+
+export const isPassengerMode = (user) => getUserMode(user) === "PESSENGER";

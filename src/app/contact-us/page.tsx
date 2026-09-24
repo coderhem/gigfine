@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { FaArrowLeft, FaVoicemail } from "react-icons/fa";
+
+export const metadata: Metadata = {
+  title: "Contact Us",
+  description:
+    "Get in touch with GIGFINE — questions about a ride-sharing report, partnerships, or support for passengers and riders in Nepal.",
+  alternates: { canonical: "/contact-us" },
+  openGraph: { url: "/contact-us" },
+};
 import { MdEmail, MdLocationOn, MdMap, MdPhone, MdPin } from "react-icons/md";
 
 const ContactUs = () => {

@@ -79,8 +79,9 @@ const LoggedHeader = () => {
     <div className="container">
       <div className="py-4 flex flex-wrap -mx-1 justify-between items-center">
         {/* Logo */}
+        {/* Logged-in users go straight home; "/" is the login page */}
         <Link
-          href="/"
+          href="/home"
           className="px-1 w-5/12 max-w-30 md:max-w-54"
         >
           <Image

@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import React from "react";
-import { useRouter } from "next/navigation";
 import headerLogo from "@/public/images/gigfine-logo-img.png";
 import Image from "next/image";
 
@@ -16,13 +15,15 @@ const MainHeader = () => {
                 src={headerLogo}
                 width={600}
                 height={200}
-                alt="Gigfine Logo"
-                loading="lazy"
+                alt="GIGFINE – report ride-sharing problems in Nepal"
+                // Above the fold on every page: load it first, not lazily
+                loading="eager"
+                fetchPriority="high"
               />
             </Link>
             <ul className="w-7/12 flex flex-wrap px-1 -mx-1.5 items-center justify-end">
               <li className="px-1.5">
-                <Link href="/" className="btn btn-primary">
+                <Link href="/#login" className="btn btn-primary">
                   Login
                 </Link>
               </li>

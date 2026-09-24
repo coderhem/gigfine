@@ -4,12 +4,14 @@ import {
   deleteUser,
   getAllRiders,
   getAllUsers,
+  getReportFileUrlAdmin,
   getReports,
   NEXT_STATUSES,
   updateReportStatus,
 } from "@/api/admin";
 import { apiErrorMessage } from "@/api/config";
 import { REPORT_STATUS_LABEL } from "@/api/problem";
+import ReportAttachments from "@/app/components/reportAttachments";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { FaBiking, FaUser } from "react-icons/fa";
@@ -32,6 +34,17 @@ const STATUS_BADGE: Record<string, string> = {
   UNDER_REVIEW: "bg-blue-100 text-blue-800",
   RESOLVED: "bg-green-100 text-green-800",
   REJECTED: "bg-red-100 text-red-800",
+};
+
+// Report.reporterMode values (backend spells passenger "PESSENGER")
+const MODE_LABEL: Record<string, string> = {
+  RIDER: "Rider",
+  PESSENGER: "Passenger",
+};
+
+const MODE_BADGE: Record<string, string> = {
+  RIDER: "bg-secondary/15 text-secondary",
+  PESSENGER: "bg-primary/15 text-primary",
 };
 
 const MENU_TITLE: Record<MenuType, string> = {
@@ -83,6 +96,7 @@ export default function Dashboard() {
 
   // Report filters (sent to the backend)
   const [statusFilter, setStatusFilter] = useState("");
+  const [modeFilter, setModeFilter] = useState("");
   const [userFilter, setUserFilter] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -117,6 +131,7 @@ export default function Dashboard() {
       const data = await getReports({
         userId: userFilter,
         status: statusFilter,
+        mode: modeFilter,
         from: fromDate,
         to: toDate,
       });
@@ -134,11 +149,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (authorized) fetchReports();
-  }, [authorized, statusFilter, userFilter, fromDate, toDate]);
+  }, [authorized, statusFilter, modeFilter, userFilter, fromDate, toDate]);
 
   useEffect(() => {
     setPage(1);
-  }, [activeMenu, search, statusFilter, userFilter, fromDate, toDate]);
+  }, [activeMenu, search, statusFilter, modeFilter, userFilter, fromDate, toDate]);
 
   const usersById = useMemo(
     () => new Map(users.map((u) => [u.userId, u])),
@@ -171,6 +186,8 @@ export default function Dashboard() {
       r.reporter?.name,
       r.reporter?.email,
       r.reporter?.mobile,
+      r.riderName,
+      r.vehicleNumber,
       ridersByUserId.get(r.reporter?.userId)?.vehicleNumber,
     ),
   );
@@ -447,6 +464,21 @@ export default function Dashboard() {
                 </select>
               </label>
               <label className="flex flex-col text-sm">
+                Reported by
+                <select
+                  className="form-control py-2!"
+                  value={modeFilter}
+                  onChange={(e) => setModeFilter(e.target.value)}
+                >
+                  <option value="">All</option>
+                  {Object.entries(MODE_LABEL).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col text-sm">
                 User
                 <select
                   className="form-control py-2!"
@@ -483,6 +515,7 @@ export default function Dashboard() {
                 className="btn py-2"
                 onClick={() => {
                   setStatusFilter("");
+                  setModeFilter("");
                   setUserFilter("");
                   setFromDate("");
                   setToDate("");
@@ -499,25 +532,29 @@ export default function Dashboard() {
                     <tr>
                       <th className="px-4 py-3 text-start">S.No.</th>
                       <th className="px-4 py-3 text-start">Name</th>
+                      <th className="px-4 py-3 text-start">Type</th>
                       <th className="px-4 py-3 text-start">Phone</th>
                       <th className="px-4 py-3 text-start">Service</th>
                       <th className="px-4 py-3 text-start">Company</th>
                       <th className="px-4 py-3 text-start">Vehicle No</th>
                       <th className="px-4 py-3 text-start">Problem</th>
+                      <th className="px-4 py-3 text-start">Attachments</th>
                       <th className="px-4 py-3 text-start">Date</th>
                       <th className="px-4 py-3 text-start">Status</th>
                     </tr>
                   </thead>
                   <tbody className="text-gray-700">
                     {reportsLoading
-                      ? loadingRow(9)
+                      ? loadingRow(11)
                       : reportRows.length === 0
-                        ? emptyRow(9, "No reports found.")
+                        ? emptyRow(11, "No reports found.")
                         : paginate(reportRows, page).map((report, i) => {
                             const next = NEXT_STATUSES[
                               report.status as keyof typeof NEXT_STATUSES
                             ] ?? [];
                             const reporter = report.reporter ?? {};
+                            const isPassenger =
+                              report.reporterMode === "PESSENGER";
                             return (
                               <tr
                                 className="border-b border-secondary/20 transition-all duration-300 hover:bg-gray-300/20"
@@ -528,6 +565,20 @@ export default function Dashboard() {
                                 </td>
                                 <td className="px-4 py-3">{reporter.name}</td>
                                 <td className="px-4 py-3">
+                                  {report.reporterMode ? (
+                                    <span
+                                      className={`text-xs font-semibold px-2 py-1 rounded ${
+                                        MODE_BADGE[report.reporterMode] ?? ""
+                                      }`}
+                                    >
+                                      {MODE_LABEL[report.reporterMode] ??
+                                        report.reporterMode}
+                                    </span>
+                                  ) : (
+                                    "-"
+                                  )}
+                                </td>
+                                <td className="px-4 py-3">
                                   {phoneCell(
                                     reporter.mobile,
                                     reportMessage(reporter.name),
@@ -537,16 +588,32 @@ export default function Dashboard() {
                                   {report.service}
                                 </td>
                                 <td className="px-4 py-3">{report.company}</td>
+                                {/* Passenger: the rider/vehicle they reported. Rider: their own vehicle */}
                                 <td className="px-4 py-3">
-                                  {ridersByUserId.get(reporter.userId)
-                                    ?.vehicleNumber ?? "-"}
+                                  {isPassenger ? (
+                                    <>
+                                      <span className="uppercase">
+                                        {report.vehicleNumber ?? "-"}
+                                      </span>
+                                      {report.riderName && (
+                                        <div className="text-xs text-gray-500">
+                                          Rider: {report.riderName}
+                                        </div>
+                                      )}
+                                    </>
+                                  ) : (
+                                    ridersByUserId.get(reporter.userId)
+                                      ?.vehicleNumber ?? "-"
+                                  )}
                                 </td>
                                 <td className="px-4 py-3 max-w-xs wrap-break-words text-start">
                                   <div className="flex gap-1">
                                     <p>
-                                      {report.problem?.length > 20
-                                        ? report.problem.slice(0, 20) + "..."
-                                        : report.problem}
+                                      {!report.problem
+                                        ? "-"
+                                        : report.problem.length > 20
+                                          ? report.problem.slice(0, 20) + "..."
+                                          : report.problem}
                                     </p>
                                     {report.problem?.length > 20 && (
                                       <a
@@ -563,6 +630,17 @@ export default function Dashboard() {
                                   >
                                     {report.problem}
                                   </div>
+                                </td>
+                                <td className="px-4 py-3 min-w-56">
+                                  {report.voice || report.image ? (
+                                    <ReportAttachments
+                                      report={report}
+                                      fetchUrl={getReportFileUrlAdmin}
+                                      className="flex flex-col gap-2"
+                                    />
+                                  ) : (
+                                    "-"
+                                  )}
                                 </td>
                                 <td className="px-4 py-3">
                                   {new Date(report.createdAt).toLocaleString()}

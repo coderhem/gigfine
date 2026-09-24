@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
+
+export const metadata: Metadata = {
+  title: "Terms & Conditions",
+  description:
+    "The terms for using GIGFINE to report ride-sharing problems in Nepal as a passenger or rider.",
+  alternates: { canonical: "/terms-%26-conditions" },
+  openGraph: { url: "/terms-%26-conditions" },
+};
 
 const TermsAndCondition = () => {
   const today = new Date().toLocaleDateString("en-NP");

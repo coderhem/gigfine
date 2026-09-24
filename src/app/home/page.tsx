@@ -1,9 +1,16 @@
 "use client";
-import { getReportsByUser, REPORT_STATUS_LABEL } from "@/api/problem";
+import {
+  getReportsByUser,
+  REPORT_EDIT_HOURS,
+  REPORT_STATUS_LABEL,
+} from "@/api/problem";
+import { getUserMode } from "@/api/user";
 import ProblemForm from "@/app/components/forms/problemForm";
+import ReportAttachments from "@/app/components/reportAttachments";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FaCalendarAlt } from "react-icons/fa";
+import { FaCalendarAlt, FaEdit } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/redux/auth/authSlice";
 import LoadingSvg from "../components/loader/loadingSvg";
@@ -14,7 +21,6 @@ import LoadingSvg from "../components/loader/loadingSvg";
 // import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
-import PassengerProblemForm from "../components/forms/passengerProblemForm";
 
 const STATUS_BADGE: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
@@ -30,6 +36,10 @@ const Home = () => {
   const [problems, setProblems] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+
+  // Riders and passengers get their own report form and wording
+  const mode = getUserMode(user);
+  const isPassenger = mode === "PESSENGER";
 
   const fetchProblems = async () => {
     if (!user?.userId) return;
@@ -109,15 +119,25 @@ const Home = () => {
                   <div className="mb-5 text-secondary text-center">
                     <h2 className="h3 mb-2">Share your problem</h2>
                     <p className="font-medium">
-                      Tell us about your ride-sharing issues.
+                      {isPassenger
+                        ? "Tell us about a problem with your ride or rider."
+                        : "Tell us about your ride-sharing issues."}
                     </p>
                   </div>
-                  <ProblemForm onSuccess={fetchProblems} />
+                  <ProblemForm
+                    key={mode}
+                    mode={mode}
+                    onSuccess={fetchProblems}
+                  />
                 </div>
               </div>
-              <h1 className="h3 text-secondary text-center mb-7">
+              <h1 className="h3 text-secondary text-center mb-2">
                 Recent Problems
               </h1>
+              <p className="text-center text-secondary/70 text-sm mb-7">
+                {isPassenger ? "Passenger" : "Rider"} account · reports can be
+                edited for {REPORT_EDIT_HOURS} hours after posting
+              </p>
               <div className="flex justify-end mb-3">
                 <select
                   className="form-control py-2! w-auto!"
@@ -132,15 +152,21 @@ const Home = () => {
                   ))}
                 </select>
               </div>
-              <div className="relative border border-dashed border-secondary px-2 sm:px-4 py-7 [&_p]:mb-0 text-secondary font-medium">
-                {isLoading ? (
-                  <LoadingSvg
-                    className={"absolute left-1/2 top-1/2 -translate-1/2"}
-                  />
-                ) : problems.length === 0 ? (
-                  <div className="text-center">
-                    <p>No problems have been posted yet. Bet the first</p>
+              {/* Keep the current list on screen while refetching (e.g. status filter change)
+                  and overlay the loader, so the box doesn't collapse and the page doesn't jump.
+                  min-h-96 = list max-h-80 + padding, so switching filters keeps the same height */}
+              <div className="relative min-h-96 border border-dashed border-secondary px-2 sm:px-4 py-7 [&_p]:mb-0 text-secondary font-medium">
+                {isLoading && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
+                    <LoadingSvg />
                   </div>
+                )}
+                {problems.length === 0 ? (
+                  !isLoading && (
+                    <div className="text-center">
+                      <p>No problems have been posted yet. Bet the first</p>
+                    </div>
+                  )
                 ) : (
                   <div className="overflow-x-auto max-w-4xl mx-auto max-h-80 overflow-y-auto">
                     {problems.map((item: any) => (
@@ -152,9 +178,34 @@ const Home = () => {
                           <FaCalendarAlt />
                           {new Date(item.createdAt).toLocaleString()}
                         </span>
-                        <div className="mb-0 px-5 pb-5">
-                          <strong>{item.problem}</strong>
-                        </div>
+                        {item.problem && (
+                          <div className="mb-0 px-5 pb-5">
+                            <strong>{item.problem}</strong>
+                          </div>
+                        )}
+                        {(item.riderName || item.vehicleNumber) && (
+                          <div className="px-5 pb-4 text-sm flex flex-wrap gap-x-5">
+                            {item.riderName && (
+                              <span>Rider: {item.riderName}</span>
+                            )}
+                            {item.vehicleNumber && (
+                              <span className="uppercase">
+                                Vehicle: {item.vehicleNumber}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        <ReportAttachments report={item} />
+                        {item.editable && (
+                          <div className="px-5 pb-4 flex justify-end">
+                            <Link
+                              href={`/client/problem-management/edit/${item.reportId}`}
+                              className="text-sm flex items-center gap-1 underline hover:no-underline"
+                            >
+                              <FaEdit /> Edit
+                            </Link>
+                          </div>
+                        )}
                         <div className="mt-2 bg-secondary/20 py-2 px-3 flex gap-1 sm:gap-5 justify-between items-center max-sm:text-sm">
                           {/* <div className="flex justify-between gap-4 items-center p-5"> */}
                           <div className="flex items-center gap-2 bg-">

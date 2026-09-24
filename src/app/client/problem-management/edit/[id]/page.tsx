@@ -2,7 +2,10 @@
 
 import { use } from "react";
 import { useEffect, useState } from "react";
-import { getProblemById } from "@/api/problem";
+import Link from "next/link";
+import { useSelector } from "react-redux";
+import { getReportById, REPORT_EDIT_HOURS } from "@/api/problem";
+import { apiErrorMessage } from "@/api/config";
 import ProblemForm from "@/app/components/forms/problemForm";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 
@@ -14,17 +17,32 @@ type Props = {
 
 const UpdateProblemPage = ({ params }: Props) => {
   const { id } = use(params);
+  const { user } = useSelector((state: any) => state.auth);
 
   const [problem, setProblem] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProblem() {
-      const data = await getProblemById(id);
-      setProblem(data);
+      try {
+        setProblem(await getReportById(id));
+      } catch (err) {
+        setError(apiErrorMessage(err, "Could not load the report"));
+      }
     }
 
     fetchProblem();
   }, [id]);
+
+  // The backend enforces the same rules; this just explains why the form is hidden
+  const isOwner = problem && user?.userId === problem.reporter?.userId;
+  const blockedReason = !problem
+    ? null
+    : !isOwner
+      ? "You can only edit your own reports."
+      : !problem.editable
+        ? `Reports can only be edited within ${REPORT_EDIT_HOURS} hours of posting, while they are still pending.`
+        : null;
 
   return (
     <section className="flex h-full items-center max-w-2xl mx-auto">
@@ -36,12 +54,19 @@ const UpdateProblemPage = ({ params }: Props) => {
               Update your ride-sharing issues.
             </p>
           </div>
-          {!problem ? (
+          {error || blockedReason ? (
+            <div className="text-center">
+              <p className="text-red">{error ?? blockedReason}</p>
+              <Link href="/home" className="btn btn-primary">
+                Back to home
+              </Link>
+            </div>
+          ) : !problem ? (
             <div className="flex justify-center items-center">
               <LoadingSvg />
             </div>
           ) : (
-            <ProblemForm problem={problem.problem} />
+            <ProblemForm mode={problem.reporterMode} problem={problem} />
           )}
         </div>
       </div>

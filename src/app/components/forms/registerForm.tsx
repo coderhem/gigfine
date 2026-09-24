@@ -12,8 +12,12 @@ import { useDispatch, useSelector } from "react-redux";
 import LoadingSvg from "../loader/loadingSvg";
 import Confetti from "react-confetti";
 
-const RegisterForm = () => {
-  const [selectedRole] = useState<"rider" | "passenger">("rider");
+// Passengers register without vehicle/license, so the backend gives them ROLE_PASSENGER
+const RegisterForm = ({
+  selectedRole = "rider",
+}: {
+  selectedRole?: "rider" | "passenger";
+}) => {
   const [show, setShow] = useState(false);
   const router = useRouter();
 
@@ -59,6 +63,7 @@ const RegisterForm = () => {
   return (
     <>
       <form className="register-form" onSubmit={handleSubmit(submitForm)}>
+        <input type="hidden" {...register("role")} />
         <div className="field-wrapper">
           {/* Full Name */}
           <div className="form-group mb-4">
@@ -129,7 +134,7 @@ const RegisterForm = () => {
                 {...register("licenseNumber")}
               />
               <p className="text-xs px-1 text-secondary/70 mb-0">
-                e.g. 01-06-12345678
+                e.g. 010612345678
               </p>
               {errors.licenseNumber && (
                 <p className="text-red text-sm mt-1">
