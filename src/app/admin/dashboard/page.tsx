@@ -589,7 +589,7 @@ export default function Dashboard() {
                                 </td>
                                 <td className="px-4 py-3">{report.company}</td>
                                 {/* Passenger: the rider/vehicle they reported. Rider: their own vehicle */}
-                                <td className="px-4 py-3">
+                                <td className="px-4 py-3 whitespace-nowrap">
                                   {isPassenger ? (
                                     <>
                                       <span className="uppercase">
@@ -631,19 +631,19 @@ export default function Dashboard() {
                                     {report.problem}
                                   </div>
                                 </td>
-                                <td className="px-4 py-3 min-w-56">
+                                <td className="px-4 py-3">
                                   {report.voice || report.image ? (
                                     <ReportAttachments
                                       report={report}
                                       fetchUrl={getReportFileUrlAdmin}
                                       autoLoad
-                                      className="flex flex-col gap-2"
+                                      compact
                                     />
                                   ) : (
                                     "-"
                                   )}
                                 </td>
-                                <td className="px-4 py-3">
+                                <td className="px-4 py-3 whitespace-nowrap">
                                   {new Date(report.createdAt).toLocaleString()}
                                 </td>
                                 <td className="px-4 py-3">

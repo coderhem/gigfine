@@ -9,10 +9,10 @@ export const SITE_TITLE =
   "GIGFINE – Report Ride-Sharing Problems in Nepal | Pathao, inDrive, Yango";
 
 export const SITE_DESCRIPTION =
-  "GIGFINE is Nepal's platform for passengers and riders of every ride-sharing app — Pathao, inDrive, Yango, Sajilo, Firiri and more — to report incidents, safety concerns and payment issues with text, voice notes or photos, and track each report until it is resolved.";
+  "GIGFINE is Nepal's platform for passengers and riders of every ride-sharing app — Pathao, inDrive, Yango, Tufan, Uber, Sajilo, Firiri and more — to report incidents, safety concerns and payment issues with text, voice notes or photos, and track each report until it is resolved.";
 
 // Same list as the report form's company options
-export const RIDE_SHARING_APPS = ["Pathao", "inDrive", "Yango", "Sajilo", "Firiri"];
+export const RIDE_SHARING_APPS = ["Pathao", "inDrive", "Yango", "Tufan", "Uber", "Sajilo", "Firiri"];
 
 export const KEYWORDS = [
   "ride sharing complaint Nepal",
@@ -22,6 +22,8 @@ export const KEYWORDS = [
   "Yango complaint Nepal",
   "Sajilo complaint",
   "Firiri complaint",
+  "Tufan complaint",
+  "Uber complaint Nepal",
   "rider problem Nepal",
   "passenger safety Nepal",
   "ride incident report",

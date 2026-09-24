@@ -35,7 +35,7 @@ export default function OpengraphImage() {
             resolved.
           </div>
         </div>
-        <div style={{ display: "flex", gap: 16 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
           {RIDE_SHARING_APPS.map((app) => (
             <div
               key={app}

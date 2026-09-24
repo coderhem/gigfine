@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Create a Free Account – Passenger or Rider",
   description:
-    "Sign up free as a passenger or rider to report ride-sharing problems in Nepal — Pathao, inDrive, Yango, Sajilo, Firiri and more — and track every report until it is resolved.",
+    "Sign up free as a passenger or rider to report ride-sharing problems in Nepal — Pathao, inDrive, Yango, Tufan, Uber, Sajilo, Firiri and more — and track every report until it is resolved.",
   alternates: { canonical: "/register" },
   openGraph: { url: "/register" },
 };

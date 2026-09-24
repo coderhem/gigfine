@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { FaImage, FaPlay } from "react-icons/fa";
+import { Fancybox as NativeFancybox } from "@fancyapps/ui";
 import { getReportFileUrl } from "@/api/problem";
 
 type FetchUrl = (kind: "image" | "voice", fileName: string) => Promise<string>;
@@ -27,11 +28,13 @@ const Attachment = ({
   fileName,
   fetchUrl,
   autoLoad,
+  compact,
 }: {
   kind: "image" | "voice";
   fileName: string;
   fetchUrl: FetchUrl;
   autoLoad: boolean;
+  compact: boolean;
 }) => {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -82,35 +85,69 @@ const Attachment = ({
     return <span className="text-xs text-gray-500">Loading {kind}…</span>;
   }
 
-  return kind === "voice" ? (
-    <audio controls autoPlay={!autoLoad} src={url} className="w-full" />
-  ) : (
+  if (kind === "voice") {
+    return (
+      <audio
+        controls
+        autoPlay={!autoLoad}
+        src={url}
+        className={compact ? "h-9 w-56 max-w-full" : "w-full"}
+      />
+    );
+  }
+
+  if (compact) {
+    // Small thumbnail; the full image opens in a lightbox.
+    // type "image" is needed because a blob: URL has no file extension.
+    return (
+      <button
+        type="button"
+        onClick={() => NativeFancybox.show([{ src: url, type: "image" }])}
+        className="shrink-0 rounded border border-secondary/20 overflow-hidden cursor-zoom-in hover:ring-2 hover:ring-primary/50"
+        title="View image"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={url} alt="Report attachment" className="size-12 object-cover" />
+      </button>
+    );
+  }
+
+  return (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={url} alt="Report attachment" className="max-h-48 rounded" />
   );
 };
 
 // fetchUrl: pass getReportFileUrlAdmin on admin pages (they use the admin token)
+// compact: one-line layout for table rows (small player + thumbnail)
 const ReportAttachments = ({
   report,
   fetchUrl = getReportFileUrl,
   autoLoad = false,
-  className = "flex flex-col gap-3 px-5 pb-5",
+  compact = false,
+  className,
 }: {
   report: any;
   fetchUrl?: FetchUrl;
   autoLoad?: boolean;
+  compact?: boolean;
   className?: string;
 }) => {
   if (!report.voice && !report.image) return null;
+  const layout =
+    className ??
+    (compact
+      ? "flex items-center gap-2"
+      : "flex flex-col gap-3 px-5 pb-5");
   return (
-    <div className={className}>
+    <div className={layout}>
       {report.voice && (
         <Attachment
           kind="voice"
           fileName={report.voice}
           fetchUrl={fetchUrl}
           autoLoad={autoLoad}
+          compact={compact}
         />
       )}
       {report.image && (
@@ -119,6 +156,7 @@ const ReportAttachments = ({
           fileName={report.image}
           fetchUrl={fetchUrl}
           autoLoad={autoLoad}
+          compact={compact}
         />
       )}
     </div>

@@ -19,6 +19,7 @@ import {
   uploadReportVoice,
 } from "@/api/problem";
 import { apiErrorMessage } from "@/api/config";
+import { RIDE_SHARING_APPS } from "@/app/seo";
 
 type Props = {
   // "RIDER" | "PESSENGER" — passengers can also name the rider and vehicle
@@ -190,13 +191,12 @@ const ProblemForm = ({ mode, problem, onSuccess }: Props) => {
             {...register("company")}
           >
             <option value="">Select Company</option>
-            <option value="Pathao">Pathao</option>
-            <option value="inDrive">Indrive</option>
-            <option value="Yango">Yango</option>
-            <option value="Sajilo">Sajilo</option>
-            <option value="Firiri">Firiri</option>
-            {/* <option value="IDF">IDF</option>
-            <option value="ChiyaCut">ChiyaCut</option> */}
+            {/* Same list as the landing page / SEO — add new apps in seo.ts */}
+            {RIDE_SHARING_APPS.map((app) => (
+              <option key={app} value={app}>
+                {app}
+              </option>
+            ))}
           </select>
           {errors.company && (
             <p className="text-red text-sm  mt-1">
