@@ -189,6 +189,7 @@ export default function Dashboard() {
       r.riderName,
       r.vehicleNumber,
       ridersByUserId.get(r.reporter?.userId)?.vehicleNumber,
+      ridersByUserId.get(r.reporter?.userId)?.licenseNumber,
     ),
   );
 
@@ -536,7 +537,7 @@ export default function Dashboard() {
                       <th className="px-4 py-3 text-start">Phone</th>
                       <th className="px-4 py-3 text-start">Service</th>
                       <th className="px-4 py-3 text-start">Company</th>
-                      <th className="px-4 py-3 text-start">Vehicle No</th>
+                      <th className="px-4 py-3 text-start">Vehicle / License</th>
                       <th className="px-4 py-3 text-start">Problem</th>
                       <th className="px-4 py-3 text-start">Attachments</th>
                       <th className="px-4 py-3 text-start">Date</th>
@@ -555,6 +556,7 @@ export default function Dashboard() {
                             const reporter = report.reporter ?? {};
                             const isPassenger =
                               report.reporterMode === "PESSENGER";
+                            const rider = ridersByUserId.get(reporter.userId);
                             return (
                               <tr
                                 className="border-b border-secondary/20 transition-all duration-300 hover:bg-gray-300/20"
@@ -588,7 +590,7 @@ export default function Dashboard() {
                                   {report.service}
                                 </td>
                                 <td className="px-4 py-3">{report.company}</td>
-                                {/* Passenger: the rider/vehicle they reported. Rider: their own vehicle */}
+                                {/* Passenger: the rider/vehicle they reported. Rider: their own vehicle + license */}
                                 <td className="px-4 py-3 whitespace-nowrap">
                                   {isPassenger ? (
                                     <>
@@ -601,9 +603,20 @@ export default function Dashboard() {
                                         </div>
                                       )}
                                     </>
+                                  ) : rider ? (
+                                    <>
+                                      <span className="uppercase">
+                                        {rider.vehicleNumber || "-"}
+                                      </span>
+                                      <div className="text-xs text-gray-500">
+                                        License:{" "}
+                                        <span className="uppercase">
+                                          {rider.licenseNumber || "-"}
+                                        </span>
+                                      </div>
+                                    </>
                                   ) : (
-                                    ridersByUserId.get(reporter.userId)
-                                      ?.vehicleNumber ?? "-"
+                                    "-"
                                   )}
                                 </td>
                                 <td className="px-4 py-3 max-w-xs wrap-break-words text-start">
