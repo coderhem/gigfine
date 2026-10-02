@@ -1,6 +1,9 @@
-// Base URL of the User-Service backend (Spring Boot)
+// Base URL of the User-Service backend (Spring Boot).
+// In `next dev` it is empty so requests stay same-origin and go through the
+// /api/v1 rewrite in next.config.ts (avoids CORS on localhost).
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://api.gigfine.com";
+  process.env.NEXT_PUBLIC_API_URL ??
+  (process.env.NODE_ENV === "development" ? "" : "https://api.gigfine.com");
 
 export function authHeader() {
   const token = localStorage.getItem("token");
