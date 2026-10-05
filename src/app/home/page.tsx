@@ -69,7 +69,7 @@ const Home = () => {
 
   return (
     <>
-      <section className="h-full flex justify-center items-center relative before:absolute before:inset-0 before:bg-[url('./assets/images/bg-img.png')] before:object-center before:object-cover before:-z-1 before:bg-bottom before:bg-cover before:bg-no-repeat">
+      <section className="h-full relative before:absolute before:inset-0 before:bg-[url('./assets/images/bg-img.png')] before:object-center before:object-cover before:-z-1 before:bg-bottom before:bg-cover before:bg-no-repeat">
         <div className="max-w-4xl mx-auto">
           <div className="container">
             {/* <div className="p-0.5 relative overflow-hidden max-w-170 mx-auto">
