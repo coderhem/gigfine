@@ -69,9 +69,10 @@ const Home = () => {
 
   return (
     <>
-      <section className="h-full flex justify-center items-center max-w-4xl mx-auto">
-        <div className="container">
-          {/* <div className="p-0.5 relative overflow-hidden max-w-170 mx-auto">
+      <section className="h-full flex justify-center items-center relative before:absolute before:inset-0 before:bg-[url('./assets/images/bg-img.png')] before:object-center before:object-cover before:-z-1 before:bg-bottom before:bg-cover before:bg-no-repeat">
+        <div className="max-w-4xl mx-auto">
+          <div className="container">
+            {/* <div className="p-0.5 relative overflow-hidden max-w-170 mx-auto">
             <div className="bg-white shadow-secondary/5 p-4 œtext-center relative before:absolute before:-left-5 before:size-20 before:rounded-full before:bg-primary/30 before:-bottom-5 after:absolute after:inset-0 after:bg-[conic-gradient(#ef4444,#f97316,#eab308,#ef4444)] after:animate-spin after:-z-1">
               <h1 className="h3 text-primary mb-5 text-center">
                 Join Protest✊
@@ -110,140 +111,143 @@ const Home = () => {
             <div className="absolute -z-1 inset-0 blur-xl opacity-60 bg-[conic-gradient(from_0deg,#4285F4,#34A853,#FBBC05,#EA4335,#4285F4)] animate-[spin_3s_linear_infinite]" />
           </div> */}
 
-          <div className="flex flex-col mt-5">
-            <div className="flex-1 overflow-y-auto bg-secondary/1 backdrop-blur-sm rounded sm:px-3 py-4 h-full">
-              <div
-                id="popup"
-                className="hidden rounded-2xl p-3! sm:p-7! w-full max-w-11/12 md:max-w-4/5 lg:max-w-3/5 xl:max-w-2/5"
-              >
-                <div className="bg-secondary/10 p-4 rounded w-full">
-                  <div className="mb-5 text-secondary text-center">
-                    <h2 className="h3 mb-2 normal-case">Report an issues</h2>
-                    <p className="font-medium">
-                      {isPassenger
-                        ? "Tell us about a problem with your ride or rider."
-                        : "Tell us about your ride-sharing issues."}
-                    </p>
-                  </div>
-                  <ProblemForm
-                    key={mode}
-                    mode={mode}
-                    onSuccess={fetchProblems}
-                  />
-                </div>
-              </div>
-              <h1 className="h3 text-secondary text-center mb-2">
-                Recent Issues
-              </h1>
-              <p className="text-center text-secondary/70 text-sm mb-7">
-                {isPassenger ? "Passenger" : "Rider"} account · 
-                edited {REPORT_EDIT_HOURS} hours after posting
-              </p>
-              <div className="flex justify-end mb-3 relative">
-                <select
-                  className="form-control py-2! pr-8! h-10! w-auto! bg-secondary/10! text-secondary! rounded-2xl! text-sm! appearance-none"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+            <div className="flex flex-col mt-5">
+              <div className="flex-1 overflow-y-auto bg-secondary/1 backdrop-blur-sm rounded sm:px-3 py-4 h-full">
+                <div
+                  id="popup"
+                  className="hidden rounded-2xl p-3! sm:p-7! w-full max-w-11/12 md:max-w-4/5 lg:max-w-3/5 xl:max-w-2/5"
                 >
-                  <option value="">All Status</option>
-                  {Object.entries(REPORT_STATUS_LABEL).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label as string}
-                    </option>
-                  ))}
-                </select>
-                <MdArrowDropDown className="absolute top-1/2 -translate-y-1/2 right-3 text-2xl text-secondary"/>
-              </div>
-              {/* Keep the current list on screen while refetching (e.g. status filter change)
+                  <div className="bg-secondary/10 p-4 rounded w-full">
+                    <div className="mb-5 text-secondary text-center">
+                      <h2 className="h3 mb-2">Report your issues.</h2>
+                      <p className="font-medium">
+                        {isPassenger
+                          ? "Tell us about a problem with your ride or rider."
+                          : "Tell us about your ride-sharing issues."}
+                      </p>
+                    </div>
+                    <ProblemForm
+                      key={mode}
+                      mode={mode}
+                      onSuccess={fetchProblems}
+                    />
+                  </div>
+                </div>
+                <h1 className="h3 text-secondary text-center mb-2">
+                  Recent Issues
+                </h1>
+                <p className="text-center text-secondary/70 text-sm mb-7">
+                  {isPassenger ? "Passenger" : "Rider"} account · edited{" "}
+                  {REPORT_EDIT_HOURS} hours after posting
+                </p>
+                <div className="flex justify-end mb-3 relative">
+                  <select
+                    className="form-control py-2! pr-8! h-10! w-auto! bg-secondary/10! text-secondary! rounded-2xl! text-sm! appearance-none"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option value="">All Status</option>
+                    {Object.entries(REPORT_STATUS_LABEL).map(
+                      ([value, label]) => (
+                        <option key={value} value={value}>
+                          {label as string}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                  <MdArrowDropDown className="absolute top-1/2 -translate-y-1/2 right-3 text-2xl text-secondary" />
+                </div>
+                {/* Keep the current list on screen while refetching (e.g. status filter change)
                   and overlay the loader, so the box doesn't collapse and the page doesn't jump.
                   min-h-96 = list max-h-80 + padding, so switching filters keeps the same height */}
-              <div className="relative min-h-96 border border-dashed border-secondary px-2 sm:px-4 py-7 [&_p]:mb-0 text-secondary font-medium">
-                {isLoading && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
-                    <LoadingSvg />
-                  </div>
-                )}
-                {problems.length === 0 ? (
-                  !isLoading && (
-                    <div className="text-center">
-                      <p>No problems have been posted yet. Bet the first</p>
+                <div className="relative min-h-96 border border-dashed border-secondary px-2 sm:px-4 py-7 [&_p]:mb-0 text-secondary font-medium">
+                  {isLoading && (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
+                      <LoadingSvg />
                     </div>
-                  )
-                ) : (
-                  <div className="overflow-x-auto max-w-4xl mx-auto max-h-80 overflow-y-auto">
-                    {problems.map((item: any) => (
-                      <div
-                        className="border border-secondary/20 mb-5 rounded"
-                        key={item.reportId}
-                      >
-                        <span className="text-secondary text-sm flex items-center gap-1 justify-end px-5 py-3">
-                          <FaCalendarAlt />
-                          {new Date(item.createdAt).toLocaleString()}
-                        </span>
-                        {item.problem && (
-                          <div className="mb-0 px-5 pb-5">
-                            <strong>{item.problem}</strong>
-                          </div>
-                        )}
-                        {(item.riderName || item.vehicleNumber) && (
-                          <div className="px-5 pb-4 text-sm flex flex-wrap gap-x-5">
-                            {item.riderName && (
-                              <span>Rider: {item.riderName}</span>
-                            )}
-                            {item.vehicleNumber && (
-                              <span className="uppercase">
-                                Vehicle: {item.vehicleNumber}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        <ReportAttachments report={item} />
-                        {item.editable && (
-                          <div className="px-5 pb-4 flex justify-end">
-                            <Link
-                              href={`/client/problem-management/edit/${item.reportId}`}
-                              className="text-sm flex items-center gap-1 underline hover:no-underline"
-                            >
-                              <FaEdit /> Edit
-                            </Link>
-                          </div>
-                        )}
-                        <div className="mt-2 bg-secondary/20 py-2 px-3 flex gap-1 sm:gap-5 justify-between items-center max-sm:text-sm">
-                          {/* <div className="flex justify-between gap-4 items-center p-5"> */}
-                          <div className="flex items-center gap-2 bg-">
-                            <span className="font-bold capitalize bg-secondary text-white mb-0 px-2 py-1 rounded ca">
-                              {item.company}
-                            </span>
-                            {item.service && (
-                              <span className="text-secondary font-medium p-1 rounded capitalize">
-                                {item.service}
-                              </span>
-                            )}
-                          </div>
-                          <span
-                            className={`text-xs sm:text-sm font-semibold px-2 py-1 rounded ${
-                              STATUS_BADGE[item.status] ?? "bg-secondary/10"
-                            }`}
-                          >
-                            {(REPORT_STATUS_LABEL as Record<string, string>)[
-                              item.status
-                            ] ?? item.status}
-                          </span>
-                        </div>
-                        {/* </div> */}
+                  )}
+                  {problems.length === 0 ? (
+                    !isLoading && (
+                      <div className="text-center">
+                        <p>No problems have been posted yet. Bet the first</p>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="mt-6">
-                <a
-                  href="#popup"
-                  className="text-end btn btn-primary w-full py-4 focus:ring-0 focus:ring-transparent focus:bg-primary focus:text-white focus:border-primary"
-                  data-fancybox
-                >
-                  Report an issues +
-                </a>
+                    )
+                  ) : (
+                    <div className="overflow-x-auto max-w-4xl mx-auto max-h-80 overflow-y-auto">
+                      {problems.map((item: any) => (
+                        <div
+                          className="border border-secondary/20 mb-5 rounded"
+                          key={item.reportId}
+                        >
+                          <span className="text-secondary text-sm flex items-center gap-1 justify-end px-5 py-3">
+                            <FaCalendarAlt />
+                            {new Date(item.createdAt).toLocaleString()}
+                          </span>
+                          {item.problem && (
+                            <div className="mb-0 px-5 pb-5">
+                              <strong>{item.problem}</strong>
+                            </div>
+                          )}
+                          {(item.riderName || item.vehicleNumber) && (
+                            <div className="px-5 pb-4 text-sm flex flex-wrap gap-x-5">
+                              {item.riderName && (
+                                <span>Rider: {item.riderName}</span>
+                              )}
+                              {item.vehicleNumber && (
+                                <span className="uppercase">
+                                  Vehicle: {item.vehicleNumber}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          <ReportAttachments report={item} />
+                          {item.editable && (
+                            <div className="px-5 pb-4 flex justify-end">
+                              <Link
+                                href={`/client/problem-management/edit/${item.reportId}`}
+                                className="text-sm flex items-center gap-1 underline hover:no-underline"
+                              >
+                                <FaEdit /> Edit
+                              </Link>
+                            </div>
+                          )}
+                          <div className="mt-2 bg-secondary/20 py-2 px-3 flex gap-1 sm:gap-5 justify-between items-center max-sm:text-sm">
+                            {/* <div className="flex justify-between gap-4 items-center p-5"> */}
+                            <div className="flex items-center gap-2 bg-">
+                              <span className="font-bold capitalize bg-secondary text-white mb-0 px-2 py-1 rounded ca">
+                                {item.company}
+                              </span>
+                              {item.service && (
+                                <span className="text-secondary font-medium p-1 rounded capitalize">
+                                  {item.service}
+                                </span>
+                              )}
+                            </div>
+                            <span
+                              className={`text-xs sm:text-sm font-semibold px-2 py-1 rounded ${
+                                STATUS_BADGE[item.status] ?? "bg-secondary/10"
+                              }`}
+                            >
+                              {(REPORT_STATUS_LABEL as Record<string, string>)[
+                                item.status
+                              ] ?? item.status}
+                            </span>
+                          </div>
+                          {/* </div> */}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="mt-6">
+                  <a
+                    href="#popup"
+                    className="text-end btn btn-primary w-full py-4 focus:ring-0 focus:ring-transparent focus:bg-primary focus:text-white focus:border-primary"
+                    data-fancybox
+                  >
+                    Report an issues +
+                  </a>
+                </div>
               </div>
             </div>
           </div>

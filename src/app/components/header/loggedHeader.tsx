@@ -73,7 +73,7 @@ const LoggedHeader = () => {
   }, [user]);
 
   return (
-    <div className="shadow shadow-secondary/10">
+    <div className="bg-white shadow shadow-secondary/10 fixed left-0 right-0 z-10">
       <div className="container">
         <div className="py-4 flex flex-wrap -mx-1 justify-between items-center">
           {/* Logo */}
