@@ -145,7 +145,7 @@ const RegisterForm = ({
           )}
 
           {/* Password */}
-          <div className="form-group mb-4 w-full!">
+          <div className="form-group mb-4">
             <div className="relative">
               <input
                 type={show ? "text" : "password"}

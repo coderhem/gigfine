@@ -21,6 +21,7 @@ import LoadingSvg from "../components/loader/loadingSvg";
 // import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import { MdArrowDropDown } from "react-icons/md";
 
 const STATUS_BADGE: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
@@ -109,7 +110,7 @@ const Home = () => {
             <div className="absolute -z-1 inset-0 blur-xl opacity-60 bg-[conic-gradient(from_0deg,#4285F4,#34A853,#FBBC05,#EA4335,#4285F4)] animate-[spin_3s_linear_infinite]" />
           </div> */}
 
-          <div className="flex flex-col mt-10">
+          <div className="flex flex-col mt-5">
             <div className="flex-1 overflow-y-auto bg-secondary/1 backdrop-blur-sm rounded sm:px-3 py-4 h-full">
               <div
                 id="popup"
@@ -117,7 +118,7 @@ const Home = () => {
               >
                 <div className="bg-secondary/10 p-4 rounded w-full">
                   <div className="mb-5 text-secondary text-center">
-                    <h2 className="h3 mb-2">Share your problem</h2>
+                    <h2 className="h3 mb-2 normal-case">Report an issues</h2>
                     <p className="font-medium">
                       {isPassenger
                         ? "Tell us about a problem with your ride or rider."
@@ -132,15 +133,15 @@ const Home = () => {
                 </div>
               </div>
               <h1 className="h3 text-secondary text-center mb-2">
-                Recent Problems
+                Recent Issues
               </h1>
               <p className="text-center text-secondary/70 text-sm mb-7">
-                {isPassenger ? "Passenger" : "Rider"} account · reports can be
-                edited for {REPORT_EDIT_HOURS} hours after posting
+                {isPassenger ? "Passenger" : "Rider"} account · 
+                edited {REPORT_EDIT_HOURS} hours after posting
               </p>
-              <div className="flex justify-end mb-3">
+              <div className="flex justify-end mb-3 relative">
                 <select
-                  className="form-control py-2! w-auto!"
+                  className="form-control py-2! pr-8! h-10! w-auto! bg-secondary/10! text-secondary! rounded-2xl! text-sm! appearance-none"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -151,6 +152,7 @@ const Home = () => {
                     </option>
                   ))}
                 </select>
+                <MdArrowDropDown className="absolute top-1/2 -translate-y-1/2 right-3 text-2xl text-secondary"/>
               </div>
               {/* Keep the current list on screen while refetching (e.g. status filter change)
                   and overlay the loader, so the box doesn't collapse and the page doesn't jump.
@@ -240,7 +242,7 @@ const Home = () => {
                   className="text-end btn btn-primary w-full py-4 focus:ring-0 focus:ring-transparent focus:bg-primary focus:text-white focus:border-primary"
                   data-fancybox
                 >
-                  Share Your Problem +
+                  Report an issues +
                 </a>
               </div>
             </div>

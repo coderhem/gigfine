@@ -72,7 +72,7 @@ export default function RootLayout({
       lang="en"
       className={`${outfit.variable} ${montserrat.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col relative before:absolute before:inset-0 before:bg-[url('./assets/images/bg-img.png')] before:object-center before:object-cover before:-z-1 before:bg-bottom before:bg-cover before:bg-no-repeat">
+      <body className="min-h-full flex flex-col">
         <Providers>
           <Fancybox>
             <AuthGuard>

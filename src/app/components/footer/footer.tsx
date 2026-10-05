@@ -19,7 +19,7 @@ const Footer = () => {
         <div className="flex flex-wrap justify-between gap-6 pb-6 border-b border-white/15">
           <div className="max-w-md">
             <p className="text-xl font-bold">
-              GIG<span className="text-primary">FINE</span>
+              GIGFINE
             </p>
             <p className="text-white/75 text-sm mt-2">
               Report ride-sharing problems in Nepal — for passengers and riders

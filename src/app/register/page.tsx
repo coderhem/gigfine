@@ -34,45 +34,49 @@ const Register = () => {
   }, [user, router]);
 
   return (
-    <div className="flex justify-center items-center h-full">
-      <div className="container">
-        <div className="bg-white p-4 sm:px-7 sm:py-6 max-w-2xl mx-auto shadow-2xl rounded-md">
-          <div className="mb-8">
-            <h3 className="normal-case">
-              Register to <span className="text-primary">GIGFINE</span>
-            </h3>
-            <p className="mb-0">
-              Join GIGFINE to report issues and get support.
-            </p>
-            <div
-              className="flex flex-wrap gap-3 mt-5"
-              role="radiogroup"
-              aria-label="Register as"
-            >
-              {ROLES.map(({ value, label, icon: Icon }) => {
-                const selected = selectedRole === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => setSelectedRole(value)}
-                    className={`${TOGGLE_BASE} ${
-                      selected ? TOGGLE_SELECTED : TOGGLE_IDLE
-                    }`}
-                  >
-                    <Icon aria-hidden />
-                    {label}
-                  </button>
-                );
-              })}
+    <>
+      <section className="py-10 relative before:absolute before:inset-0 before:bg-[url('./assets/images/bg-img.png')] before:object-center before:object-cover before:-z-1 before:bg-bottom before:bg-cover before:bg-no-repeat">
+        <div className="flex justify-center items-center h-full">
+          <div className="container">
+            <div className="bg-white p-4 sm:px-7 sm:py-6 max-w-2xl mx-auto shadow-2xl rounded-md">
+              <div className="mb-8">
+                <h3 className="normal-case">
+                  Register to <span className="text-primary">GIGFINE</span>
+                </h3>
+                <p className="mb-0">
+                  Join GIGFINE to report issues and get support.
+                </p>
+                <div
+                  className="flex flex-wrap gap-3 mt-5"
+                  role="radiogroup"
+                  aria-label="Register as"
+                >
+                  {ROLES.map(({ value, label, icon: Icon }) => {
+                    const selected = selectedRole === value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => setSelectedRole(value)}
+                        className={`${TOGGLE_BASE} ${
+                          selected ? TOGGLE_SELECTED : TOGGLE_IDLE
+                        }`}
+                      >
+                        <Icon aria-hidden />
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <RegisterForm selectedRole={selectedRole} />
             </div>
           </div>
-          <RegisterForm selectedRole={selectedRole} />
         </div>
-      </div>
-    </div>
+      </section>
+    </>
   );
 };
 

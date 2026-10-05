@@ -167,7 +167,7 @@ export default function Landing() {
       />
 
       {/* Hero + login */}
-      <section className="py-10 lg:py-16">
+      <section className="py-10 lg:py-16 relative before:absolute before:inset-0 before:bg-[url('./assets/images/bg-img.png')] before:object-center before:object-cover before:-z-1 before:bg-bottom before:bg-cover before:bg-no-repeat">
         <div className="container">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div>

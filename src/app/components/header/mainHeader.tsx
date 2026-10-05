@@ -23,7 +23,7 @@ const MainHeader = () => {
             </Link>
             <ul className="w-7/12 flex flex-wrap px-1 -mx-1.5 items-center justify-end">
               <li className="px-1.5">
-                <Link href="/#login" className="btn btn-primary">
+                <Link href="/login" className="btn btn-primary">
                   Login
                 </Link>
               </li>
