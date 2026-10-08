@@ -28,5 +28,5 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
-EXPOSE 8088 8089
+EXPOSE 8088 8089 8090
 CMD ["node", "server.js"]

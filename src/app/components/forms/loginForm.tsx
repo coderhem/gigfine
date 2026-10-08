@@ -12,11 +12,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { loggedUser } from "@/redux/auth/authActions";
 import { logout } from "@/redux/auth/authSlice";
 import { ADMIN_URL, isAdmin } from "@/api/admin";
+import { BUSINESS_URL, isBusiness } from "@/api/business";
 import LoadingSvg from "../loader/loadingSvg";
 
-const LoginForm = () => {
+// variant "business": the form on business.gigfine.com/business/login
+const LoginForm = ({ variant = "user" }: { variant?: "user" | "business" }) => {
   const router = useRouter();
   const dispatch = useDispatch<any>();
+  const isBusinessSite = variant === "business";
 
   const [show, setShow] = useState(false);
 
@@ -40,6 +43,21 @@ const LoginForm = () => {
         dispatch(logout());
         toast.success("Redirecting to admin panel...");
         window.location.href = `${ADMIN_URL}/admin/login#token=${encodeURIComponent(token)}`;
+        return;
+      }
+
+      if (isBusinessSite) {
+        toast.success("Login successful!");
+        router.push("/business");
+        return;
+      }
+
+      // Businesses use their own site — hand the session over like admins
+      if (isBusiness(user)) {
+        const token = localStorage.getItem("token") ?? "";
+        dispatch(logout());
+        toast.success("Redirecting to business panel...");
+        window.location.href = `${BUSINESS_URL}/business/login#token=${encodeURIComponent(token)}`;
         return;
       }
 
@@ -114,17 +132,22 @@ const LoginForm = () => {
 
       {/* Bottom links */}
       <div className="pt-5 pb-1 text-center">
-        <div className="text-end mb-3">
-          <Link
-            className="text-sm underline hover:no-underline"
-            href="/client/forgot-password"
-          >
-            Forgot Password
-          </Link>
-        </div>
+        {!isBusinessSite && (
+          <div className="text-end mb-3">
+            <Link
+              className="text-sm underline hover:no-underline"
+              href="/client/forgot-password"
+            >
+              Forgot Password
+            </Link>
+          </div>
+        )}
 
         <p className="mb-0 max-sm:text-sm">
-          Don't have an account? <Link href="/register">Register</Link>
+          Don't have an account?{" "}
+          <Link href={isBusinessSite ? "/business/register" : "/register"}>
+            Register
+          </Link>
         </p>
       </div>
 

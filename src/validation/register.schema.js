@@ -81,6 +81,29 @@ export const registerValidation = z
   //   }
   // });
 
+const required = (label) => z.string().trim().min(1, `${label} is required.`);
+
+const phoneField = (label) =>
+  required(label)
+    .length(10, `${label} must be exactly 10 digits.`)
+    .regex(/^\d+$/, `${label} must contain only digits`);
+
+// business.gigfine.com sign-up: the account fields + the business details
+export const businessRegisterValidation = z.object({
+  name: required("Business name").min(2, "Minimum 2 characters required."),
+  phone: phoneField("Business phone"),
+  email: required("Email").regex(
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    "Please enter a valid email address.",
+  ),
+  registrationNo: required("Registration number"),
+  panNo: required("PAN number"),
+  businessLocation: required("Business location"),
+  ownerName: required("Owner name"),
+  ownerPhone: phoneField("Owner phone"),
+  password: required("Password").min(8, "Password must be at least 8 characters."),
+});
+
 export const loginValidation = z.object({
   // Backend accepts either mobile number or email as the username
   phone: z

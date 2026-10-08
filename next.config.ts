@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   // Minimal self-contained server bundle for the Docker image
   output: "standalone",
 
+  // Let `next dev` be opened from other devices on the LAN (phone testing etc.)
+  allowedDevOrigins: ["192.168.18.11"],
+
   // Local dev only: the browser calls same-origin /api/v1/* and Next forwards it
   // to the backend server-side, so there is no CORS preflight to fail.
   async rewrites() {

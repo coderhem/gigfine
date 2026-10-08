@@ -3,8 +3,10 @@ import { API_BASE_URL } from "./config.js";
 
 export const ADMIN_ROLE = "ROLE_ADMIN";
 
+// In `next dev` the admin panel is on the same server, so stay on the current origin
 export const ADMIN_URL =
-  process.env.NEXT_PUBLIC_ADMIN_URL || "https://admin.gigfine.com";
+  process.env.NEXT_PUBLIC_ADMIN_URL ??
+  (process.env.NODE_ENV === "development" ? "" : "https://admin.gigfine.com");
 
 export const isAdmin = (user) => !!user?.roles?.includes(ADMIN_ROLE);
 
@@ -90,6 +92,46 @@ export const getReportFileUrlAdmin = async (kind, fileName) => {
 
 export const updateReportStatus = async (reportId, status) =>
   (await adminApi.put(`/api/v1/reports/${reportId}/status`, { status })).data;
+
+// businessUserId null takes the report back from the business
+export const forwardReport = async (reportId, businessUserId) =>
+  (await adminApi.put(`/api/v1/reports/${reportId}/forward`, { businessUserId })).data;
+
+// ---------- Businesses ----------
+
+// filters: { status, mobile, name, registrationNo, panNo, sortBy, direction } — all optional
+export const searchBusinesses = async (filters = {}) => {
+  const params = Object.fromEntries(
+    Object.entries(filters).filter(([, v]) => v !== "" && v != null),
+  );
+  return (await adminApi.get("/api/v1/businesses", { params })).data;
+};
+
+// "APPROVED" gives the user ROLE_BUSINESS, "PENDING" takes it away
+export const updateBusinessStatus = async (userId, status) =>
+  (await adminApi.put(`/api/v1/businesses/${userId}/status`, { status })).data;
+
+// Registration certificate / PAN images. Returns an object URL — revoke it when done.
+export const getBusinessDocUrlAdmin = async (fileName) => {
+  const res = await adminApi.get(
+    `/api/v1/users/image/${encodeURIComponent(fileName)}`,
+    { responseType: "blob" },
+  );
+  return URL.createObjectURL(res.data);
+};
+
+// ---------- Roles ----------
+
+// role: "admin" | "business" | "rider" | "passenger"
+export const getUsersByRole = async (role) =>
+  (await adminApi.get(`/api/v1/roles/${role}/users`)).data;
+
+export const assignRole = async (mobile, role) =>
+  (await adminApi.post("/api/v1/roles/assign", { mobile, role })).data;
+
+// Removes every role and keeps only passenger. Pass { userId } or { mobile }.
+export const removeRoles = async (target) =>
+  (await adminApi.post("/api/v1/roles/remove", target)).data;
 
 // Mirrors ReportStatus.allowedNext() in the backend
 export const NEXT_STATUSES = {

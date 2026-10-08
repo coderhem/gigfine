@@ -21,3 +21,15 @@ services:
     ports:
       - "8089:8089"
     restart: unless-stopped
+
+  business:
+    image: gigfine:latest
+    container_name: gigfine-business
+    depends_on:
+      - web
+    environment:
+      PORT: 8090
+      APP_MODE: business
+    ports:
+      - "8090:8090"
+    restart: unless-stopped

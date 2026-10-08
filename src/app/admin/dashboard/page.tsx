@@ -2,11 +2,13 @@
 
 import {
   deleteUser,
+  forwardReport,
   getAllRiders,
   getAllUsers,
   getReportFileUrlAdmin,
   getReports,
   NEXT_STATUSES,
+  searchBusinesses,
   updateReportStatus,
 } from "@/api/admin";
 import { apiErrorMessage } from "@/api/config";
@@ -14,7 +16,7 @@ import { REPORT_STATUS_LABEL } from "@/api/problem";
 import ReportAttachments from "@/app/components/reportAttachments";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { FaBiking, FaUser } from "react-icons/fa";
+import { FaBiking, FaBuilding, FaUser, FaUserShield } from "react-icons/fa";
 import { MdOutlineReportProblem } from "react-icons/md";
 import LoadingSvg from "../../components/loader/loadingSvg";
 import DeleteBtn from "../../components/crudOperationBtns/deleteBtn";
@@ -22,8 +24,10 @@ import toast from "react-hot-toast";
 import { HiShieldCheck } from "react-icons/hi2";
 import Pagination from "@/app/components/paginationUI/pagination";
 import Link from "next/link";
+import BusinessSection from "../components/businessSection";
+import RoleManagement from "../components/roleManagement";
 
-type MenuType = "riders" | "passengers" | "reports";
+type MenuType = "riders" | "passengers" | "reports" | "businesses" | "roles";
 
 const PER_PAGE = 10;
 
@@ -51,7 +55,12 @@ const MENU_TITLE: Record<MenuType, string> = {
   riders: "Rider Details",
   passengers: "Passenger Details",
   reports: "User Reports",
+  businesses: "Businesses",
+  roles: "Role Management",
 };
+
+// These sections have their own filters and counts
+const SELF_CONTAINED: MenuType[] = ["businesses", "roles"];
 
 function paginate<T>(items: T[], page: number) {
   return items.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -93,6 +102,8 @@ export default function Dashboard() {
   const [reports, setReports] = useState<any[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [reportsLoading, setReportsLoading] = useState(true);
+  // Approved businesses a report can be forwarded to
+  const [approvedBusinesses, setApprovedBusinesses] = useState<any[]>([]);
 
   // Report filters (sent to the backend)
   const [statusFilter, setStatusFilter] = useState("");
@@ -143,9 +154,24 @@ export default function Dashboard() {
     }
   };
 
+  const fetchApprovedBusinesses = async () => {
+    try {
+      setApprovedBusinesses(
+        await searchBusinesses({ status: "APPROVED", sortBy: "name", direction: "asc" }),
+      );
+    } catch (err) {
+      toast.error(apiErrorMessage(err, "Failed to load businesses"));
+    }
+  };
+
   useEffect(() => {
     if (authorized) fetchUsers();
   }, [authorized]);
+
+  // Refresh when opening reports so newly approved businesses show up
+  useEffect(() => {
+    if (authorized && activeMenu === "reports") fetchApprovedBusinesses();
+  }, [authorized, activeMenu]);
 
   useEffect(() => {
     if (authorized) fetchReports();
@@ -193,11 +219,12 @@ export default function Dashboard() {
     ),
   );
 
-  const activeCount = {
+  const activeCount: Partial<Record<MenuType, number>> = {
     riders: riderRows.length,
     passengers: passengerRows.length,
     reports: reportRows.length,
-  }[activeMenu];
+  };
+  const showSearch = !SELF_CONTAINED.includes(activeMenu);
 
   const handleDeleteUser = async (userId: number) => {
     try {
@@ -218,6 +245,25 @@ export default function Dashboard() {
       toast.success(`Report marked as ${STATUS_LABEL[status]}.`);
     } catch (err) {
       toast.error(apiErrorMessage(err, "Failed to update status"));
+    }
+  };
+
+  const handleForward = async (reportId: number, businessUserId: string) => {
+    try {
+      const updated = await forwardReport(
+        reportId,
+        businessUserId ? Number(businessUserId) : null,
+      );
+      setReports((prev) =>
+        prev.map((r) => (r.reportId === reportId ? updated : r)),
+      );
+      toast.success(
+        updated.forwardedBusinessName
+          ? `Report forwarded to ${updated.forwardedBusinessName}.`
+          : "Report taken back from the business.",
+      );
+    } catch (err) {
+      toast.error(apiErrorMessage(err, "Failed to forward report"));
     }
   };
 
@@ -288,6 +334,8 @@ export default function Dashboard() {
           {menuBtn("riders", <FaBiking />, "Rider Details")}
           {menuBtn("passengers", <FaUser />, "Passenger Details")}
           {menuBtn("reports", <MdOutlineReportProblem />, "User Reports")}
+          {menuBtn("businesses", <FaBuilding />, "Businesses")}
+          {menuBtn("roles", <FaUserShield />, "Role Management")}
           <Link
             href={"/admin/notifications/add"}
             className="w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex flex-wrap gap-2 items-center hover:bg-primary"
@@ -308,10 +356,12 @@ export default function Dashboard() {
         <div className="mb-5 fixed z-20 left-40 lg:left-72 p-5 bg-white shadow right-0 top-0 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <h2 className="text-xl font-semibold text-secondary">
             {MENU_TITLE[activeMenu]}{" "}
-            <span className="text-primary">({activeCount})</span>
+            {showSearch && (
+              <span className="text-primary">({activeCount[activeMenu]})</span>
+            )}
           </h2>
 
-          <div className="relative w-full md:w-80">
+          <div className={`relative w-full md:w-80 ${showSearch ? "" : "invisible"}`}>
             <input
               type="text"
               placeholder="Search..."
@@ -542,13 +592,14 @@ export default function Dashboard() {
                       <th className="px-4 py-3 text-start">Attachments</th>
                       <th className="px-4 py-3 text-start">Date</th>
                       <th className="px-4 py-3 text-start">Status</th>
+                      <th className="px-4 py-3 text-start">Forwarded to</th>
                     </tr>
                   </thead>
                   <tbody className="text-gray-700">
                     {reportsLoading
-                      ? loadingRow(11)
+                      ? loadingRow(12)
                       : reportRows.length === 0
-                        ? emptyRow(11, "No reports found.")
+                        ? emptyRow(12, "No reports found.")
                         : paginate(reportRows, page).map((report, i) => {
                             const next = NEXT_STATUSES[
                               report.status as keyof typeof NEXT_STATUSES
@@ -693,6 +744,31 @@ export default function Dashboard() {
                                     )}
                                   </div>
                                 </td>
+                                <td className="px-4 py-3">
+                                  <select
+                                    className="border rounded px-1 py-1 text-xs max-w-40"
+                                    value={report.forwardedBusinessUserId ?? ""}
+                                    onChange={(e) =>
+                                      handleForward(report.reportId, e.target.value)
+                                    }
+                                  >
+                                    <option value="">Not forwarded</option>
+                                    {/* Keep the current business listed even if it is no longer approved */}
+                                    {report.forwardedBusinessUserId &&
+                                      !approvedBusinesses.some(
+                                        (b) => b.userId === report.forwardedBusinessUserId,
+                                      ) && (
+                                        <option value={report.forwardedBusinessUserId}>
+                                          {report.forwardedBusinessName}
+                                        </option>
+                                      )}
+                                    {approvedBusinesses.map((b) => (
+                                      <option key={b.userId} value={b.userId}>
+                                        {b.businessName}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </td>
                               </tr>
                             );
                           })}
@@ -707,6 +783,10 @@ export default function Dashboard() {
             </div>
           </>
         )}
+
+        {activeMenu === "businesses" && <BusinessSection />}
+
+        {activeMenu === "roles" && <RoleManagement />}
       </div>
     </div>
   );
