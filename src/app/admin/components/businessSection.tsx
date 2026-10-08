@@ -9,6 +9,7 @@ import { BUSINESS_STATUS_LABEL } from "@/api/business";
 import { apiErrorMessage } from "@/api/config";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import Pagination from "@/app/components/paginationUI/pagination";
+import { Fancybox as NativeFancybox } from "@fancyapps/ui";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -43,11 +44,14 @@ const EMPTY_FILTERS = {
   direction: "desc",
 };
 
-// Opens a registration certificate / PAN image in a new tab
+// Shows a registration certificate / PAN image in a lightbox (has a close button).
+// type "image" is needed because a blob: URL has no file extension.
 async function openDocument(fileName: string) {
   try {
     const url = await getBusinessDocUrlAdmin(fileName);
-    window.open(url, "_blank", "noopener,noreferrer");
+    NativeFancybox.show([{ src: url, type: "image" }], {
+      on: { destroy: () => URL.revokeObjectURL(url) },
+    });
   } catch (err) {
     toast.error(apiErrorMessage(err, "Failed to load document"));
   }

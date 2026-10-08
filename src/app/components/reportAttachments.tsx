@@ -112,9 +112,22 @@ const Attachment = ({
     );
   }
 
+  // Real proportions (self-start stops the flex column from stretching it);
+  // click opens the full image in a lightbox with a close button
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={url} alt="Report attachment" className="max-h-48 rounded" />
+    <button
+      type="button"
+      onClick={() => NativeFancybox.show([{ src: url, type: "image" }])}
+      className="self-start max-w-full cursor-zoom-in"
+      title="View image"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        alt="Report attachment"
+        className="block w-auto h-auto max-w-full max-h-48 object-contain rounded border border-secondary/20"
+      />
+    </button>
   );
 };
 
