@@ -133,10 +133,4 @@ export const assignRole = async (mobile, role) =>
 export const removeRoles = async (target) =>
   (await adminApi.post("/api/v1/roles/remove", target)).data;
 
-// Mirrors ReportStatus.allowedNext() in the backend
-export const NEXT_STATUSES = {
-  PENDING: ["UNDER_REVIEW"],
-  UNDER_REVIEW: ["RESOLVED", "REJECTED"],
-  RESOLVED: [],
-  REJECTED: [],
-};
+export { NEXT_STATUSES } from "./problem.js";

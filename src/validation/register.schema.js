@@ -97,10 +97,11 @@ export const businessRegisterValidation = z.object({
     "Please enter a valid email address.",
   ),
   registrationNo: required("Registration number"),
-  panNo: required("PAN number"),
+  panNo: required("PAN/VAT number"),
   businessLocation: required("Business location"),
   ownerName: required("Owner name"),
-  ownerPhone: phoneField("Owner phone"),
+  // Any format; the same number may be used by other businesses/users
+  ownerPhone: required("Owner phone"),
   password: required("Password").min(8, "Password must be at least 8 characters."),
 });
 

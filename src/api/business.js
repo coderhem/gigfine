@@ -1,6 +1,7 @@
 import axios from "axios";
 import api from "./axios.js";
 import { API_BASE_URL, authHeader } from "./config.js";
+import { IMAGE_EXTENSIONS, IMAGE_MAX_MB } from "./problem.js";
 
 export const BUSINESS_ROLE = "ROLE_BUSINESS";
 
@@ -32,6 +33,26 @@ export const BUSINESS_STATUS_LABEL = {
   PENDING: "Pending",
   APPROVED: "Approved",
 };
+
+// Logo / document images: same rules as the backend (jpeg/jpg/png, max 5MB).
+// Returns an error message, or null when the file is fine.
+export function imageFileError(file) {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (!IMAGE_EXTENSIONS.includes(ext)) return `Allowed: ${IMAGE_EXTENSIONS.join(", ")}`;
+  if (file.size > IMAGE_MAX_MB * 1024 * 1024) return `File must be less than ${IMAGE_MAX_MB}MB`;
+  return null;
+}
+
+// Reports: the business that a report was forwarded to may move its status
+// (same transitions as the admin, see NEXT_STATUSES)
+export async function updateBusinessReportStatus(reportId, status) {
+  const response = await api.put(
+    `${API_BASE_URL}/api/v1/reports/${reportId}/status`,
+    { status },
+    { headers: authHeader() },
+  );
+  return response.data; // ReportDto
+}
 
 // The logged-in user's business profile, or null if they haven't applied yet
 export async function getMyBusiness(userId) {

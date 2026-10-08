@@ -9,6 +9,14 @@ export const REPORT_STATUS_LABEL = {
   REJECTED: "Rejected",
 };
 
+// Mirrors ReportStatus.allowedNext() in the backend
+export const NEXT_STATUSES = {
+  PENDING: ["UNDER_REVIEW"],
+  UNDER_REVIEW: ["RESOLVED", "REJECTED"],
+  RESOLVED: [],
+  REJECTED: [],
+};
+
 // Reporters can edit a report for this long (mirrors EDIT_WINDOW in ReportServiceImpl)
 export const REPORT_EDIT_HOURS = 2;
 

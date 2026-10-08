@@ -3,10 +3,11 @@ import {
   BUSINESS_STATUS_LABEL,
   createBusiness,
   getMyBusiness,
+  imageFileError,
   uploadBusinessDocument,
 } from "@/api/business";
 import { apiErrorMessage } from "@/api/config";
-import { IMAGE_EXTENSIONS, IMAGE_MAX_MB } from "@/api/problem";
+import BusinessLogo from "@/app/components/businessLogo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -27,16 +28,16 @@ const EMPTY_FORM = {
 
 const FIELDS: { key: keyof typeof EMPTY_FORM; label: string }[] = [
   { key: "registrationNo", label: "Registration No." },
-  { key: "panNo", label: "PAN No." },
+  { key: "panNo", label: "PAN/VAT No." },
   { key: "businessLocation", label: "Business location" },
   { key: "ownerName", label: "Owner name" },
   { key: "ownerPhone", label: "Owner phone number" },
 ];
 
-// rc = registration certificate, pc = PAN card
+// rc = registration certificate, pc = PAN/VAT certificate
 const DOCUMENTS: { type: "rc" | "pc"; label: string; field: string }[] = [
   { type: "rc", label: "Registration certificate", field: "registrationCertImage" },
-  { type: "pc", label: "PAN card", field: "panImage" },
+  { type: "pc", label: "PAN/VAT certificate", field: "panImage" },
 ];
 
 // Status + document upload after /business/register. Accounts created on the main
@@ -82,13 +83,9 @@ const BusinessApply = () => {
 
   const handleUpload = async (type: "rc" | "pc", file: File | undefined) => {
     if (!file) return;
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-    if (!IMAGE_EXTENSIONS.includes(ext)) {
-      toast.error(`Allowed: ${IMAGE_EXTENSIONS.join(", ")}`);
-      return;
-    }
-    if (file.size > IMAGE_MAX_MB * 1024 * 1024) {
-      toast.error(`File must be less than ${IMAGE_MAX_MB}MB`);
+    const fileError = imageFileError(file);
+    if (fileError) {
+      toast.error(fileError);
       return;
     }
     setUploading(type);
@@ -111,12 +108,15 @@ const BusinessApply = () => {
       <div className="container">
         <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-secondary/10 p-6 sm:p-8">
           <h2 className="h3 normal-case mb-1">
-            Business <span className="text-primary">application</span>
+            Business <span className="text-primary">profile</span>
           </h2>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-gray-500 mb-4">
             Business name: <b>{user.name}</b> · Phone: <b>{user.mobile || "-"}</b> (from your
             account)
           </p>
+          <div className="mb-6">
+            <BusinessLogo editable />
+          </div>
 
           {!business ? (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">

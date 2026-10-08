@@ -29,7 +29,7 @@ const SORT_OPTIONS: Record<string, string> = {
   name: "Business name",
   mobile: "Phone",
   registrationNo: "Registration No.",
-  panNo: "PAN No.",
+  panNo: "PAN/VAT No.",
   ownerName: "Owner name",
   status: "Status",
 };
@@ -147,7 +147,7 @@ export default function BusinessSection() {
         {textFilter("name", "Business name")}
         {textFilter("mobile", "Phone")}
         {textFilter("registrationNo", "Registration No.")}
-        {textFilter("panNo", "PAN No.")}
+        {textFilter("panNo", "PAN/VAT No.")}
         <label className="flex flex-col text-sm">
           Sort by
           <select
@@ -187,7 +187,7 @@ export default function BusinessSection() {
                 <th className="px-4 py-3 text-start">Business</th>
                 <th className="px-4 py-3 text-start">Phone</th>
                 <th className="px-4 py-3 text-start">Reg. No.</th>
-                <th className="px-4 py-3 text-start">PAN No.</th>
+                <th className="px-4 py-3 text-start">PAN/VAT No.</th>
                 <th className="px-4 py-3 text-start">Location</th>
                 <th className="px-4 py-3 text-start">Owner</th>
                 <th className="px-4 py-3 text-start">Documents</th>
