@@ -1,6 +1,6 @@
 "use client";
 
-import { getBusinessReports, isBusiness } from "@/api/business";
+import { getBusinessReports, isBusiness, markAllReportsSeen } from "@/api/business";
 import { apiErrorMessage } from "@/api/config";
 import { getMyProfile } from "@/api/user";
 import BusinessLogo from "@/app/components/businessLogo";
@@ -55,6 +55,8 @@ const BusinessPanel = () => {
       .finally(() => setLoading(false));
   }, [checking, approved, statusFilter]);
 
+  const unseenCount = reports.filter((r) => r.unseen).length;
+
   if (!user || checking || !approved) {
     return <LoadingSvg className="absolute left-1/2 top-1/2 -translate-1/2 size-20" />;
   }
@@ -68,6 +70,11 @@ const BusinessPanel = () => {
             <div>
               <h2 className="h3 mb-1">
                 <span className="text-primary">{user.name}</span> — Reports
+                {unseenCount > 0 && (
+                  <span className="ml-2 align-middle text-sm font-semibold px-2 py-0.5 rounded-full bg-primary text-white">
+                    {unseenCount} new
+                  </span>
+                )}
               </h2>
               <p className="text-sm text-gray-500 mb-0">
                 Problems reported by riders and passengers that GIGFINE forwarded to you.
@@ -78,6 +85,23 @@ const BusinessPanel = () => {
               </p>
             </div>
           </div>
+          <div className="flex items-end gap-3">
+          {unseenCount > 0 && (
+            <button
+              type="button"
+              className="btn btn-primary py-2"
+              onClick={async () => {
+                try {
+                  await markAllReportsSeen();
+                  setReports((prev) => prev.map((r) => ({ ...r, unseen: false })));
+                } catch (err) {
+                  toast.error(apiErrorMessage(err, "Failed to mark reports as seen"));
+                }
+              }}
+            >
+              Mark all {unseenCount} new as seen
+            </button>
+          )}
           <label className="flex flex-col text-sm">
             Status
             <select
@@ -93,6 +117,7 @@ const BusinessPanel = () => {
               ))}
             </select>
           </label>
+          </div>
         </div>
 
         <div className="rounded-xl bg-white shadow overflow-x-auto">
@@ -128,11 +153,24 @@ const BusinessPanel = () => {
                   <tr
                     key={report.reportId}
                     onClick={() => router.push(`/business/reports/${report.reportId}`)}
-                    className="border-b border-secondary/20 cursor-pointer hover:bg-primary/5"
+                    className={`border-b border-secondary/20 cursor-pointer ${
+                      report.unseen ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-primary/5"
+                    }`}
                   >
-                    <td className="px-4 py-3">{report.reportId}</td>
+                    <td
+                      className={`px-4 py-3 border-l-4 ${report.unseen ? "border-primary" : "border-transparent"}`}
+                    >
+                      {report.reportId}
+                    </td>
                     <td className="px-4 py-3">
-                      {report.reporter?.name}
+                      <span className={report.unseen ? "font-semibold text-secondary" : ""}>
+                        {report.reporter?.name}
+                      </span>
+                      {report.unseen && (
+                        <span className="ml-2 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-primary text-white align-middle">
+                          New
+                        </span>
+                      )}
                       <div className="text-xs text-gray-500">{report.reporter?.mobile}</div>
                     </td>
                     <td className="px-4 py-3">

@@ -95,6 +95,15 @@ export async function uploadBusinessDocument(userId, type, file) {
   return response.data;
 }
 
+// "New" highlight (kept in Redis): this business opened the report
+export async function markReportSeen(reportId) {
+  await api.put(`${API_BASE_URL}/api/v1/reports/${reportId}/seen`, null, { headers: authHeader() });
+}
+
+export async function markAllReportsSeen() {
+  await api.put(`${API_BASE_URL}/api/v1/reports/seen`, null, { headers: authHeader() });
+}
+
 // Reports an admin forwarded to the logged-in (approved) business
 export async function getBusinessReports(status) {
   const response = await api.get(`${API_BASE_URL}/api/v1/reports/business`, {

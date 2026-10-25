@@ -94,6 +94,15 @@ export const getReportFileUrlAdmin = async (kind, fileName) => {
 export const updateReportStatus = async (reportId, status) =>
   (await adminApi.put(`/api/v1/reports/${reportId}/status`, { status })).data;
 
+// "New" highlight (kept in Redis). Clears it for every admin.
+export const markReportSeenAdmin = async (reportId) => {
+  await adminApi.put(`/api/v1/reports/${reportId}/seen`);
+};
+
+export const markAllReportsSeenAdmin = async () => {
+  await adminApi.put("/api/v1/reports/seen");
+};
+
 // businessUserId null takes the report back from the business
 export const forwardReport = async (reportId, businessUserId) =>
   (await adminApi.put(`/api/v1/reports/${reportId}/forward`, { businessUserId })).data;

@@ -1,6 +1,6 @@
 "use client";
 
-import { updateBusinessReportStatus } from "@/api/business";
+import { markReportSeen, updateBusinessReportStatus } from "@/api/business";
 import { apiErrorMessage } from "@/api/config";
 import { getReportById, NEXT_STATUSES } from "@/api/problem";
 import { getProfileImageUrl } from "@/api/user";
@@ -90,7 +90,11 @@ const BusinessReportDetail = ({ params }: Props) => {
       return;
     }
     getReportById(id)
-      .then(setReport)
+      .then((r) => {
+        setReport(r);
+        // Opening it clears the "new" highlight in the list (Redis); not worth an error if it fails
+        markReportSeen(id).catch(() => {});
+      })
       .catch((err) => setError(apiErrorMessage(err, "Could not load the report")));
   }, [id]);
 

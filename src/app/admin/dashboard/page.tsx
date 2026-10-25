@@ -10,6 +10,8 @@ import {
   getAllUsers,
   getReportFileUrlAdmin,
   getReports,
+  markAllReportsSeenAdmin,
+  markReportSeenAdmin,
   NEXT_STATUSES,
   searchBusinesses,
   updateAdminNotification,
@@ -233,6 +235,8 @@ export default function Dashboard() {
     ),
   );
 
+  const unseenCount = reports.filter((r) => r.unseen).length;
+
   const activeCount: Partial<Record<MenuType, number>> = {
     riders: riderRows.length,
     passengers: passengerRows.length,
@@ -281,6 +285,27 @@ export default function Dashboard() {
     }
   };
 
+  // Clear the "new" highlight right away; the backend call just keeps other admins in sync
+  const handleSeen = async (reportId: number) => {
+    setReports((prev) =>
+      prev.map((r) => (r.reportId === reportId ? { ...r, unseen: false } : r)),
+    );
+    try {
+      await markReportSeenAdmin(reportId);
+    } catch {
+      /* only the highlight; it comes back on the next load */
+    }
+  };
+
+  const handleAllSeen = async () => {
+    try {
+      await markAllReportsSeenAdmin();
+      setReports((prev) => prev.map((r) => ({ ...r, unseen: false })));
+    } catch (err) {
+      toast.error(apiErrorMessage(err, "Failed to mark reports as seen"));
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     router.replace("/admin/login");
@@ -294,7 +319,7 @@ export default function Dashboard() {
     );
   }
 
-  const menuBtn = (menu: MenuType, icon: ReactNode, label: string) => (
+  const menuBtn = (menu: MenuType, icon: ReactNode, label: string, badge = 0) => (
     <button
       onClick={() => setActiveMenu(menu)}
       className={`w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex flex-wrap gap-2 items-center ${
@@ -303,6 +328,11 @@ export default function Dashboard() {
     >
       {icon}
       <span>{label}</span>
+      {badge > 0 && (
+        <span className="ml-auto min-w-6 h-6 px-1.5 rounded-full bg-white text-primary text-xs font-bold flex items-center justify-center">
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
     </button>
   );
 
@@ -347,7 +377,7 @@ export default function Dashboard() {
         <nav className="p-4 space-y-3">
           {menuBtn("riders", <FaBiking />, "Rider Details")}
           {menuBtn("passengers", <FaUser />, "Passenger Details")}
-          {menuBtn("reports", <MdOutlineReportProblem />, "User Reports")}
+          {menuBtn("reports", <MdOutlineReportProblem />, "User Reports", unseenCount)}
           {menuBtn("businesses", <FaBuilding />, "Businesses")}
           {menuBtn("roles", <FaUserShield />, "Role Management")}
           {menuBtn("notifications", <FaBell />, "Notifications")}
@@ -584,6 +614,11 @@ export default function Dashboard() {
               >
                 Clear
               </button>
+              {unseenCount > 0 && (
+                <button className="btn btn-primary py-2 ml-auto" onClick={handleAllSeen}>
+                  Mark all {unseenCount} new as seen
+                </button>
+              )}
             </div>
 
             <div className="relative rounded-xl bg-white px-3 lg:px-6 pt-6 pb-14 shadow">
@@ -620,13 +655,32 @@ export default function Dashboard() {
                             const rider = ridersByUserId.get(reporter.userId);
                             return (
                               <tr
-                                className="border-b border-secondary/20 transition-all duration-300 hover:bg-gray-300/20"
+                                className={`border-b border-secondary/20 transition-all duration-300 ${
+                                  report.unseen
+                                    ? "bg-primary/10 hover:bg-primary/15 cursor-pointer"
+                                    : "hover:bg-gray-300/20"
+                                }`}
                                 key={report.reportId}
+                                onClick={() => report.unseen && handleSeen(report.reportId)}
+                                title={report.unseen ? "New — click to mark as seen" : undefined}
                               >
-                                <td className="px-4 py-3">
+                                <td
+                                  className={`px-4 py-3 border-l-4 ${
+                                    report.unseen ? "border-primary" : "border-transparent"
+                                  }`}
+                                >
                                   {(page - 1) * PER_PAGE + i + 1}
                                 </td>
-                                <td className="px-4 py-3">{reporter.name}</td>
+                                <td className="px-4 py-3">
+                                  <span className={report.unseen ? "font-semibold text-secondary" : ""}>
+                                    {reporter.name}
+                                  </span>
+                                  {report.unseen && (
+                                    <span className="ml-2 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-primary text-white align-middle">
+                                      New
+                                    </span>
+                                  )}
+                                </td>
                                 <td className="px-4 py-3">
                                   {report.reporterMode ? (
                                     <span
