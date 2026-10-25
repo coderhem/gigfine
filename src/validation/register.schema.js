@@ -88,6 +88,20 @@ const phoneField = (label) =>
     .length(10, `${label} must be exactly 10 digits.`)
     .regex(/^\d+$/, `${label} must contain only digits`);
 
+// rent.gigfine.com sign-up: the account fields + the landlord's PAN details
+export const rentalRegisterValidation = z.object({
+  name: required("Full name").min(3, "Minimum 3 characters required."),
+  phone: phoneField("Phone number"),
+  email: required("Email").regex(
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    "Please enter a valid email address.",
+  ),
+  panNo: required("PAN number"),
+  citizenshipNo: z.string().trim().optional(),
+  permanentAddress: z.string().trim().optional(),
+  password: required("Password").min(8, "Password must be at least 8 characters."),
+});
+
 // business.gigfine.com sign-up: the account fields + the business details
 export const businessRegisterValidation = z.object({
   name: required("Business name").min(2, "Minimum 2 characters required."),

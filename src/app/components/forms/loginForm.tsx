@@ -13,13 +13,16 @@ import { loggedUser } from "@/redux/auth/authActions";
 import { logout } from "@/redux/auth/authSlice";
 import { ADMIN_URL, isAdmin } from "@/api/admin";
 import { BUSINESS_URL, isBusiness } from "@/api/business";
+import { isLandlord } from "@/api/rental";
 import LoadingSvg from "../loader/loadingSvg";
 
 // variant "business": the form on business.gigfine.com/business/login
-const LoginForm = ({ variant = "user" }: { variant?: "user" | "business" }) => {
+// variant "rental": the form on rent.gigfine.com/rent/login — any account can log in there
+const LoginForm = ({ variant = "user" }: { variant?: "user" | "business" | "rental" }) => {
   const router = useRouter();
   const dispatch = useDispatch<any>();
   const isBusinessSite = variant === "business";
+  const isRentalSite = variant === "rental";
 
   const [show, setShow] = useState(false);
 
@@ -49,6 +52,14 @@ const LoginForm = ({ variant = "user" }: { variant?: "user" | "business" }) => {
       if (isBusinessSite) {
         toast.success("Login successful!");
         router.push("/business");
+        return;
+      }
+
+      if (isRentalSite) {
+        // Back to the page that sent them to login (only rental pages)
+        const next = new URLSearchParams(window.location.search).get("next");
+        toast.success("Login successful!");
+        router.push(next?.startsWith("/rent") ? next : isLandlord(user) ? "/rent/landlord" : "/rent");
         return;
       }
 
@@ -132,7 +143,7 @@ const LoginForm = ({ variant = "user" }: { variant?: "user" | "business" }) => {
 
       {/* Bottom links */}
       <div className="pt-5 pb-1 text-center">
-        {!isBusinessSite && (
+        {variant === "user" && (
           <div className="text-end mb-3">
             <Link
               className="text-sm underline hover:no-underline"
@@ -145,7 +156,7 @@ const LoginForm = ({ variant = "user" }: { variant?: "user" | "business" }) => {
 
         <p className="mb-0 max-sm:text-sm">
           Don't have an account?{" "}
-          <Link href={isBusinessSite ? "/business/register" : "/register"}>
+          <Link href={isBusinessSite ? "/business/register" : isRentalSite ? "/rent/register" : "/register"}>
             Register
           </Link>
         </p>

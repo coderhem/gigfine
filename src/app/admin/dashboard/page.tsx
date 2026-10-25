@@ -1,14 +1,18 @@
 "use client";
 
 import {
+  createAdminNotification,
+  deleteAdminNotification,
   deleteUser,
   forwardReport,
+  getAdminNotifications,
   getAllRiders,
   getAllUsers,
   getReportFileUrlAdmin,
   getReports,
   NEXT_STATUSES,
   searchBusinesses,
+  updateAdminNotification,
   updateReportStatus,
 } from "@/api/admin";
 import { apiErrorMessage } from "@/api/config";
@@ -16,18 +20,19 @@ import { REPORT_STATUS_LABEL } from "@/api/problem";
 import ReportAttachments from "@/app/components/reportAttachments";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { FaBiking, FaBuilding, FaUser, FaUserShield } from "react-icons/fa";
+import { FaBell, FaBiking, FaBuilding, FaHome, FaUser, FaUserShield } from "react-icons/fa";
 import { MdOutlineReportProblem } from "react-icons/md";
 import LoadingSvg from "../../components/loader/loadingSvg";
 import DeleteBtn from "../../components/crudOperationBtns/deleteBtn";
 import toast from "react-hot-toast";
 import { HiShieldCheck } from "react-icons/hi2";
 import Pagination from "@/app/components/paginationUI/pagination";
-import Link from "next/link";
 import BusinessSection from "../components/businessSection";
 import RoleManagement from "../components/roleManagement";
+import NotificationManager, { type NotificationApi } from "@/app/components/notificationManager";
+import RentalReview from "../components/rentalReview";
 
-type MenuType = "riders" | "passengers" | "reports" | "businesses" | "roles";
+type MenuType = "riders" | "passengers" | "reports" | "businesses" | "roles" | "notifications" | "rentals";
 
 const PER_PAGE = 10;
 
@@ -57,10 +62,19 @@ const MENU_TITLE: Record<MenuType, string> = {
   reports: "User Reports",
   businesses: "Businesses",
   roles: "Role Management",
+  notifications: "Notifications",
+  rentals: "Rentals",
 };
 
 // These sections have their own filters and counts
-const SELF_CONTAINED: MenuType[] = ["businesses", "roles"];
+const SELF_CONTAINED: MenuType[] = ["businesses", "roles", "notifications", "rentals"];
+
+const NOTIFICATION_API: NotificationApi = {
+  list: getAdminNotifications,
+  create: createAdminNotification,
+  update: updateAdminNotification,
+  remove: deleteAdminNotification,
+};
 
 function paginate<T>(items: T[], page: number) {
   return items.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -336,12 +350,8 @@ export default function Dashboard() {
           {menuBtn("reports", <MdOutlineReportProblem />, "User Reports")}
           {menuBtn("businesses", <FaBuilding />, "Businesses")}
           {menuBtn("roles", <FaUserShield />, "Role Management")}
-          <Link
-            href={"/admin/notifications/add"}
-            className="w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex flex-wrap gap-2 items-center hover:bg-primary"
-          >
-            + Add Notifications
-          </Link>
+          {menuBtn("notifications", <FaBell />, "Notifications")}
+          {menuBtn("rentals", <FaHome />, "Rentals")}
         </nav>
 
         <div className="absolute bottom-5 left-0 w-full px-4">
@@ -787,6 +797,15 @@ export default function Dashboard() {
         {activeMenu === "businesses" && <BusinessSection />}
 
         {activeMenu === "roles" && <RoleManagement />}
+
+        {activeMenu === "notifications" && (
+          <>
+            <h1 className="mb-6 pt-24 text-3xl font-bold text-secondary">Notifications</h1>
+            <NotificationManager api={NOTIFICATION_API} showCreator />
+          </>
+        )}
+
+        {activeMenu === "rentals" && <RentalReview />}
       </div>
     </div>
   );

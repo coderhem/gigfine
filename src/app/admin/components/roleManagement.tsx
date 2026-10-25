@@ -7,14 +7,15 @@ import LoadingSvg from "@/app/components/loader/loadingSvg";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-type ListRole = "admin" | "business";
+type ListRole = "admin" | "business" | "landlord";
 
-// Roles an admin can hand out by phone number. Business is normally given by approving
-// the business in the Businesses tab; assigning it here approves the business too.
+// Roles an admin can hand out by phone number. Business / landlord are normally given by
+// approving them in the Businesses / Rentals tabs; assigning them here approves them too.
 const ASSIGNABLE_ROLES: Record<string, string> = {
   ADMIN: "Admin",
   RIDER: "Rider",
   BUSINESS: "Business",
+  LANDLORD: "Landlord",
 };
 
 const ROLE_LABEL: Record<string, string> = {
@@ -22,6 +23,7 @@ const ROLE_LABEL: Record<string, string> = {
   ROLE_RIDER: "Rider",
   ROLE_PASSENGER: "Passenger",
   ROLE_BUSINESS: "Business",
+  ROLE_LANDLORD: "Landlord",
 };
 
 export default function RoleManagement() {
@@ -162,6 +164,7 @@ export default function RoleManagement() {
       <div className="flex gap-2 mb-4">
         {tabBtn("admin", "Admins")}
         {tabBtn("business", "Businesses")}
+        {tabBtn("landlord", "Landlords")}
       </div>
 
       <div className="relative rounded-xl bg-white px-3 lg:px-6 pt-6 pb-6 shadow">

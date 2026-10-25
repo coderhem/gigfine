@@ -33,3 +33,15 @@ services:
     ports:
       - "8090:8090"
     restart: unless-stopped
+
+  rental:
+    image: gigfine:latest
+    container_name: gigfine-rental
+    depends_on:
+      - web
+    environment:
+      PORT: 8091
+      APP_MODE: rental
+    ports:
+      - "8091:8091"
+    restart: unless-stopped

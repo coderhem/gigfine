@@ -20,6 +20,7 @@
 import MainHeader from "./mainHeader";
 import LoggedHeader from "./loggedHeader";
 import BusinessHeader from "./businessHeader";
+import RentalHeader from "./rentalHeader";
 import { useSelector } from "react-redux";
 import { usePathname } from "next/navigation";
 
@@ -34,6 +35,10 @@ export default function HeaderSwitcher() {
   // business.gigfine.com has its own header
   if (pathname === "/business" || pathname.startsWith("/business/")) {
     return <BusinessHeader />;
+  }
+  // rent.gigfine.com has its own header too
+  if (pathname === "/rent" || pathname.startsWith("/rent/")) {
+    return <RentalHeader />;
   }
 
   return user ? <LoggedHeader /> : <MainHeader />;

@@ -6,10 +6,11 @@ type Props = {
   deleteIcon?: boolean;
   deleteText?: string;
   className?: string;
+  confirmTitle?: string;
   onConfirm: () => void;
 };
 
-const DeleteBtn = ({ deleteIcon, deleteText, className, onConfirm }: Props) => {
+const DeleteBtn = ({ deleteIcon, deleteText, className, confirmTitle = "Delete Problem?", onConfirm }: Props) => {
   const [showPopup, setShowPopup] = useState(false);
 
   const openPopup = () => {
@@ -32,7 +33,7 @@ const DeleteBtn = ({ deleteIcon, deleteText, className, onConfirm }: Props) => {
       {showPopup && (
         <div className="fixed inset-0 w-full bg-black/80 flex items-center justify-center">
           <div className="bg-white p-5 w-full max-w-md text-center mx-auto rounded">
-            <h2 className="h4 text-red"> Delete Problem?</h2>
+            <h2 className="h4 text-red">{confirmTitle}</h2>
             <p className="text-black/60 mt-2">
               This action cannot be undone. Are you sure you want to permanently
               delete this?

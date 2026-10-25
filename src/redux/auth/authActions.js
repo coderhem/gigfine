@@ -1,7 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { addProblem, updateProblem } from "@/api/problem";
 import { loginUser, registerUser } from "@/api/auth";
-import {addNotification} from "@/api/notification"
 import {loginPassenger, registerPassenger, updatePassenger} from "@/api/passenger"
 import {addPassengerProblem, updatePassengerProblem} from "@/api/passenger.problem"
 import { apiErrorMessage } from "@/api/config";
@@ -39,20 +38,6 @@ export const addProblemApi = createAsyncThunk(
       return result;
     } catch (error) {
       return rejectWithValue(apiErrorMessage(error));
-    }
-  },
-);
-
-export const addNotificationAPI = createAsyncThunk(
-  "notification/add",
-  async (data, { rejectWithValue }) => {
-    try {
-      const result = await addNotification(data);
-      // Token Pass
-      // localStorage.setItem("authToken", result.token);
-      return result;
-    } catch (error) {
-      return rejectWithValue(error.response?.data);
     }
   },
 );

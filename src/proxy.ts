@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// Same build runs as three instances:
-//   APP_MODE=user     -> public site (port 8088), /admin and /business are hidden
+// Same build runs as four instances:
+//   APP_MODE=user     -> public site (port 8088), /admin, /business and /rent are hidden
 //   APP_MODE=admin    -> admin panel (port 8089), "/" opens the dashboard
 //   APP_MODE=business -> business site (port 8090), only /business/* and legal pages
+//   APP_MODE=rental   -> rent.gigfine.com (port 8091), only /rent/* and legal pages
 // `next dev` (no APP_MODE) serves everything from one server.
 const BUSINESS_SHARED = ["/privacy-policy", "/terms-&-conditions"];
 
@@ -18,6 +19,7 @@ export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isAdminPath = under(pathname, "/admin");
   const isBusinessPath = under(pathname, "/business");
+  const isRentalPath = under(pathname, "/rent");
 
   if (mode === "admin") {
     if (pathname === "/" || pathname === "/admin") {
@@ -33,7 +35,14 @@ export function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/business", req.url));
   }
 
-  if (isAdminPath || isBusinessPath) {
+  if (mode === "rental") {
+    if (isRentalPath || BUSINESS_SHARED.some((p) => under(pathname, p))) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL("/rent", req.url));
+  }
+
+  if (isAdminPath || isBusinessPath || isRentalPath) {
     return new NextResponse("Not Found", { status: 404 });
   }
   return NextResponse.next();

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { API_BASE_URL } from "./config.js";
+import { notificationBody, notificationSearchParams } from "./notification.js";
 
 export const ADMIN_ROLE = "ROLE_ADMIN";
 
@@ -132,5 +133,52 @@ export const assignRole = async (mobile, role) =>
 // Removes every role and keeps only passenger. Pass { userId } or { mobile }.
 export const removeRoles = async (target) =>
   (await adminApi.post("/api/v1/roles/remove", target)).data;
+
+// ---------- Notifications ----------
+
+// filters: { audience, q, from, to, sort } — see notificationSearchParams
+export const getAdminNotifications = async (filters) =>
+  (await adminApi.get("/api/v1/notifications/manage", {
+    params: notificationSearchParams(filters),
+  })).data;
+
+export const createAdminNotification = async (data) =>
+  (await adminApi.post("/api/v1/notifications", notificationBody(data))).data;
+
+export const updateAdminNotification = async (id, data) =>
+  (await adminApi.put(`/api/v1/notifications/${id}`, notificationBody(data))).data;
+
+export const deleteAdminNotification = async (id) => {
+  await adminApi.delete(`/api/v1/notifications/${id}`);
+};
+
+// ---------- Rentals (landlords + houses review) ----------
+
+// status: "" | "PENDING" | "APPROVED" | "REJECTED"
+export const getLandlords = async (status) =>
+  (await adminApi.get("/api/v1/landlords", { params: status ? { status } : {} })).data;
+
+// review: { status, note } — APPROVED gives the user ROLE_LANDLORD
+export const reviewLandlord = async (userId, review) =>
+  (await adminApi.put(`/api/v1/landlords/${userId}/status`, review)).data;
+
+// filters: { status, userId } — oldest first
+export const getHousesForReview = async ({ status, userId } = {}) => {
+  const params = {};
+  if (status) params.status = status;
+  if (userId) params.userId = userId;
+  return (await adminApi.get("/api/v1/houses", { params })).data;
+};
+
+// A house can be APPROVED only after its landlord is
+export const reviewHouse = async (houseId, review) =>
+  (await adminApi.put(`/api/v1/houses/${houseId}/status`, review)).data;
+
+export const getRentalMediaUrlAdmin = async (fileName) => {
+  const res = await adminApi.get(`/api/v1/rentals/media/${encodeURIComponent(fileName)}`, {
+    responseType: "blob",
+  });
+  return URL.createObjectURL(res.data);
+};
 
 export { NEXT_STATUSES } from "./problem.js";

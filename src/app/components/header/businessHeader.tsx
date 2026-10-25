@@ -1,17 +1,25 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { MdLogout } from "react-icons/md";
 import headerLogo from "@/public/images/gigfine-logo-img.png";
 import { logout } from "@/redux/auth/authSlice";
+import { isBusiness } from "@/api/business";
+
+// Approved businesses only
+const NAV = [
+  { href: "/business", label: "Reports" },
+  { href: "/business/notifications", label: "Notifications" },
+];
 
 // Header for business.gigfine.com (/business/*)
 const BusinessHeader = () => {
   const { user } = useSelector((state: any) => state.auth);
   const dispatch = useDispatch();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = () => {
     dispatch(logout());
@@ -38,7 +46,22 @@ const BusinessHeader = () => {
           <div className="px-1 flex items-center gap-3">
             {user ? (
               <>
-                <span className="max-sm:hidden text-secondary font-medium">{user.name}</span>
+                {isBusiness(user) && (
+                  <nav className="flex gap-3 text-sm md:text-base">
+                    {NAV.map(({ href, label }) => (
+                      <Link
+                        key={href}
+                        href={href}
+                        className={`hover:text-primary ${
+                          pathname === href ? "text-primary font-semibold" : "text-secondary"
+                        }`}
+                      >
+                        {label}
+                      </Link>
+                    ))}
+                  </nav>
+                )}
+                <span className="max-md:hidden text-secondary font-medium">{user.name}</span>
                 <button
                   className="flex gap-2 items-center hover:text-primary transition-all duration-300 cursor-pointer"
                   onClick={handleLogout}

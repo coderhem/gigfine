@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       // Logged-in and admin areas have nothing useful for search engines
-      disallow: ["/home", "/client/", "/admin/", "/notifications", "/passenger-login"],
+      disallow: ["/home", "/client/", "/admin/", "/notifications", "/passenger-login", "/rent"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { MdArrowDropDown, MdBikeScooter, MdLogout } from "react-icons/md";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "@/redux/auth/authSlice.js";
@@ -9,19 +9,13 @@ import Link from "next/link";
 import Image from "next/image";
 import headerLogo from "@/public/images/gigfine-logo-img.png";
 import { FaBell, FaBiking, FaUser } from "react-icons/fa";
-import { getAllNotification } from "@/api/notification";
+import { countUnseen, getMyNotifications } from "@/api/notification";
 import { getUserMode } from "@/api/user";
-
-interface NotificationType {
-  _id: string;
-  notification: string;
-  read: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import { RENT_URL } from "@/api/rental";
 
 const LoggedHeader = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const dispatch = useDispatch();
   const { user } = useSelector((state: any) => state.auth);
   const mode = getUserMode(user);
@@ -49,28 +43,17 @@ const LoggedHeader = () => {
     }
   }, [active]);
 
-  // Get unread notification count
+  // Unread = newer than the last visit to /notifications (re-checked on every page change)
   useEffect(() => {
-    const fetchNotificationCount = async () => {
-      try {
-        const data = await getAllNotification();
-
-        const notifications: NotificationType[] = data.notification || [];
-
-        const unreadCount = notifications.filter((item) => !item.read).length;
-
-        setNotificationCount(unreadCount);
-      } catch (error) {
-        console.error("Failed to fetch notification count:", error);
-
-        setNotificationCount(0);
-      }
-    };
-
-    if (user) {
-      fetchNotificationCount();
+    if (!user) return;
+    if (pathname === "/notifications") {
+      setNotificationCount(0);
+      return;
     }
-  }, [user]);
+    getMyNotifications()
+      .then((data) => setNotificationCount(countUnseen(Array.isArray(data) ? data : [])))
+      .catch(() => setNotificationCount(0));
+  }, [user, mode, pathname]);
 
   return (
     <div className="bg-white shadow shadow-secondary/10 fixed left-0 right-0 z-10">
@@ -145,6 +128,18 @@ const LoggedHeader = () => {
                 >
                   Contact for Business
                 </Link>
+
+                {/* rent.gigfine.com — hand the session over like the business site */}
+                <button
+                  type="button"
+                  className="text-start text-secondary hover:text-primary cursor-pointer"
+                  onClick={() => {
+                    const token = localStorage.getItem("token") ?? "";
+                    window.location.href = `${RENT_URL}/rent/login#token=${encodeURIComponent(token)}`;
+                  }}
+                >
+                  Rooms for Rent
+                </button>
                 {/* Logout */}
                 <button
                   className="flex gap-2 items-center hover:text-primary transition-all duration-300"
