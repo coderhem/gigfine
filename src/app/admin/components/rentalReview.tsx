@@ -13,6 +13,7 @@ import LoadingSvg from "@/app/components/loader/loadingSvg";
 import { formatDate, StatusBadge } from "@/app/rent/_components/formBits";
 import { mapsLink } from "@/app/rent/_components/locationMap";
 import { MediaGallery } from "@/app/rent/_components/rentalMedia";
+import RentalDetail from "./rentalDetail";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -20,8 +21,12 @@ import toast from "react-hot-toast";
 const LocationMap = dynamic(() => import("@/app/rent/_components/locationMap"), { ssr: false });
 
 type Tab = "landlords" | "houses";
+// What the detail panel shows: a landlord with all their houses, or one house
+type Selected = { userId: number; landlord?: any; houseId?: number };
 const STATUSES = APPROVAL_LABEL as Record<string, string>;
 const AMENITIES = AMENITY_LABEL as Record<string, string>;
+const cardClass = "bg-white rounded-xl shadow p-4 cursor-pointer hover:ring-2 hover:ring-secondary/30 transition";
+const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
 // Approve / reject buttons; rejecting asks for a reason the landlord will see
 function ReviewActions({
@@ -92,6 +97,8 @@ export default function RentalReview() {
   const [status, setStatus] = useState("PENDING");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Selected | null>(null);
+  const [version, setVersion] = useState(0);
 
   const fetchItems = async () => {
     setLoading(true);
@@ -110,7 +117,9 @@ export default function RentalReview() {
 
   const handleLandlord = async (userId: number, next: string, note?: string) => {
     try {
-      await reviewLandlord(userId, { status: next, note });
+      const updated = await reviewLandlord(userId, { status: next, note });
+      setSelected((s) => (s?.landlord?.userId === userId ? { ...s, landlord: { ...s.landlord, ...updated } } : s));
+      setVersion((v) => v + 1);
       toast.success(`Landlord ${STATUSES[next].toLowerCase()}.`);
       await fetchItems();
     } catch (err) {
@@ -121,12 +130,21 @@ export default function RentalReview() {
   const handleHouse = async (houseId: number, next: string, note?: string) => {
     try {
       await reviewHouse(houseId, { status: next, note });
+      setVersion((v) => v + 1);
       toast.success(`House ${STATUSES[next].toLowerCase()}.`);
       await fetchItems();
     } catch (err) {
       toast.error(apiErrorMessage(err, "Failed to update house"));
     }
   };
+
+  const houseActions = (h: any) => (
+    <ReviewActions
+      status={h.status}
+      approveDisabledReason={h.landlordStatus !== "APPROVED" ? "Approve the landlord first" : undefined}
+      onReview={(s, n) => handleHouse(h.id, s, n)}
+    />
+  );
 
   const tabBtn = (t: Tab, label: string) => (
     <button onClick={() => setTab(t)}
@@ -161,7 +179,8 @@ export default function RentalReview() {
       ) : tab === "landlords" ? (
         <div className="flex flex-col gap-3">
           {items.map((l) => (
-            <div key={l.id} className="bg-white rounded-xl shadow p-4 grid md:grid-cols-[1fr_180px] gap-4">
+            <div key={l.id} onClick={() => setSelected({ userId: l.userId, landlord: l })}
+              className={`${cardClass} grid md:grid-cols-[1fr_180px] gap-4`}>
               <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="font-semibold text-secondary mb-0">{l.name}</h3>
@@ -175,9 +194,15 @@ export default function RentalReview() {
                   ))}
                 </dl>
                 {l.reviewNote && <p className="text-xs text-gray-500 mb-0">Note: {l.reviewNote}</p>}
-                <ReviewActions status={l.status} onReview={(s, n) => handleLandlord(l.userId, s, n)} />
+                <div className="flex flex-wrap items-center gap-3" onClick={stop}>
+                  <ReviewActions status={l.status} onReview={(s, n) => handleLandlord(l.userId, s, n)} />
+                  <button className="text-sm underline text-secondary cursor-pointer"
+                    onClick={() => setSelected({ userId: l.userId, landlord: l })}>
+                    View houses, photos, videos &amp; location →
+                  </button>
+                </div>
               </div>
-              <div>
+              <div onClick={stop}>
                 <span className="text-xs text-gray-500">PAN photo</span>
                 {l.panImage ? (
                   <MediaGallery media={[{ id: 0, type: "IMAGE", fileName: l.panImage }]} fetchUrl={getRentalMediaUrlAdmin} />
@@ -191,7 +216,8 @@ export default function RentalReview() {
       ) : (
         <div className="flex flex-col gap-4">
           {items.map((h) => (
-            <div key={h.id} className="bg-white rounded-xl shadow p-4 grid lg:grid-cols-2 gap-4">
+            <div key={h.id} onClick={() => setSelected({ userId: h.landlordUserId, houseId: h.id })}
+              className={`${cardClass} grid lg:grid-cols-2 gap-4`}>
               <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="font-semibold text-secondary mb-0">{h.name}</h3>
@@ -215,13 +241,15 @@ export default function RentalReview() {
                 )}
                 {h.description && <p className="text-sm whitespace-pre-line mb-0">{h.description}</p>}
                 {h.reviewNote && <p className="text-xs text-gray-500 mb-0">Note: {h.reviewNote}</p>}
-                <ReviewActions
-                  status={h.status}
-                  approveDisabledReason={h.landlordStatus !== "APPROVED" ? "Approve the landlord first" : undefined}
-                  onReview={(s, n) => handleHouse(h.id, s, n)}
-                />
+                <div className="flex flex-wrap items-center gap-3" onClick={stop}>
+                  {houseActions(h)}
+                  <button className="text-sm underline text-secondary cursor-pointer"
+                    onClick={() => setSelected({ userId: h.landlordUserId, houseId: h.id })}>
+                    View full details &amp; rooms →
+                  </button>
+                </div>
               </div>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3" onClick={stop}>
                 <MediaGallery media={h.media} fetchUrl={getRentalMediaUrlAdmin} emptyText="No photos uploaded." />
                 <LocationMap latitude={h.latitude} longitude={h.longitude} className="h-48" />
                 <a href={mapsLink(h.latitude, h.longitude)} target="_blank" rel="noopener noreferrer" className="text-sm underline">
@@ -231,6 +259,21 @@ export default function RentalReview() {
             </div>
           ))}
         </div>
+      )}
+
+      {selected && (
+        <RentalDetail
+          userId={selected.userId}
+          landlord={selected.landlord}
+          houseId={selected.houseId}
+          version={version}
+          reviewSlot={selected.landlord && (
+            <ReviewActions status={selected.landlord.status}
+              onReview={(s, n) => handleLandlord(selected.landlord.userId, s, n)} />
+          )}
+          houseReviewSlot={houseActions}
+          onClose={() => setSelected(null)}
+        />
       )}
     </>
   );

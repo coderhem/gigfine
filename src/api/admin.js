@@ -179,6 +179,10 @@ export const getHousesForReview = async ({ status, userId } = {}) => {
   return (await adminApi.get("/api/v1/houses", { params })).data;
 };
 
+// Rooms / flats the landlord posted under a house (admin may read any landlord's)
+export const getHousePostsAdmin = async (userId, houseId) =>
+  (await adminApi.get(`/api/v1/users/${userId}/houses/${houseId}/posts`)).data;
+
 // A house can be APPROVED only after its landlord is
 export const reviewHouse = async (houseId, review) =>
   (await adminApi.put(`/api/v1/houses/${houseId}/status`, review)).data;
