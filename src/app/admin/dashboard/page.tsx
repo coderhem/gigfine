@@ -361,8 +361,9 @@ export default function Dashboard() {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside className="fixed z-100 left-0 top-0 h-screen w-40 lg:w-72 bg-secondary text-white shadow-lg">
-        <div className="border-b border-white/20 p-3 md:p-6">
+      {/* Column: header, scrollable menu, logout pinned at the bottom (h-dvh = mobile-safe height) */}
+      <aside className="fixed z-100 left-0 top-0 h-dvh w-40 lg:w-72 bg-secondary text-white shadow-lg flex flex-col">
+        <div className="shrink-0 border-b border-white/20 p-3 md:p-6">
           <div className="flex items-center gap-2 mb-2">
             <HiShieldCheck className="text-xl md:text-3xl text-white" />
             <h2 className="text-lg md:text-2xl font-bold mb-0">
@@ -374,7 +375,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <nav className="p-4 space-y-3">
+        <nav className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
           {menuBtn("riders", <FaBiking />, "Rider Details")}
           {menuBtn("passengers", <FaUser />, "Passenger Details")}
           {menuBtn("reports", <MdOutlineReportProblem />, "User Reports", unseenCount)}
@@ -384,7 +385,7 @@ export default function Dashboard() {
           {menuBtn("rentals", <FaHome />, "Rentals")}
         </nav>
 
-        <div className="absolute bottom-5 left-0 w-full px-4">
+        <div className="shrink-0 border-t border-white/20 p-4">
           <button className="w-full btn btn-primary" onClick={handleLogout}>
             Logout
           </button>
