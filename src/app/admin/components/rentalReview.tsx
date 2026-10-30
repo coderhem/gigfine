@@ -57,7 +57,7 @@ function ReviewActions({
     return (
       <div className="flex flex-col gap-2 w-full sm:w-72">
         <textarea className="form-control h-auto! min-h-20 text-sm" maxLength={500} autoFocus
-          placeholder="Reason (shown to the landlord), e.g. PAN photo is blurry" value={note}
+          placeholder="Reason (shown to the landlord), e.g. citizenship photo is blurry" value={note}
           onChange={(e) => setNote(e.target.value)} />
         <div className="flex gap-2">
           <button className="delete-btn py-2 px-3 text-sm" disabled={busy} onClick={() => run("REJECTED", note)}>
@@ -157,7 +157,7 @@ export default function RentalReview() {
     <>
       <h1 className="mb-2 pt-24 text-3xl font-bold text-secondary">Rentals</h1>
       <p className="text-sm text-gray-500 mb-6">
-        Approve the landlord first (PAN check), then each of their houses. Landlords can post rooms only under
+        Approve the landlord first (citizenship check), then each of their houses. Landlords can post rooms only under
         approved houses.
       </p>
 
@@ -203,12 +203,21 @@ export default function RentalReview() {
                 </div>
               </div>
               <div onClick={stop}>
-                <span className="text-xs text-gray-500">PAN photo</span>
-                {l.panImage ? (
-                  <MediaGallery media={[{ id: 0, type: "IMAGE", fileName: l.panImage }]} fetchUrl={getRentalMediaUrlAdmin} />
-                ) : (
-                  <p className="text-sm text-red-700 mb-0">Not uploaded</p>
-                )}
+{[
+                ["Citizenship — front", l.citizenshipFrontImage],
+                ["Citizenship — back", l.citizenshipBackImage],
+                // Older landlords may have a PAN photo
+                ...(l.panImage ? [["PAN photo", l.panImage]] : []),
+              ].map(([label, fileName]) => (
+                <div key={label} className="mb-2">
+                  <span className="text-xs text-gray-500">{label}</span>
+                  {fileName ? (
+                    <MediaGallery media={[{ id: 0, type: "IMAGE", fileName }]} fetchUrl={getRentalMediaUrlAdmin} />
+                  ) : (
+                    <p className="text-sm text-red-700 mb-0">Not uploaded</p>
+                  )}
+                </div>
+              ))}
               </div>
             </div>
           ))}

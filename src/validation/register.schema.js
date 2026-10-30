@@ -96,9 +96,7 @@ export const rentalRegisterValidation = z.object({
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     "Please enter a valid email address.",
   ),
-  panNo: required("PAN number"),
-  citizenshipNo: z.string().trim().optional(),
-  permanentAddress: z.string().trim().optional(),
+  panNo: z.string().trim().optional(),
   password: required("Password").min(8, "Password must be at least 8 characters."),
 });
 

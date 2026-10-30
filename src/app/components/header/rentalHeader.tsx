@@ -73,7 +73,7 @@ const RentalHeader = () => {
                 <Link href="/rent/login" className="btn btn-primary">
                   Login
                 </Link>
-                <Link href="/rent/register" className="btn btn-blue max-sm:hidden">
+                <Link href="/rent/register?as=landlord" className="btn btn-blue max-sm:hidden">
                   List your house
                 </Link>
               </>

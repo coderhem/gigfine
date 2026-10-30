@@ -1,7 +1,7 @@
 "use client";
 
 import { apiErrorMessage } from "@/api/config";
-import { createLandlord, getMyHouses, getMyLandlord, updateLandlord, uploadPanImage } from "@/api/rental";
+import { createLandlord, getMyHouses, getMyLandlord, updateLandlord, uploadCitizenshipImage } from "@/api/rental";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -10,6 +10,12 @@ import { FaCheckCircle, FaHome, FaMapMarkerAlt, FaPlus, FaRegCircle } from "reac
 import { Field, inputClass, StatusBadge } from "../_components/formBits";
 import { MediaGallery, MediaUploader } from "../_components/rentalMedia";
 import { useRentalSession } from "../_components/useRentalSession";
+
+// What an admin checks. PAN photo isn't asked for right now.
+const CITIZENSHIP_SIDES = [
+  { side: "front", field: "citizenshipFrontImage", label: "Citizenship — front" },
+  { side: "back", field: "citizenshipBackImage", label: "Citizenship — back" },
+] as const;
 
 type ProfileForm = { panNo: string; citizenshipNo: string; permanentAddress: string };
 
@@ -45,16 +51,12 @@ export default function LandlordPanel() {
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.panNo.trim()) {
-      toast.error("PAN number is required.");
-      return;
-    }
     setSaving(true);
     try {
       const saved = landlord ? await updateLandlord(user.userId, form) : await createLandlord(user.userId, form);
       setLandlord(saved);
       setEditing(false);
-      toast.success(landlord ? "Details saved." : "Landlord profile created. Now upload your PAN photo.");
+      toast.success(landlord ? "Details saved." : "Landlord profile created. Now upload your citizenship photos.");
     } catch (err) {
       toast.error(apiErrorMessage(err, "Failed to save"));
     } finally {
@@ -64,7 +66,7 @@ export default function LandlordPanel() {
 
   const profileForm = (
     <form onSubmit={saveProfile} className="grid sm:grid-cols-3 gap-4 items-end">
-      <Field label="PAN number *">
+      <Field label="PAN number">
         <input className={inputClass} value={form.panNo} onChange={(e) => setForm({ ...form, panNo: e.target.value })} />
       </Field>
       <Field label="Citizenship number">
@@ -95,7 +97,7 @@ export default function LandlordPanel() {
         <div className="container max-w-3xl">
           <h2 className="h3 mb-1">List your <span className="text-primary">house</span></h2>
           <p className="text-sm text-gray-500 mb-6">
-            Add your PAN details to become a landlord. Your name and phone come from your GIGFINE account
+            Add your details to become a landlord. Your name and phone come from your GIGFINE account
             ({user.name}, {user.mobile}).
           </p>
           <div className="bg-white rounded-xl shadow p-5">{profileForm}</div>
@@ -106,8 +108,11 @@ export default function LandlordPanel() {
 
   const approved = landlord.status === "APPROVED";
   const steps = [
-    { done: true, label: "Details + PAN number" },
-    { done: !!landlord.panImage, label: "PAN photo uploaded" },
+    { done: true, label: "Your details" },
+    {
+      done: !!landlord.citizenshipFrontImage && !!landlord.citizenshipBackImage,
+      label: "Citizenship photos uploaded",
+    },
     { done: houses.length > 0, label: "House added" },
     { done: approved, label: "Approved by admin" },
   ];
@@ -121,12 +126,11 @@ export default function LandlordPanel() {
               <span className="text-primary">{user.name}</span> — My houses
             </h2>
             <p className="text-sm text-gray-500 mb-0">
-              Each house is checked by an admin. You can post rooms / flats once a house is approved.
+              Your house is checked by an admin. You can post rooms / flats once a house is approved.
             </p>
           </div>
-          <Link href="/rent/landlord/houses/new" className="btn btn-primary flex items-center gap-2">
-            <FaPlus /> Add house
-          </Link>
+          {/* One house per landlord for now (the backend allows more) — the only
+              "Add house" is the empty state below */}
         </div>
 
         {/* Progress */}
@@ -166,7 +170,7 @@ export default function LandlordPanel() {
               <dl className="text-sm grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 mb-0">
                 <dt className="text-gray-500">Name</dt><dd className="mb-0">{landlord.name}</dd>
                 <dt className="text-gray-500">Phone</dt><dd className="mb-0">{landlord.mobile}</dd>
-                <dt className="text-gray-500">PAN</dt><dd className="mb-0">{landlord.panNo}</dd>
+                <dt className="text-gray-500">PAN</dt><dd className="mb-0">{landlord.panNo || "-"}</dd>
                 <dt className="text-gray-500">Citizenship</dt><dd className="mb-0">{landlord.citizenshipNo || "-"}</dd>
                 <dt className="text-gray-500">Address</dt><dd className="mb-0">{landlord.permanentAddress || "-"}</dd>
               </dl>
@@ -177,24 +181,26 @@ export default function LandlordPanel() {
               </button>
             )}
 
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium text-secondary">PAN card photo</span>
-              {landlord.panImage && (
-                <MediaGallery media={[{ id: 0, type: "IMAGE", fileName: landlord.panImage }]} />
-              )}
-              {!approved && (
-                <MediaUploader
-                  imagesOnly
-                  label={landlord.panImage ? "Replace PAN photo" : "Upload PAN photo"}
-                  upload={async (file) => {
-                    const saved = await uploadPanImage(user.userId, file);
-                    setLandlord(saved);
-                    return { id: 0, type: "IMAGE", fileName: saved.panImage };
-                  }}
-                  onUploaded={() => toast.success("PAN photo uploaded.")}
-                />
-              )}
-            </div>
+            {CITIZENSHIP_SIDES.map(({ side, field, label }) => (
+              <div key={side} className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-secondary">{label}</span>
+                {landlord[field] && (
+                  <MediaGallery media={[{ id: 0, type: "IMAGE", fileName: landlord[field] }]} />
+                )}
+                {!approved && (
+                  <MediaUploader
+                    imagesOnly
+                    label={landlord[field] ? "Replace photo" : "Upload photo"}
+                    upload={async (file) => {
+                      const saved = await uploadCitizenshipImage(user.userId, side, file);
+                      setLandlord(saved);
+                      return { id: 0, type: "IMAGE", fileName: saved[field] };
+                    }}
+                    onUploaded={() => toast.success("Citizenship photo uploaded.")}
+                  />
+                )}
+              </div>
+            ))}
           </div>
 
           {/* Houses */}

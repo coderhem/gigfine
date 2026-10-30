@@ -9,6 +9,9 @@ export const RENT_URL =
   process.env.NEXT_PUBLIC_RENT_URL ??
   (process.env.NODE_ENV === "development" ? "" : "https://rent.gigfine.com");
 
+// Tenants never get the owner's number — every enquiry goes through the GIGFINE office
+export const RENT_CONTACT_PHONE = process.env.NEXT_PUBLIC_RENT_CONTACT_PHONE ?? "9868222043";
+
 export const isLandlord = (user) => !!user?.roles?.includes(LANDLORD_ROLE);
 
 // ---------- Labels (mirror the backend enums) ----------
@@ -98,7 +101,7 @@ const upload = async (path, file) => {
 // ---------- Auth ----------
 
 // Account + PENDING landlord in one request; logs in.
-// data: { name, email, mobile, password, panNo, citizenshipNo, permanentAddress }
+// data: { name, email, mobile, password, panNo? }
 export async function registerLandlord(data) {
   const response = await axios.post(`${API_BASE_URL}/api/v1/auth/register-landlord`, data);
   localStorage.setItem("token", response.data.token);
@@ -129,7 +132,11 @@ export async function getMyLandlord(userId) {
 // { panNo, citizenshipNo, permanentAddress }
 export const createLandlord = (userId, data) => post(`/api/v1/landlords/${userId}`, data);
 export const updateLandlord = (userId, data) => put(`/api/v1/landlords/${userId}`, data);
+// PAN photo isn't asked for right now — kept for when it is needed again
 export const uploadPanImage = (userId, file) => upload(`/api/v1/landlords/${userId}/pan`, file);
+// side: "front" | "back"
+export const uploadCitizenshipImage = (userId, side, file) =>
+  upload(`/api/v1/landlords/${userId}/citizenship/${side}`, file);
 
 // ---------- Houses ----------
 
@@ -170,7 +177,8 @@ export async function searchPosts({ sort, ...filters } = {}) {
 
 export const getPublicPost = (postId) => get(`/api/v1/posts/${postId}`);
 
-// Media needs the auth header, so it can't be a plain src. Returns an object URL — revoke it when done.
+// Room photos are public, but PAN / citizenship photos need the auth header — so every file
+// is fetched as a blob. Returns an object URL — revoke it when done.
 export async function getRentalMediaUrl(fileName) {
   const response = await api.get(`${API_BASE_URL}/api/v1/rentals/media/${encodeURIComponent(fileName)}`, {
     headers: authHeader(),

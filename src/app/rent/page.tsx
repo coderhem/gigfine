@@ -37,9 +37,9 @@ const EMPTY: Filters = {
   type: "", district: "", municipality: "", minRent: "", maxRent: "", bathroom: "", kitchen: "", sort: "createdAt:desc",
 };
 
-// Tenants: rooms / flats from approved houses only
+// Rooms / flats from approved houses only. Public — no login needed to browse.
 export default function FindRooms() {
-  const { ready } = useRentalSession();
+  const { ready } = useRentalSession({ optional: true });
   const [draft, setDraft] = useState<Filters>(EMPTY);
   const [filters, setFilters] = useState<Filters>(EMPTY);
   const [posts, setPosts] = useState<any[]>([]);
@@ -71,7 +71,7 @@ export default function FindRooms() {
     <section className="py-8 md:py-11">
       <div className="container">
         <h1 className="h3 mb-1">Find a <span className="text-primary">room or flat</span></h1>
-        <p className="text-sm text-gray-500 mb-5">Every house here is verified by GIGFINE. Call the owner directly.</p>
+        <p className="text-sm text-gray-500 mb-5">Every house here is verified by GIGFINE. Contact GIGFINE to visit a room.</p>
 
         <div className="bg-white rounded-xl shadow p-4 mb-6 flex flex-col gap-3">
           <Pills options={TYPES} value={draft.type} onChange={(v) => set("type", v)} allowEmpty />

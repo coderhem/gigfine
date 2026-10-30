@@ -14,12 +14,17 @@ type Props = {
   longitude?: number | null;
   // Omit for a read-only map
   onChange?: (lat: number, lng: number) => void;
+  // Tenant view: the backend sends only the area's centre — shade the area, no pin
+  approximate?: boolean;
   className?: string;
 };
 
+// Covers the ~1 km cell the backend snaps public coordinates to
+const AREA_RADIUS_M = 800;
+
 // OpenStreetMap + Leaflet (no API key). Editable: click the map or drag the pin.
 // Leaflet touches `window`, so it is loaded inside the effect only.
-export default function LocationMap({ latitude, longitude, onChange, className = "h-72" }: Props) {
+export default function LocationMap({ latitude, longitude, onChange, approximate, className = "h-72" }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<LeafletMap | null>(null);
   const marker = useRef<Marker | null>(null);
@@ -38,7 +43,10 @@ export default function LocationMap({ latitude, longitude, onChange, className =
       if (cancelled || !container.current || map.current) return;
       const editable = !!onChangeRef.current;
       const start: [number, number] = hasPoint ? [latitude!, longitude!] : DEFAULT_CENTER;
-      const m = L.map(container.current, { scrollWheelZoom: editable }).setView(start, hasPoint ? 16 : 12);
+      const m = L.map(container.current, { scrollWheelZoom: editable }).setView(
+        start,
+        hasPoint ? (approximate ? 14 : 16) : 12,
+      );
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: "&copy; OpenStreetMap contributors",
@@ -63,6 +71,14 @@ export default function LocationMap({ latitude, longitude, onChange, className =
           });
         }
       };
+      if (approximate) {
+        if (hasPoint) {
+          L.circle(start, { radius: AREA_RADIUS_M, color: "#0c589c", weight: 2, fillOpacity: 0.15 }).addTo(m);
+        }
+        map.current = m;
+        setTimeout(() => m.invalidateSize(), 100);
+        return;
+      }
       placeRef.current = place;
       if (hasPoint) place(latitude!, longitude!);
       if (editable) {

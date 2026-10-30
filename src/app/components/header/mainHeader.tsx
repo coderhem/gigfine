@@ -3,6 +3,8 @@ import Link from "next/link";
 import React from "react";
 import headerLogo from "@/public/images/gigfine-logo-img.png";
 import Image from "next/image";
+import { FaHome } from "react-icons/fa";
+import { RENT_URL } from "@/api/rental";
 
 const MainHeader = () => {
   return (
@@ -22,6 +24,17 @@ const MainHeader = () => {
               />
             </Link>
             <ul className="w-7/12 flex flex-wrap px-1 -mx-1.5 items-center justify-end">
+              {/* Public room listing on rent.gigfine.com — no login needed */}
+              <li className="px-1.5">
+                <a
+                  href={`${RENT_URL}/rent`}
+                  className="flex items-center gap-1.5 font-semibold text-secondary hover:text-primary transition-colors"
+                >
+                  <FaHome className="text-primary" />
+                  <span className="max-sm:hidden">Find rooms</span>
+                  <span className="sm:hidden max-[380px]:hidden">Rooms</span>
+                </a>
+              </li>
               <li className="px-1.5">
                 <Link href="/login" className="btn btn-primary">
                   Login

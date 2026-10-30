@@ -1,7 +1,7 @@
 "use client";
 
 import { apiErrorMessage } from "@/api/config";
-import { createHouse, getMyLandlord } from "@/api/rental";
+import { createHouse, getMyHouses, getMyLandlord } from "@/api/rental";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,11 +15,16 @@ export default function NewHouse() {
   const router = useRouter();
   const [allowed, setAllowed] = useState(false);
 
-  // Needs a landlord profile first
+  // Needs a landlord profile first. One house per landlord for now (the backend
+  // allows more) — someone who has one is sent to it.
   useEffect(() => {
     if (!ready) return;
-    getMyLandlord(user.userId)
-      .then((l) => (l ? setAllowed(true) : router.replace("/rent/landlord")))
+    Promise.all([getMyLandlord(user.userId), getMyHouses(user.userId)])
+      .then(([landlord, houses]) => {
+        if (!landlord) router.replace("/rent/landlord");
+        else if (houses?.length) router.replace(`/rent/landlord/houses/${houses[0].id}`);
+        else setAllowed(true);
+      })
       .catch((err) => toast.error(apiErrorMessage(err, "Failed to load your landlord profile")));
   }, [ready]);
 

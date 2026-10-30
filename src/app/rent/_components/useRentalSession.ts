@@ -6,9 +6,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-// Every rental page needs a login (the backend wants a token for all of /api/v1 except auth).
-// Refreshes the profile so a just-approved landlord gets ROLE_LANDLORD without logging in again.
-export function useRentalSession() {
+// Landlord pages need a login. Refreshes the profile so a just-approved landlord gets
+// ROLE_LANDLORD without logging in again.
+// optional: room browsing is public — visitors stay on the page (user is null) instead
+// of being sent to login.
+export function useRentalSession({ optional = false }: { optional?: boolean } = {}) {
   const { user } = useSelector((state: any) => state.auth);
   const router = useRouter();
   const pathname = usePathname();
@@ -18,7 +20,11 @@ export function useRentalSession() {
   useEffect(() => {
     if (!user || !localStorage.getItem("token")) {
       dispatch(logout());
-      router.replace(`/rent/login?next=${encodeURIComponent(pathname)}`);
+      if (optional) {
+        setChecking(false);
+      } else {
+        router.replace(`/rent/login?next=${encodeURIComponent(pathname)}`);
+      }
       return;
     }
     getMyProfile()
@@ -27,5 +33,5 @@ export function useRentalSession() {
       .finally(() => setChecking(false));
   }, []);
 
-  return { user, ready: !!user && !checking };
+  return { user, ready: (optional || !!user) && !checking };
 }

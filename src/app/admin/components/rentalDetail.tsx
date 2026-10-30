@@ -229,12 +229,21 @@ export default function RentalDetail({
               {reviewSlot}
             </div>
             <div>
-              <span className="text-xs text-gray-500">PAN photo</span>
-              {landlord.panImage ? (
-                <MediaGallery media={[{ id: 0, type: "IMAGE", fileName: landlord.panImage }]} fetchUrl={getRentalMediaUrlAdmin} hero />
-              ) : (
-                <p className="text-sm text-red-700 mb-0">Not uploaded</p>
-              )}
+{[
+                ["Citizenship — front", landlord.citizenshipFrontImage],
+                ["Citizenship — back", landlord.citizenshipBackImage],
+                // Older landlords may have a PAN photo
+                ...(landlord.panImage ? [["PAN photo", landlord.panImage]] : []),
+              ].map(([label, fileName]) => (
+                <div key={label} className="mb-2">
+                  <span className="text-xs text-gray-500">{label}</span>
+                  {fileName ? (
+                    <MediaGallery media={[{ id: 0, type: "IMAGE", fileName }]} fetchUrl={getRentalMediaUrlAdmin} hero />
+                  ) : (
+                    <p className="text-sm text-red-700 mb-0">Not uploaded</p>
+                  )}
+                </div>
+              ))}
             </div>
           </section>
         )}

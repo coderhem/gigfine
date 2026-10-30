@@ -8,6 +8,7 @@ import {
   getPublicPost,
   KITCHEN_LABEL,
   PROPERTY_TYPE_LABEL,
+  RENT_CONTACT_PHONE,
 } from "@/api/rental";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import dynamic from "next/dynamic";
@@ -15,9 +16,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { FaMapMarkerAlt, FaPhoneAlt, FaWhatsapp } from "react-icons/fa";
+import { FaLock, FaMapMarkerAlt, FaPhoneAlt, FaWhatsapp } from "react-icons/fa";
 import { formatRent, StatusBadge } from "../../_components/formBits";
-import { mapsLink } from "../../_components/locationMap";
 import { MediaGallery } from "../../_components/rentalMedia";
 import { useRentalSession } from "../../_components/useRentalSession";
 
@@ -27,7 +27,8 @@ const L = (map: Record<string, string>, key?: string | null) => (key ? map[key] 
 
 export default function PostDetail() {
   const { postId } = useParams<{ postId: string }>();
-  const { user, ready } = useRentalSession();
+  // Public page; contacting GIGFINE about the room needs a login
+  const { user, ready } = useRentalSession({ optional: true });
   const router = useRouter();
   const [post, setPost] = useState<any>(null);
 
@@ -45,10 +46,13 @@ export default function PostDetail() {
     return <LoadingSvg className="absolute left-1/2 top-1/2 -translate-1/2 size-20" />;
   }
 
-  const isOwner = post.landlordUserId === user.userId;
-  const phone = String(post.landlordMobile ?? "").replace(/\D/g, "");
+  // Owners and admins get the full post (exact point, their own contact); everyone else the area only
+  const isOwner = !!user && post.landlordUserId === user.userId;
+  const phone = RENT_CONTACT_PHONE.replace(/\D/g, "");
+  const area = [post.tole, post.municipality, post.wardNo && `Ward ${post.wardNo}`, post.district]
+    .filter(Boolean).join(", ");
   const whatsapp = `https://wa.me/977${phone.replace(/^977/, "")}?text=${encodeURIComponent(
-    `Namaste, I saw your ${post.title} (Rs. ${post.rent}) on GIGFINE Rent. Is it still available?`,
+    `Namaste GIGFINE, I'm interested in room #${post.id} "${post.title}" (Rs. ${post.rent}) in ${area}. Is it still available?`,
   )}`;
 
   const facts = [
@@ -84,8 +88,7 @@ export default function PostDetail() {
               <h1 className="h3 mb-1">{post.title}</h1>
               <p className="text-sm text-gray-500 flex items-center gap-1">
                 <FaMapMarkerAlt />
-                {[post.houseName, post.tole, post.municipality, post.wardNo && `Ward ${post.wardNo}`, post.district]
-                  .filter(Boolean).join(", ")}
+                {isOwner && post.houseName ? `${post.houseName}, ${area}` : area}
               </p>
               <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-0">
                 {facts.map(([label, value]) => (
@@ -108,12 +111,13 @@ export default function PostDetail() {
             </div>
 
             <div className="bg-white rounded-xl shadow p-5 flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <h2 className="h5 mb-0">Location</h2>
-                <a href={mapsLink(post.latitude, post.longitude)} target="_blank" rel="noopener noreferrer"
-                  className="text-sm underline">Open in Google Maps</a>
+              <div>
+                <h2 className="h5 mb-1">Location</h2>
+                <p className="text-sm text-gray-500 mb-0">
+                  {isOwner ? area : `Around ${area}. GIGFINE shares the exact place when you book a visit.`}
+                </p>
               </div>
-              <LocationMap latitude={post.latitude} longitude={post.longitude} className="h-72" />
+              <LocationMap latitude={post.latitude} longitude={post.longitude} approximate={!isOwner} className="h-72" />
             </div>
           </div>
 
@@ -124,23 +128,28 @@ export default function PostDetail() {
             </span>
             {post.negotiable && <span className="text-sm text-gray-500 -mt-2">Negotiable</span>}
             <hr className="border-secondary/10" />
-            <div>
-              <span className="text-xs text-gray-500">Owner</span>
-              <p className="font-semibold text-secondary mb-0">{post.landlordName}</p>
-            </div>
-            {phone && (
+            <p className="text-sm text-gray-600 mb-0">
+              Rooms are let through the GIGFINE office — we arrange the visit with the owner for you.
+            </p>
+            {user ? (
               <>
                 <a href={`tel:${phone}`} className="btn btn-primary flex items-center justify-center gap-2">
-                  <FaPhoneAlt /> Call {post.landlordMobile}
+                  <FaPhoneAlt /> Call GIGFINE {RENT_CONTACT_PHONE}
                 </a>
                 <a href={whatsapp} target="_blank" rel="noopener noreferrer"
                   className="btn btn-green flex items-center justify-center gap-2">
-                  <FaWhatsapp /> WhatsApp
+                  <FaWhatsapp /> WhatsApp GIGFINE
                 </a>
+                <span className="text-xs text-gray-500">Mention room #{post.id} when you call.</span>
               </>
+            ) : (
+              <Link href={`/rent/login?next=${encodeURIComponent(`/rent/posts/${post.id}`)}`}
+                className="btn btn-primary flex items-center justify-center gap-2">
+                <FaLock /> Login to contact
+              </Link>
             )}
             <p className="text-xs text-gray-400 mb-0">
-              Never pay a deposit before seeing the room. Report problems to GIGFINE.
+              Never pay a deposit before seeing the room.
             </p>
           </aside>
         </div>
