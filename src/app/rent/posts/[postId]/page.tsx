@@ -4,8 +4,10 @@ import { apiErrorMessage } from "@/api/config";
 import {
   AMENITY_LABEL,
   BATHROOM_LABEL,
+  flatFacts,
   FURNISHING_LABEL,
   getPublicPost,
+  houseFacts,
   KITCHEN_LABEL,
   PROPERTY_TYPE_LABEL,
   RENT_CONTACT_PHONE,
@@ -64,13 +66,17 @@ export default function PostDetail() {
     ["Furnishing", L(FURNISHING_LABEL, post.furnishing)],
     ["Deposit", post.deposit != null ? formatRent(post.deposit) : null],
     ["Available from", post.availableFrom ? new Date(post.availableFrom).toLocaleDateString() : "Now"],
+    ...flatFacts(post),
+    // The house's own bathroom count would read like this room's — the room has "Bathroom" above
+    ...houseFacts(post).filter(([k]) => k !== "Bathrooms"),
   ].filter(([, v]) => v != null && v !== "");
 
   // Room photos first, then the house's
   const media = [...(post.media ?? []), ...(post.houseMedia ?? [])];
 
   return (
-    <section className="py-8 md:py-11">
+    // Bottom padding keeps the page clear of the mobile contact bar
+    <section className="pt-8 pb-28 md:pt-11 lg:pb-11">
       <div className="container">
         <Link href="/rent" className="text-sm underline">← All rooms</Link>
 
@@ -108,6 +114,12 @@ export default function PostDetail() {
                 </div>
               )}
               {post.description && <p className="whitespace-pre-line mt-4 mb-0">{post.description}</p>}
+              {post.houseRules && (
+                <div className="mt-4">
+                  <h2 className="h6 mb-1">House rules</h2>
+                  <p className="whitespace-pre-line mb-0">{post.houseRules}</p>
+                </div>
+              )}
             </div>
 
             <div className="bg-white rounded-xl shadow p-5 flex flex-col gap-3">
@@ -153,6 +165,30 @@ export default function PostDetail() {
             </p>
           </aside>
         </div>
+      </div>
+
+      {/* Phones: the contact box is far down the page, so keep rent + contact always in reach */}
+      <div className="lg:hidden fixed inset-x-0 bottom-0 z-50 bg-white border-t border-secondary/10 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-4 py-3 flex items-center gap-3">
+        <span className="font-bold text-primary leading-tight">
+          {formatRent(post.rent)}
+          <span className="block text-xs font-normal text-gray-500">/month{post.negotiable && " · negotiable"}</span>
+        </span>
+        {user ? (
+          <div className="ml-auto flex gap-2">
+            <a href={`tel:${phone}`} className="btn btn-primary py-2 px-3 flex items-center gap-2 text-sm">
+              <FaPhoneAlt /> Call
+            </a>
+            <a href={whatsapp} target="_blank" rel="noopener noreferrer"
+              className="btn btn-green py-2 px-3 flex items-center gap-2 text-sm">
+              <FaWhatsapp /> WhatsApp
+            </a>
+          </div>
+        ) : (
+          <Link href={`/rent/login?next=${encodeURIComponent(`/rent/posts/${post.id}`)}`}
+            className="ml-auto btn btn-primary py-2 px-3 flex items-center gap-2 text-sm">
+            <FaLock /> Login to contact
+          </Link>
+        )}
       </div>
     </section>
   );

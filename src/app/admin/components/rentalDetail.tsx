@@ -5,7 +5,9 @@ import { apiErrorMessage } from "@/api/config";
 import {
   AMENITY_LABEL,
   BATHROOM_LABEL,
+  flatFacts,
   FURNISHING_LABEL,
+  houseFacts,
   KITCHEN_LABEL,
   PROPERTY_TYPE_LABEL,
 } from "@/api/rental";
@@ -59,11 +61,14 @@ function PostCard({ p }: { p: any }) {
           ["Rent", `${formatRent(p.rent)}${p.negotiable ? " (negotiable)" : ""}`],
           ["Deposit", p.deposit != null ? formatRent(p.deposit) : null],
           ["Floor", p.floorNo],
-          ["Bedrooms", p.bedrooms],
+          // Not asked any more; shown for old posts only
+          ...(p.bedrooms != null ? [["Bedrooms", p.bedrooms] as [string, ReactNode]] : []),
           ["Bathroom", BATHROOMS[p.bathroom] ?? p.bathroom],
           ["Kitchen", KITCHENS[p.kitchen] ?? p.kitchen],
           ["Furnishing", FURNISHING[p.furnishing] ?? p.furnishing],
           ["Available from", p.availableFrom],
+          ...flatFacts(p),
+          ["Updated", formatDate(p.updatedAt)],
         ]}
       />
       {p.description && <p className="text-sm whitespace-pre-line mb-0">{p.description}</p>}
@@ -101,8 +106,10 @@ export function HouseDetail({ house: h, reviewSlot }: { house: any; reviewSlot?:
           ["District", h.district],
           ["Municipality", h.municipality],
           ["Ward", h.wardNo],
+          ["City", h.city],
           ["Tole", h.tole],
           ["Total floors", h.totalFloors],
+          ...houseFacts(h),
           ["Latitude", h.latitude],
           ["Longitude", h.longitude],
           ["Posts", h.postCount],
@@ -114,10 +121,17 @@ export function HouseDetail({ house: h, reviewSlot }: { house: any; reviewSlot?:
       />
 
       {h.amenities?.length > 0 && (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-xs text-gray-500 mr-1">Facilities:</span>
           {h.amenities.map((a: string) => (
             <span key={a} className="text-xs px-2 py-0.5 rounded bg-secondary/10">{AMENITIES[a] ?? a}</span>
           ))}
+        </div>
+      )}
+      {h.houseRules && (
+        <div className="text-sm">
+          <span className="text-xs text-gray-500">House rules</span>
+          <p className="whitespace-pre-line mb-0">{h.houseRules}</p>
         </div>
       )}
       {h.description && <p className="text-sm whitespace-pre-line mb-0">{h.description}</p>}

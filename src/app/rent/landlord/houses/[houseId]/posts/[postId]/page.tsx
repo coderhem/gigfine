@@ -98,6 +98,16 @@ export default function EditPost() {
             </div>
             <div className="bg-white rounded-xl shadow p-5 flex flex-col gap-3">
               <h3 className="h5 mb-0">Photos & videos</h3>
+              {post.type === "FLAT" && post.media.filter((m: any) => m.type === "IMAGE").length < 3 && (
+                <div className="text-sm rounded-lg bg-blue-50 border border-blue-200 text-blue-900 p-3">
+                  <p className="font-medium mb-1">Required photos</p>
+                  <ol className="list-decimal pl-5 mb-0">
+                    <li>Bedroom</li>
+                    <li>Kitchen</li>
+                    <li>Bathroom</li>
+                  </ol>
+                </div>
+              )}
               <MediaGallery
                 media={post.media}
                 emptyText="Posts with photos get many more calls."

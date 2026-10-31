@@ -8,7 +8,7 @@ import {
   reviewLandlord,
 } from "@/api/admin";
 import { apiErrorMessage } from "@/api/config";
-import { AMENITY_LABEL, APPROVAL_LABEL } from "@/api/rental";
+import { AMENITY_LABEL, APPROVAL_LABEL, houseFacts } from "@/api/rental";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import { formatDate, StatusBadge } from "@/app/rent/_components/formBits";
 import { mapsLink } from "@/app/rent/_components/locationMap";
@@ -233,7 +233,8 @@ export default function RentalReview() {
                   <StatusBadge status={h.status} />
                 </div>
                 <p className="text-sm mb-0">
-                  {[h.tole, h.municipality, h.wardNo && `Ward ${h.wardNo}`, h.district, h.province].filter(Boolean).join(", ")}
+                  {[h.tole, h.city, h.municipality, h.wardNo && `Ward ${h.wardNo}`, h.district, h.province]
+                    .filter(Boolean).join(", ")}
                 </p>
                 <p className="text-sm text-gray-500 mb-0">
                   Landlord: {h.landlordName} ({h.landlordMobile}) — <StatusBadge status={h.landlordStatus} />
@@ -241,12 +242,22 @@ export default function RentalReview() {
                 <p className="text-xs text-gray-400 mb-0">
                   {h.totalFloors ? `${h.totalFloors} floor(s) · ` : ""}{h.postCount} post(s) · updated {formatDate(h.updatedAt)}
                 </p>
+                <dl className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm mb-0">
+                  {houseFacts(h).filter(([, v]) => v != null && v !== "").map(([k, v]) => (
+                    <div key={k}><dt className="text-xs text-gray-500">{k}</dt><dd className="mb-0 break-words">{v}</dd></div>
+                  ))}
+                </dl>
                 {h.amenities?.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {h.amenities.map((a: string) => (
                       <span key={a} className="text-xs px-2 py-0.5 rounded bg-secondary/10">{AMENITIES[a] ?? a}</span>
                     ))}
                   </div>
+                )}
+                {h.houseRules && (
+                  <p className="text-sm whitespace-pre-line mb-0 line-clamp-3">
+                    <span className="text-xs text-gray-500">Rules: </span>{h.houseRules}
+                  </p>
                 )}
                 {h.description && <p className="text-sm whitespace-pre-line mb-0">{h.description}</p>}
                 {h.reviewNote && <p className="text-xs text-gray-500 mb-0">Note: {h.reviewNote}</p>}

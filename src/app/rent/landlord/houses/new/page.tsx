@@ -15,13 +15,17 @@ export default function NewHouse() {
   const router = useRouter();
   const [allowed, setAllowed] = useState(false);
 
-  // Needs a landlord profile first. One house per landlord for now (the backend
-  // allows more) — someone who has one is sent to it.
+  // Needs a landlord profile with both citizenship photos first. One house per landlord
+  // for now (the backend allows more) — someone who has one is sent to it.
   useEffect(() => {
     if (!ready) return;
     Promise.all([getMyLandlord(user.userId), getMyHouses(user.userId)])
       .then(([landlord, houses]) => {
         if (!landlord) router.replace("/rent/landlord");
+        else if (!landlord.citizenshipFrontImage || !landlord.citizenshipBackImage) {
+          toast.error("Upload both sides of your citizenship before adding a house.");
+          router.replace("/rent/landlord");
+        }
         else if (houses?.length) router.replace(`/rent/landlord/houses/${houses[0].id}`);
         else setAllowed(true);
       })
@@ -38,7 +42,8 @@ export default function NewHouse() {
         <Link href="/rent/landlord" className="text-sm underline">← My houses</Link>
         <h2 className="h3 mt-3 mb-1">Add a house</h2>
         <p className="text-sm text-gray-500 mb-6">
-          After saving you can add photos and videos. An admin reviews the house before you can post rooms.
+          After saving, upload a photo of the house and a photo of the road in front of it. An admin reviews
+          the house before you can post rooms.
         </p>
         <div className="bg-white rounded-xl shadow p-5">
           <HouseForm
@@ -46,7 +51,7 @@ export default function NewHouse() {
             onSubmit={async (data) => {
               try {
                 const house = await createHouse(user.userId, data);
-                toast.success("House saved. Now add photos.");
+                toast.success("House saved. Now upload the house photo and the road photo.");
                 router.push(`/rent/landlord/houses/${house.id}`);
               } catch (err) {
                 toast.error(apiErrorMessage(err, "Failed to save house"));

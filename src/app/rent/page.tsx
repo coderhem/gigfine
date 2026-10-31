@@ -1,7 +1,7 @@
 "use client";
 
 import { apiErrorMessage } from "@/api/config";
-import { BATHROOM_LABEL, KITCHEN_LABEL, PROPERTY_TYPE_LABEL, searchPosts } from "@/api/rental";
+import { BATHROOM_LABEL, FLAT_TYPE_LABEL, KITCHEN_LABEL, PROPERTY_TYPE_LABEL, searchPosts } from "@/api/rental";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -88,11 +88,11 @@ export default function FindRooms() {
             <input type="number" min={0} className={inputClass} placeholder="Max rent" value={draft.maxRent}
               onChange={(e) => set("maxRent", e.target.value)} />
             <select className={inputClass} value={draft.bathroom} onChange={(e) => set("bathroom", e.target.value)}>
-              <option value="">Any bathroom</option>
+              <option value="">Bathroom</option>
               {Object.entries(BATHROOMS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
             <select className={inputClass} value={draft.kitchen} onChange={(e) => set("kitchen", e.target.value)}>
-              <option value="">Any kitchen</option>
+              <option value="">Kitchen</option>
               {Object.entries(KITCHENS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>
@@ -138,6 +138,8 @@ export default function FindRooms() {
                   </p>
                   <p className="text-xs text-gray-400 mb-0 mt-auto pt-2">
                     {[
+                      p.flatType && (FLAT_TYPE_LABEL as Record<string, string>)[p.flatType],
+                      p.areaSqft != null && `${p.areaSqft} sq ft`,
                       p.bedrooms != null && `${p.bedrooms} room(s)`,
                       p.bathroom && BATHROOMS[p.bathroom],
                       p.kitchen && KITCHENS[p.kitchen],

@@ -33,18 +33,98 @@ export const POST_STATUS_BADGE = {
 };
 
 export const AMENITY_LABEL = {
-  WIFI: "WiFi",
-  BIKE_PARKING: "Bike parking",
-  CAR_PARKING: "Car parking",
-  WATER_24H: "24 hr water",
-  SOLAR_HOT_WATER: "Solar hot water",
+  GARBAGE_COLLECTION: "Garbage collection",
+  PEACEFUL_ENVIRONMENT: "Peaceful environment",
   CCTV: "CCTV",
+  GOOD_ROAD: "Good road",
+  HOT_WATER: "Hot water",
+  BACKUP_POWER: "Power backup",
+  WIFI: "WiFi",
   LIFT: "Lift",
   ROOFTOP_ACCESS: "Rooftop access",
-  BACKUP_POWER: "Power backup",
+  SOLAR_HOT_WATER: "Solar hot water",
+  BIKE_PARKING: "Bike parking",
+  CAR_PARKING: "Car parking",
+  WATER_24H: "24 hr water", // old houses only — replaced by house.water
 };
 
+// Amenities the house form asks for under "Parking"; the rest go under "Facilities"
+export const PARKING_AMENITIES = ["BIKE_PARKING", "CAR_PARKING"];
+export const FACILITY_LABEL = Object.fromEntries(
+  Object.entries(AMENITY_LABEL).filter(([k]) => !PARKING_AMENITIES.includes(k) && k !== "WATER_24H"),
+);
+
+export const NEARBY_LABEL = {
+  HIGHWAY: "Highway",
+  HOSPITAL: "Hospital",
+  COLLEGE: "College",
+  PARK: "Park",
+  BUSPARK: "Buspark",
+  HOTEL: "Hotel",
+  MARKET: "Market",
+  MART: "Mart",
+  AIRPORT: "Airport",
+  PHARMACY: "Pharmacy",
+  STUDIO: "Studio",
+  GOVERNMENT_OFFICE: "Government office",
+  CAFE: "Cafe",
+};
+
+export const WATER_LABEL = {
+  ALL_DAY: "24 hours",
+  ALTERNATE_DAYS: "Alternate days",
+  FEW_DAYS_A_WEEK: "Few days a week",
+  STORAGE: "Water storage",
+};
+
+const yesNo = (v) => (v == null ? null : v ? "Yes" : "No");
+
+// Label / value rows for a house (or a post, which carries its house's details). Empty values are null.
+/** @returns {[string, any][]} */
+export function houseFacts(h) {
+  const parking = (h.amenities ?? []).filter((a) => PARKING_AMENITIES.includes(a));
+  return [
+    ["Total rooms", h.totalRooms],
+    ["Bathrooms", h.totalBathrooms],
+    ["Owner lives here", yesNo(h.ownerLivesHere)],
+    ["Water", WATER_LABEL[h.water] ?? null],
+    // Houses saved with the current form always have water set, so no parking there means "No space"
+    ["Parking", parking.length ? parking.map((a) => AMENITY_LABEL[a]).join(", ") : h.water ? "No space" : null],
+    ["Gate closes", h.gateClosingTime],
+    ["Nearby", h.nearby?.length ? h.nearby.map((n) => NEARBY_LABEL[n] ?? n).join(", ") : null],
+  ];
+}
+
 export const PROPERTY_TYPE_LABEL = { ROOM: "Room", FLAT: "Flat", WHOLE_HOUSE: "Whole house", SHUTTER: "Shutter" };
+// What the post form offers; whole house / shutter remain only for old posts
+export const POSTABLE_TYPES = ["ROOM", "FLAT"];
+
+export const FLAT_TYPE_LABEL = { ONE_BK: "1BK", ONE_BHK: "1BHK", TWO_BHK: "2BHK", THREE_BHK: "3BHK", FOUR_PLUS_BHK: "4BHK+" };
+export const MINIMUM_STAY_LABEL = { SIX_MONTHS: "6 months", ONE_YEAR: "1 year", TWO_YEARS: "2 years", FLEXIBLE: "Flexible" };
+export const RENT_INCREASE_LABEL = { YEARLY: "Yearly", NO_INCREASE: "No increase", NEGOTIABLE: "Negotiable" };
+export const TENANT_TYPE_LABEL = {
+  FAMILY: "Family",
+  BACHELOR: "Bachelor",
+  STUDENT: "Student",
+  JOB_PROFESSIONAL: "Job professional",
+  ANYONE: "Anyone",
+};
+
+// Label / value rows for a flat post; empty for rooms
+/** @returns {[string, any][]} */
+export function flatFacts(p) {
+  if (p.type !== "FLAT") return [];
+  return [
+    ["Flat type", FLAT_TYPE_LABEL[p.flatType] ?? null],
+    ["Size", p.areaSqft != null ? `${p.areaSqft} sq ft` : null],
+    ["Bathrooms", p.bathrooms],
+    ["Balconies", p.balconies],
+    ["Minimum stay", MINIMUM_STAY_LABEL[p.minimumStay] ?? null],
+    ["Rent increase", RENT_INCREASE_LABEL[p.rentIncrease] ?? null],
+    ["Written agreement", yesNo(p.writtenAgreement)],
+    ["Preferred tenant", p.preferredTenants?.length ? p.preferredTenants.map((t) => TENANT_TYPE_LABEL[t] ?? t).join(", ") : null],
+  ];
+}
 export const BATHROOM_LABEL = { ATTACHED: "Attached bathroom", SHARED: "Shared bathroom" };
 export const KITCHEN_LABEL = { PRIVATE: "Private kitchen", SHARED: "Shared kitchen", NONE: "No kitchen" };
 export const FURNISHING_LABEL = {

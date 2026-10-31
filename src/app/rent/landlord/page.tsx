@@ -11,10 +11,11 @@ import { Field, inputClass, StatusBadge } from "../_components/formBits";
 import { MediaGallery, MediaUploader } from "../_components/rentalMedia";
 import { useRentalSession } from "../_components/useRentalSession";
 
-// What an admin checks. PAN photo isn't asked for right now.
+// What an admin checks — both sides are required before a house can be added.
+// PAN photo isn't asked for right now.
 const CITIZENSHIP_SIDES = [
-  { side: "front", field: "citizenshipFrontImage", label: "Citizenship — front" },
-  { side: "back", field: "citizenshipBackImage", label: "Citizenship — back" },
+  { side: "front", field: "citizenshipFrontImage", label: "Citizenship — front *" },
+  { side: "back", field: "citizenshipBackImage", label: "Citizenship — back *" },
 ] as const;
 
 type ProfileForm = { panNo: string; citizenshipNo: string; permanentAddress: string };
@@ -107,12 +108,10 @@ export default function LandlordPanel() {
   }
 
   const approved = landlord.status === "APPROVED";
+  const hasCitizenship = !!landlord.citizenshipFrontImage && !!landlord.citizenshipBackImage;
   const steps = [
     { done: true, label: "Your details" },
-    {
-      done: !!landlord.citizenshipFrontImage && !!landlord.citizenshipBackImage,
-      label: "Citizenship photos uploaded",
-    },
+    { done: hasCitizenship, label: "Citizenship photos uploaded" },
     { done: houses.length > 0, label: "House added" },
     { done: approved, label: "Approved by admin" },
   ];
@@ -208,10 +207,18 @@ export default function LandlordPanel() {
             {houses.length === 0 ? (
               <div className="bg-white rounded-xl shadow p-8 text-center text-gray-500">
                 <FaHome className="mx-auto mb-3 text-4xl text-secondary/30" />
-                <p>No houses yet. Add your house with photos and its location on the map.</p>
-                <Link href="/rent/landlord/houses/new" className="btn btn-primary inline-flex items-center gap-2">
-                  <FaPlus /> Add house
-                </Link>
+                {hasCitizenship ? (
+                  <>
+                    <p>No houses yet. Add your house with photos and its location on the map.</p>
+                    <Link href="/rent/landlord/houses/new" className="btn btn-primary inline-flex items-center gap-2">
+                      <FaPlus /> Add house
+                    </Link>
+                  </>
+                ) : (
+                  <p className="mb-0">
+                    Upload both sides of your citizenship (front and back) first. Then you can add your house.
+                  </p>
+                )}
               </div>
             ) : (
               houses.map((h) => (

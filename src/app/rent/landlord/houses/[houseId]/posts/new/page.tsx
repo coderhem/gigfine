@@ -53,7 +53,9 @@ export default function NewPost() {
             onSubmit={async (data) => {
               try {
                 const post = await createPost(user.userId, house.id, data);
-                toast.success("Posted! Now add photos so tenants can see it.");
+                toast.success(data.type === "FLAT"
+                  ? "Posted! Now add photos of the bedroom, kitchen and bathroom."
+                  : "Posted! Now add photos so tenants can see it.");
                 router.push(`/rent/landlord/houses/${house.id}/posts/${post.id}`);
               } catch (err) {
                 toast.error(apiErrorMessage(err, "Failed to post"));

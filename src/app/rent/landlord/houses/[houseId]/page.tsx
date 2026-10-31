@@ -7,6 +7,7 @@ import {
   deleteHouseMedia,
   getHouse,
   getHousePosts,
+  houseFacts,
   PROPERTY_TYPE_LABEL,
   updateHouse,
   uploadHouseMedia,
@@ -56,6 +57,7 @@ export default function HouseDetail() {
   }
 
   const canPost = house.status === "APPROVED" && house.landlordStatus === "APPROVED";
+  const photoCount = house.media?.filter((m: any) => m.type === "IMAGE").length ?? 0;
 
   const handleDelete = async () => {
     try {
@@ -104,6 +106,15 @@ export default function HouseDetail() {
             {/* Media */}
             <div className="bg-white rounded-xl shadow p-5 flex flex-col gap-3">
               <h3 className="h5 mb-0">House photos & videos</h3>
+              {photoCount < 2 && (
+                <div className="text-sm rounded-lg bg-blue-50 border border-blue-200 text-blue-900 p-3">
+                  <p className="font-medium mb-1">Required photos</p>
+                  <ol className="list-decimal pl-5 mb-0">
+                    <li>The house, from outside</li>
+                    <li>The road in front of the house</li>
+                  </ol>
+                </div>
+              )}
               {house.status === "APPROVED" && (
                 <p className="text-xs text-gray-500 mb-0">New photos send the house back for a quick admin check.</p>
               )}
@@ -150,11 +161,25 @@ export default function HouseDetail() {
               ) : (
                 <div className="flex flex-col gap-3 text-sm">
                   {house.totalFloors && <p className="mb-0">{house.totalFloors} floor(s)</p>}
+                  <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 mb-0">
+                    {houseFacts(house).filter(([, v]) => v != null && v !== "").map(([k, v]) => (
+                      <div key={k}>
+                        <dt className="text-xs text-gray-500">{k}</dt>
+                        <dd className="mb-0">{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
                   {house.amenities?.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {house.amenities.map((a: string) => (
                         <span key={a} className="px-2 py-1 rounded bg-secondary/10 text-secondary text-xs">{AMENITIES[a] ?? a}</span>
                       ))}
+                    </div>
+                  )}
+                  {house.houseRules && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">House rules</p>
+                      <p className="whitespace-pre-line mb-0">{house.houseRules}</p>
                     </div>
                   )}
                   {house.description && <p className="whitespace-pre-line mb-0">{house.description}</p>}

@@ -33,21 +33,21 @@ const RentalHeader = () => {
     <header className="fixed left-0 right-0 z-30 bg-white shadow-md">
       <div className="container">
         <div className="py-4 flex flex-wrap justify-between -mx-1 items-center gap-y-2">
-          <Link href="/rent" className="px-1 flex items-center gap-2">
+          <Link href="/rent" className="px-1 flex items-center gap-1.5 sm:gap-2">
             <Image
               src={headerLogo}
               width={600}
               height={200}
               alt="GIGFINE Rent"
               loading="eager"
-              className="w-28 md:w-44 h-auto"
+              className="w-20 min-[380px]:w-24 sm:w-28 md:w-44 h-auto"
             />
-            <span className="text-xs md:text-sm font-semibold px-2 py-1 rounded bg-primary text-white">Rent</span>
+            <span className="text-xs md:text-sm font-semibold px-1.5 sm:px-2 py-1 rounded bg-primary text-white">Rent</span>
           </Link>
-          <div className="px-1 flex items-center gap-3 md:gap-5">
+          <div className="px-1 flex items-center gap-2.5 sm:gap-3 md:gap-5">
             {user ? (
               <>
-                <nav className="flex gap-3 md:gap-5 text-sm md:text-base">
+                <nav className="flex gap-2.5 sm:gap-3 md:gap-5 text-sm md:text-base whitespace-nowrap">
                   {NAV.map(({ href, label }) => (
                     <Link
                       key={href}
