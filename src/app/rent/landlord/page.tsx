@@ -1,7 +1,14 @@
 "use client";
 
 import { apiErrorMessage } from "@/api/config";
-import { createLandlord, getMyHouses, getMyLandlord, updateLandlord, uploadCitizenshipImage } from "@/api/rental";
+import {
+  createLandlord,
+  getMyHouses,
+  getMyLandlord,
+  mediaFileError,
+  updateLandlord,
+  uploadCitizenshipImage,
+} from "@/api/rental";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -18,6 +25,7 @@ const CITIZENSHIP_SIDES = [
   { side: "back", field: "citizenshipBackImage", label: "Citizenship — back *" },
 ] as const;
 
+// citizenshipNo isn't asked any more; an old profile's number is sent back unchanged
 type ProfileForm = { panNo: string; citizenshipNo: string; permanentAddress: string };
 
 const toForm = (l: any): ProfileForm => ({
@@ -25,6 +33,76 @@ const toForm = (l: any): ProfileForm => ({
   citizenshipNo: l?.citizenshipNo ?? "",
   permanentAddress: l?.permanentAddress ?? "",
 });
+
+// Logged-in user who isn't a landlord yet: PAN + both citizenship photos in one go.
+// Photos need the profile to exist, so it is created first and the photos uploaded right after.
+function BecomeLandlord({ user, onDone }: { user: any; onDone: (landlord: any) => void }) {
+  const [panNo, setPanNo] = useState("");
+  const [files, setFiles] = useState<Record<string, File | null>>({ front: null, back: null });
+  const [previews, setPreviews] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
+  const pick = (side: string, file?: File) => {
+    if (!file) return;
+    const error = mediaFileError(file, { imagesOnly: true });
+    if (error) {
+      toast.error(error);
+      return;
+    }
+    setFiles((f) => ({ ...f, [side]: file }));
+    setPreviews((p) => {
+      if (p[side]) URL.revokeObjectURL(p[side]);
+      return { ...p, [side]: URL.createObjectURL(file) };
+    });
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!files.front || !files.back) {
+      toast.error("Add both sides of your citizenship (front and back).");
+      return;
+    }
+    setSaving(true);
+    try {
+      let landlord = await createLandlord(user.userId, { panNo });
+      for (const side of ["front", "back"]) {
+        landlord = await uploadCitizenshipImage(user.userId, side, files[side]);
+      }
+      toast.success("Registered as landlord. Now add your house.");
+      onDone(landlord);
+    } catch (err) {
+      toast.error(apiErrorMessage(err, "Failed to register"));
+      // The profile may exist without photos — the panel shows what is still missing
+      getMyLandlord(user.userId).then((l) => l && onDone(l)).catch(() => {});
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="flex flex-col gap-4">
+      <Field label="PAN number (optional)">
+        <input className={inputClass} value={panNo} onChange={(e) => setPanNo(e.target.value)} />
+      </Field>
+      <div className="grid sm:grid-cols-2 gap-4">
+        {CITIZENSHIP_SIDES.map(({ side, label }) => (
+          <Field key={side} label={label}>
+            <input type="file" accept="image/*" className="form-control h-auto! py-2! text-sm"
+              onChange={(e) => pick(side, e.target.files?.[0])} />
+            {previews[side] && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={previews[side]} alt={label}
+                className="mt-2 rounded-lg border border-gray-200 max-h-40 object-contain" />
+            )}
+          </Field>
+        ))}
+      </div>
+      <button type="submit" className="btn btn-primary self-start" disabled={saving}>
+        {saving ? <LoadingSvg /> : "Register as landlord"}
+      </button>
+    </form>
+  );
+}
 
 // Landlord panel: profile (step 1-2), houses (step 3), approval status (step 4)
 export default function LandlordPanel() {
@@ -54,10 +132,9 @@ export default function LandlordPanel() {
     e.preventDefault();
     setSaving(true);
     try {
-      const saved = landlord ? await updateLandlord(user.userId, form) : await createLandlord(user.userId, form);
-      setLandlord(saved);
+      setLandlord(await updateLandlord(user.userId, form));
       setEditing(false);
-      toast.success(landlord ? "Details saved." : "Landlord profile created. Now upload your citizenship photos.");
+      toast.success("Details saved.");
     } catch (err) {
       toast.error(apiErrorMessage(err, "Failed to save"));
     } finally {
@@ -66,27 +143,21 @@ export default function LandlordPanel() {
   };
 
   const profileForm = (
-    <form onSubmit={saveProfile} className="grid sm:grid-cols-3 gap-4 items-end">
-      <Field label="PAN number">
+    <form onSubmit={saveProfile} className="grid sm:grid-cols-2 gap-4 items-end">
+      <Field label="PAN number (optional)">
         <input className={inputClass} value={form.panNo} onChange={(e) => setForm({ ...form, panNo: e.target.value })} />
       </Field>
-      <Field label="Citizenship number">
-        <input className={inputClass} value={form.citizenshipNo}
-          onChange={(e) => setForm({ ...form, citizenshipNo: e.target.value })} />
-      </Field>
-      <Field label="Permanent address">
+      <Field label="Permanent address (optional)">
         <input className={inputClass} value={form.permanentAddress}
           onChange={(e) => setForm({ ...form, permanentAddress: e.target.value })} />
       </Field>
-      <div className="sm:col-span-3 flex gap-2">
+      <div className="sm:col-span-2 flex gap-2">
         <button type="submit" className="btn btn-primary py-2" disabled={saving}>
-          {saving ? <LoadingSvg /> : landlord ? "Save details" : "Register as landlord"}
+          {saving ? <LoadingSvg /> : "Save details"}
         </button>
-        {editing && (
-          <button type="button" className="btn py-2" onClick={() => { setEditing(false); setForm(toForm(landlord)); }}>
-            Cancel
-          </button>
-        )}
+        <button type="button" className="btn py-2" onClick={() => { setEditing(false); setForm(toForm(landlord)); }}>
+          Cancel
+        </button>
       </div>
     </form>
   );
@@ -98,10 +169,12 @@ export default function LandlordPanel() {
         <div className="container max-w-3xl">
           <h2 className="h3 mb-1">List your <span className="text-primary">house</span></h2>
           <p className="text-sm text-gray-500 mb-6">
-            Add your details to become a landlord. Your name and phone come from your GIGFINE account
-            ({user.name}, {user.mobile}).
+            Add your citizenship photos to become a landlord. Your name and phone come from your GIGFINE account
+            ({user.name}, {user.mobile}). An admin checks them before your house goes live.
           </p>
-          <div className="bg-white rounded-xl shadow p-5">{profileForm}</div>
+          <div className="bg-white rounded-xl shadow p-5">
+            <BecomeLandlord user={user} onDone={(l) => { setLandlord(l); setForm(toForm(l)); }} />
+          </div>
         </div>
       </section>
     );
@@ -170,7 +243,6 @@ export default function LandlordPanel() {
                 <dt className="text-gray-500">Name</dt><dd className="mb-0">{landlord.name}</dd>
                 <dt className="text-gray-500">Phone</dt><dd className="mb-0">{landlord.mobile}</dd>
                 <dt className="text-gray-500">PAN</dt><dd className="mb-0">{landlord.panNo || "-"}</dd>
-                <dt className="text-gray-500">Citizenship</dt><dd className="mb-0">{landlord.citizenshipNo || "-"}</dd>
                 <dt className="text-gray-500">Address</dt><dd className="mb-0">{landlord.permanentAddress || "-"}</dd>
               </dl>
             )}
