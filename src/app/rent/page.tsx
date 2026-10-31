@@ -1,7 +1,7 @@
 "use client";
 
 import { apiErrorMessage } from "@/api/config";
-import { BATHROOM_LABEL, FLAT_TYPE_LABEL, KITCHEN_LABEL, PROPERTY_TYPE_LABEL, searchPosts } from "@/api/rental";
+import { BATHROOM_LABEL, BILL_LABEL, FLAT_TYPE_LABEL, KITCHEN_LABEL, PROPERTY_TYPE_LABEL, searchPosts } from "@/api/rental";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -14,12 +14,14 @@ import { useRentalSession } from "./_components/useRentalSession";
 const TYPES = PROPERTY_TYPE_LABEL as Record<string, string>;
 const BATHROOMS = BATHROOM_LABEL as Record<string, string>;
 const KITCHENS = KITCHEN_LABEL as Record<string, string>;
+const BILLS = BILL_LABEL as Record<string, string>;
 
 const SORTS: Record<string, string> = {
   "createdAt:desc": "Newest first",
   "rent:asc": "Rent: low to high",
   "rent:desc": "Rent: high to low",
   "availableFrom:asc": "Available soonest",
+  "billsIncluded:desc": "Most bills included",
 };
 
 type Filters = {
@@ -30,11 +32,13 @@ type Filters = {
   maxRent: string;
   bathroom: string;
   kitchen: string;
+  included: string[];
   sort: string;
 };
 
 const EMPTY: Filters = {
-  type: "", district: "", municipality: "", minRent: "", maxRent: "", bathroom: "", kitchen: "", sort: "createdAt:desc",
+  type: "", district: "", municipality: "", minRent: "", maxRent: "", bathroom: "", kitchen: "", included: [],
+  sort: "createdAt:desc",
 };
 
 // Rooms / flats from approved houses only. Public — no login needed to browse.
@@ -64,7 +68,9 @@ export default function FindRooms() {
     return <LoadingSvg className="absolute left-1/2 top-1/2 -translate-1/2 size-20" />;
   }
 
-  const set = (key: keyof Filters, value: string) => setDraft((f) => ({ ...f, [key]: value }));
+  const set = (key: Exclude<keyof Filters, "included">, value: string) => setDraft((f) => ({ ...f, [key]: value }));
+  const toggleBill = (b: string) =>
+    setDraft((f) => ({ ...f, included: f.included.includes(b) ? f.included.filter((x) => x !== b) : [...f.included, b] }));
   const changed = JSON.stringify(draft) !== JSON.stringify(EMPTY);
 
   return (
@@ -95,6 +101,10 @@ export default function FindRooms() {
               <option value="">Kitchen</option>
               {Object.entries(KITCHENS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
+          </div>
+          <div className="flex flex-col gap-1.5 text-sm">
+            <span className="text-gray-500">Rent includes</span>
+            <Pills options={BILLS} values={draft.included} onToggle={toggleBill} />
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <span className="text-gray-500">{loading ? "Searching…" : `${posts.length} result(s)`}</span>
@@ -130,6 +140,11 @@ export default function FindRooms() {
                   <span className="text-lg font-bold text-primary">
                     {formatRent(p.rent)}<span className="text-sm font-normal text-gray-500">/month</span>
                     {p.negotiable && <span className="ml-2 text-xs font-normal text-gray-500">negotiable</span>}
+                  </span>
+                  <span className={`text-xs ${p.includedInRent?.length ? "text-green-700" : "text-gray-400"}`}>
+                    {p.includedInRent?.length
+                      ? `Includes ${p.includedInRent.map((b: string) => BILLS[b] ?? b).join(", ")}`
+                      : "Bills paid separately"}
                   </span>
                   <h3 className="font-semibold text-secondary mb-0 line-clamp-1">{p.title}</h3>
                   <p className="text-sm text-gray-500 mb-0 flex items-center gap-1 line-clamp-1">

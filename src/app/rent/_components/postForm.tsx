@@ -2,6 +2,7 @@
 
 import {
   BATHROOM_LABEL,
+  BILL_LABEL,
   FLAT_TYPE_LABEL,
   FURNISHING_LABEL,
   KITCHEN_LABEL,
@@ -29,6 +30,7 @@ type PostFormData = {
   kitchen: string;
   furnishing: string;
   rent: string;
+  includedInRent: string[];
   deposit: string;
   negotiable: boolean;
   availableFrom: string;
@@ -54,6 +56,7 @@ const fromPost = (p: any): PostFormData => ({
   kitchen: p?.kitchen ?? "",
   furnishing: p?.furnishing ?? "",
   rent: p?.rent?.toString() ?? "",
+  includedInRent: p?.includedInRent ?? [],
   deposit: p?.deposit?.toString() ?? "",
   negotiable: p?.negotiable ?? false,
   availableFrom: p?.availableFrom ?? "",
@@ -185,6 +188,13 @@ export default function PostForm({
           Rent is negotiable
         </label>
       </div>
+
+      <Field label="Included in the monthly rent"
+        hint="Tap every bill the rent already covers. Anything not selected, the tenant pays separately.">
+        <Pills options={BILL_LABEL} values={form.includedInRent}
+          onToggle={(v) => set("includedInRent", form.includedInRent.includes(v)
+            ? form.includedInRent.filter((x) => x !== v) : [...form.includedInRent, v])} />
+      </Field>
 
       <div className="grid grid-cols-2 gap-4">
         <Field label="Floor" hint={totalFloors ? `0 = ground, house has ${totalFloors}` : "0 = ground floor"}>

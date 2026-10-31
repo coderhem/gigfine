@@ -187,6 +187,18 @@ export const getHousePostsAdmin = async (userId, houseId) =>
 export const reviewHouse = async (houseId, review) =>
   (await adminApi.put(`/api/v1/houses/${houseId}/status`, review)).data;
 
+// Every room / flat post. filters: { status, sort } — sort "rent:asc", "createdAt:desc" etc.
+export const getAllPostsAdmin = async ({ status, sort } = {}) => {
+  const params = {};
+  if (status) params.status = status;
+  if (sort) [params.sortBy, params.direction] = sort.split(":");
+  return (await adminApi.get("/api/v1/rental-posts", { params })).data;
+};
+
+// status: "ACTIVE" | "RENTED" | "INACTIVE" — same endpoint the landlord uses
+export const updatePostStatusAdmin = async (post, status) =>
+  (await adminApi.put(`/api/v1/users/${post.landlordUserId}/houses/${post.houseId}/posts/${post.id}/status`, { status })).data;
+
 export const getRentalMediaUrlAdmin = async (fileName) => {
   const res = await adminApi.get(`/api/v1/rentals/media/${encodeURIComponent(fileName)}`, {
     responseType: "blob",

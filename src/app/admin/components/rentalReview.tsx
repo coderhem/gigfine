@@ -14,13 +14,14 @@ import { formatDate, StatusBadge } from "@/app/rent/_components/formBits";
 import { mapsLink } from "@/app/rent/_components/locationMap";
 import { MediaGallery } from "@/app/rent/_components/rentalMedia";
 import RentalDetail from "./rentalDetail";
+import RentalPosts from "./rentalPosts";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const LocationMap = dynamic(() => import("@/app/rent/_components/locationMap"), { ssr: false });
 
-type Tab = "landlords" | "houses";
+type Tab = "landlords" | "houses" | "posts";
 // What the detail panel shows: a landlord with all their houses, or one house
 type Selected = { userId: number; landlord?: any; houseId?: number };
 const STATUSES = APPROVAL_LABEL as Record<string, string>;
@@ -112,7 +113,7 @@ export default function RentalReview() {
   };
 
   useEffect(() => {
-    fetchItems();
+    if (tab !== "posts") fetchItems();
   }, [tab, status]);
 
   const handleLandlord = async (userId: number, next: string, note?: string) => {
@@ -165,14 +166,19 @@ export default function RentalReview() {
         <div className="flex gap-2">
           {tabBtn("landlords", "Landlords")}
           {tabBtn("houses", "Houses")}
+          {tabBtn("posts", "Rooms / flats")}
         </div>
-        <select className="form-control py-2! h-11! w-auto!" value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="">All</option>
-          {Object.entries(STATUSES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
+        {tab !== "posts" && (
+          <select className="form-control py-2! h-11! w-auto!" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="">All</option>
+            {Object.entries(STATUSES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+        )}
       </div>
 
-      {loading ? (
+      {tab === "posts" ? (
+        <RentalPosts onOpenHouse={(userId, houseId) => setSelected({ userId, houseId })} />
+      ) : loading ? (
         <div className="flex justify-center py-8"><LoadingSvg /></div>
       ) : items.length === 0 ? (
         <div className="bg-white rounded-xl shadow p-8 text-center text-gray-500">Nothing here.</div>

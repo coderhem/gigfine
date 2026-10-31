@@ -4,6 +4,7 @@ import { apiErrorMessage } from "@/api/config";
 import {
   AMENITY_LABEL,
   BATHROOM_LABEL,
+  BILL_LABEL,
   flatFacts,
   FURNISHING_LABEL,
   getPublicPost,
@@ -139,6 +140,16 @@ export default function PostDetail() {
               {formatRent(post.rent)}<span className="text-sm font-normal text-gray-500">/month</span>
             </span>
             {post.negotiable && <span className="text-sm text-gray-500 -mt-2">Negotiable</span>}
+            <ul className="text-sm mb-0 flex flex-col gap-1">
+              {Object.entries(BILL_LABEL as Record<string, string>).map(([key, label]) => {
+                const included = post.includedInRent?.includes(key);
+                return (
+                  <li key={key} className={included ? "text-green-700" : "text-gray-500"}>
+                    {included ? "✓" : "✗"} {label} {included ? "included in rent" : "paid separately"}
+                  </li>
+                );
+              })}
+            </ul>
             <hr className="border-secondary/10" />
             <p className="text-sm text-gray-600 mb-0">
               Rooms are let through the GIGFINE office — we arrange the visit with the owner for you.

@@ -43,6 +43,7 @@ export type HouseFormData = {
 
 const fromHouse = (h: any): HouseFormData => ({
   name: h?.name ?? "",
+  // No longer asked; an old house's text is sent back unchanged
   description: h?.description ?? "",
   province: h?.province ?? "Bagmati",
   district: h?.district ?? "",
@@ -77,7 +78,7 @@ const toRequest = ({ noParking, ...f }: HouseFormData) => ({
   water: f.water || null,
 });
 
-// Everything the client asked for except house rules and the description
+// Everything the client asked for except house rules
 const REQUIRED: [keyof HouseFormData, string][] = [
   ["name", "house name"],
   ["totalFloors", "house floors"],
@@ -239,12 +240,6 @@ export default function HouseForm({
         hint="One rule per line. Rules written on paper? Add a photo of the paper with the house photos after saving.">
         <textarea className="form-control h-auto! min-h-28" maxLength={3000} placeholder={RULES_PLACEHOLDER}
           value={form.houseRules} onChange={(e) => set("houseRules", e.target.value)} />
-      </Field>
-
-      <Field label="About the house (optional)">
-        <textarea className="form-control h-auto! min-h-24" maxLength={3000}
-          placeholder="Anything else tenants should know" value={form.description}
-          onChange={(e) => set("description", e.target.value)} />
       </Field>
 
       <button type="submit" className="btn btn-primary" disabled={saving}>

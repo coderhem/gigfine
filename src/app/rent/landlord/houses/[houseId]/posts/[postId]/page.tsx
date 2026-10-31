@@ -124,6 +124,12 @@ export default function EditPost() {
                 upload={(file) => uploadPostMedia(user.userId, houseId, post.id, file)}
                 onUploaded={(m) => setPost((p: any) => ({ ...p, media: [...p.media, m] }))}
               />
+              <button type="button" className="btn btn-primary py-2" onClick={() => {
+                toast.success(`${post.type === "FLAT" ? "Flat" : "Room"} saved.`);
+                router.push("/rent/landlord");
+              }}>
+                Done
+              </button>
             </div>
           </div>
 
@@ -135,8 +141,9 @@ export default function EditPost() {
               submitLabel="Save changes"
               onSubmit={async (data) => {
                 try {
-                  setPost(await updatePost(user.userId, houseId, post.id, data));
-                  toast.success("Saved.");
+                  await updatePost(user.userId, houseId, post.id, data);
+                  toast.success(`${data.type === "FLAT" ? "Flat" : "Room"} details saved.`);
+                  router.push("/rent/landlord");
                 } catch (err) {
                   toast.error(apiErrorMessage(err, "Failed to save"));
                 }

@@ -5,6 +5,7 @@ import { apiErrorMessage } from "@/api/config";
 import {
   AMENITY_LABEL,
   BATHROOM_LABEL,
+  BILL_LABEL,
   flatFacts,
   FURNISHING_LABEL,
   houseFacts,
@@ -59,6 +60,8 @@ function PostCard({ p }: { p: any }) {
         rows={[
           ["Type", TYPES[p.type] ?? p.type],
           ["Rent", `${formatRent(p.rent)}${p.negotiable ? " (negotiable)" : ""}`],
+          ["Included in rent", p.includedInRent?.length
+            ? p.includedInRent.map((b: string) => (BILL_LABEL as Record<string, string>)[b] ?? b).join(", ") : "None"],
           ["Deposit", p.deposit != null ? formatRent(p.deposit) : null],
           ["Floor", p.floorNo],
           // Not asked any more; shown for old posts only

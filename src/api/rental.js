@@ -95,6 +95,9 @@ export function houseFacts(h) {
   ];
 }
 
+// Monthly bills the rent may already cover
+export const BILL_LABEL = { ELECTRICITY: "Electricity", WATER: "Water", WIFI: "WiFi", GARBAGE: "Garbage" };
+
 export const PROPERTY_TYPE_LABEL = { ROOM: "Room", FLAT: "Flat", WHOLE_HOUSE: "Whole house", SHUTTER: "Shutter" };
 // What the post form offers; whole house / shutter remain only for old posts
 export const POSTABLE_TYPES = ["ROOM", "FLAT"];
@@ -248,9 +251,11 @@ export const deletePostMedia = (userId, houseId, postId, mediaId) =>
 
 // ---------- Tenants ----------
 
-// filters: { type, district, municipality, minRent, maxRent, bathroom, kitchen, sort } — sort "rent:asc" etc.
-export async function searchPosts({ sort, ...filters } = {}) {
+// filters: { type, district, municipality, minRent, maxRent, bathroom, kitchen, included, sort } — sort "rent:asc"
+// etc.; included: bills the rent must cover, e.g. ["ELECTRICITY", "WATER"]
+export async function searchPosts({ sort, included, ...filters } = {}) {
   const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== "" && v != null));
+  if (included?.length) params.included = included.join(",");
   if (sort) [params.sortBy, params.direction] = sort.split(":");
   return get("/api/v1/posts", params);
 }
