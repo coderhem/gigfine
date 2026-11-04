@@ -15,13 +15,14 @@ import { mapsLink } from "@/app/rent/_components/locationMap";
 import { MediaGallery } from "@/app/rent/_components/rentalMedia";
 import RentalDetail from "./rentalDetail";
 import RentalPosts from "./rentalPosts";
+import VisitRequests from "./visitRequests";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const LocationMap = dynamic(() => import("@/app/rent/_components/locationMap"), { ssr: false });
 
-type Tab = "landlords" | "houses" | "posts";
+type Tab = "landlords" | "houses" | "posts" | "visits";
 // What the detail panel shows: a landlord with all their houses, or one house
 type Selected = { userId: number; landlord?: any; houseId?: number };
 const STATUSES = APPROVAL_LABEL as Record<string, string>;
@@ -113,7 +114,7 @@ export default function RentalReview() {
   };
 
   useEffect(() => {
-    if (tab !== "posts") fetchItems();
+    if (tab === "landlords" || tab === "houses") fetchItems();
   }, [tab, status]);
 
   const handleLandlord = async (userId: number, next: string, note?: string) => {
@@ -163,12 +164,13 @@ export default function RentalReview() {
       </p>
 
       <div className="flex flex-wrap gap-2 items-center justify-between mb-4">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {tabBtn("landlords", "Landlords")}
           {tabBtn("houses", "Houses")}
           {tabBtn("posts", "Rooms / flats")}
+          {tabBtn("visits", "Visit requests")}
         </div>
-        {tab !== "posts" && (
+        {(tab === "landlords" || tab === "houses") && (
           <select className="form-control py-2! h-11! w-auto!" value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">All</option>
             {Object.entries(STATUSES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -178,6 +180,8 @@ export default function RentalReview() {
 
       {tab === "posts" ? (
         <RentalPosts onOpenHouse={(userId, houseId) => setSelected({ userId, houseId })} />
+      ) : tab === "visits" ? (
+        <VisitRequests onOpenHouse={(userId, houseId) => setSelected({ userId, houseId })} />
       ) : loading ? (
         <div className="flex justify-center py-8"><LoadingSvg /></div>
       ) : items.length === 0 ? (

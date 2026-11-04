@@ -199,6 +199,14 @@ export const getAllPostsAdmin = async ({ status, sort } = {}) => {
 export const updatePostStatusAdmin = async (post, status) =>
   (await adminApi.put(`/api/v1/users/${post.landlordUserId}/houses/${post.houseId}/posts/${post.id}/status`, { status })).data;
 
+// Field visit requests, newest first. status: "" | "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED"
+export const getVisitRequestsAdmin = async (status) =>
+  (await adminApi.get("/api/v1/visit-requests", { params: status ? { status } : {} })).data;
+
+// adminNote is shown to the user
+export const updateVisitRequestAdmin = async (id, status, adminNote) =>
+  (await adminApi.put(`/api/v1/visit-requests/${id}/status`, { status, adminNote })).data;
+
 export const getRentalMediaUrlAdmin = async (fileName) => {
   const res = await adminApi.get(`/api/v1/rentals/media/${encodeURIComponent(fileName)}`, {
     responseType: "blob",

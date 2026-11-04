@@ -10,7 +10,13 @@ export const RENT_URL =
   (process.env.NODE_ENV === "development" ? "" : "https://rent.gigfine.com");
 
 // Tenants never get the owner's number — every enquiry goes through the GIGFINE office
-export const RENT_CONTACT_PHONE = process.env.NEXT_PUBLIC_RENT_CONTACT_PHONE ?? "9868222043";
+export const RENT_CONTACT_PHONE = process.env.NEXT_PUBLIC_RENT_CONTACT_PHONE ?? "9705882868";
+
+// WhatsApp chat with the rental office, optionally with a message typed in
+export function rentWhatsAppUrl(message) {
+  const phone = RENT_CONTACT_PHONE.replace(/\D/g, "").replace(/^977/, "");
+  return `https://wa.me/977${phone}${message ? `?text=${encodeURIComponent(message)}` : ""}`;
+}
 
 export const isLandlord = (user) => !!user?.roles?.includes(LANDLORD_ROLE);
 
@@ -261,6 +267,28 @@ export async function searchPosts({ sort, included, ...filters } = {}) {
 }
 
 export const getPublicPost = (postId) => get(`/api/v1/posts/${postId}`);
+
+// ---------- Field visits ----------
+
+export const VISIT_STATUS_LABEL = {
+  PENDING: "Requested",
+  CONFIRMED: "Confirmed",
+  COMPLETED: "Visited",
+  CANCELLED: "Cancelled",
+};
+
+export const VISIT_STATUS_BADGE = {
+  PENDING: "bg-yellow-100 text-yellow-800",
+  CONFIRMED: "bg-green-100 text-green-800",
+  COMPLETED: "bg-blue-100 text-blue-800",
+  CANCELLED: "bg-gray-200 text-gray-600",
+};
+
+// data: { visitDate: "YYYY-MM-DD", visitTime: "HH:mm", contactPhone, people, message }
+export const requestVisit = (postId, data) => post(`/api/v1/posts/${postId}/visit-requests`, data);
+// postId optional: only the requests for that room
+export const getMyVisitRequests = (postId) => get("/api/v1/visit-requests/mine", postId ? { postId } : {});
+export const cancelVisitRequest = (id) => put(`/api/v1/visit-requests/${id}/cancel`);
 
 // Room photos are public, but PAN / citizenship photos need the auth header — so every file
 // is fetched as a blob. Returns an object URL — revoke it when done.

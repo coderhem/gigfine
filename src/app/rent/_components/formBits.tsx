@@ -1,13 +1,21 @@
 "use client";
 
-import { APPROVAL_BADGE, APPROVAL_LABEL, POST_STATUS_BADGE, POST_STATUS_LABEL } from "@/api/rental";
+import {
+  APPROVAL_BADGE,
+  APPROVAL_LABEL,
+  POST_STATUS_BADGE,
+  POST_STATUS_LABEL,
+  VISIT_STATUS_BADGE,
+  VISIT_STATUS_LABEL,
+} from "@/api/rental";
 import type { ReactNode } from "react";
 
 const APPROVAL = { label: APPROVAL_LABEL as Record<string, string>, badge: APPROVAL_BADGE as Record<string, string> };
 const POST = { label: POST_STATUS_LABEL as Record<string, string>, badge: POST_STATUS_BADGE as Record<string, string> };
+const VISIT = { label: VISIT_STATUS_LABEL as Record<string, string>, badge: VISIT_STATUS_BADGE as Record<string, string> };
 
-export function StatusBadge({ status, kind = "approval" }: { status: string; kind?: "approval" | "post" }) {
-  const map = kind === "post" ? POST : APPROVAL;
+export function StatusBadge({ status, kind = "approval" }: { status: string; kind?: "approval" | "post" | "visit" }) {
+  const map = kind === "post" ? POST : kind === "visit" ? VISIT : APPROVAL;
   return (
     <span className={`text-xs font-semibold px-2 py-1 rounded whitespace-nowrap ${map.badge[status] ?? "bg-secondary/10"}`}>
       {map.label[status] ?? status}
@@ -68,3 +76,9 @@ export const formatRent = (rent?: number | null) =>
   rent == null ? "-" : `Rs. ${rent.toLocaleString("en-IN")}`;
 
 export const formatDate = (value?: string | null) => (value ? new Date(value).toLocaleString() : "-");
+
+// Visit request: date "2026-11-10" + time "14:30" -> "Mon, Nov 10, 2026 · 2:30 PM"
+export const formatVisit = (date: string, time: string) => {
+  const at = new Date(`${date}T${time}`);
+  return `${at.toLocaleDateString(undefined, { weekday: "short", year: "numeric", month: "short", day: "numeric" })} · ${at.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+};

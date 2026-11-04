@@ -12,6 +12,7 @@ import {
   KITCHEN_LABEL,
   PROPERTY_TYPE_LABEL,
   RENT_CONTACT_PHONE,
+  rentWhatsAppUrl,
 } from "@/api/rental";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import dynamic from "next/dynamic";
@@ -19,10 +20,11 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { FaLock, FaMapMarkerAlt, FaPhoneAlt, FaWhatsapp } from "react-icons/fa";
+import { FaCalendarCheck, FaLock, FaMapMarkerAlt, FaPhoneAlt, FaWhatsapp } from "react-icons/fa";
 import { formatRent, StatusBadge } from "../../_components/formBits";
 import { MediaGallery } from "../../_components/rentalMedia";
 import { useRentalSession } from "../../_components/useRentalSession";
+import VisitRequest from "../../_components/visitRequest";
 
 const LocationMap = dynamic(() => import("../../_components/locationMap"), { ssr: false });
 
@@ -54,9 +56,9 @@ export default function PostDetail() {
   const phone = RENT_CONTACT_PHONE.replace(/\D/g, "");
   const area = [post.tole, post.municipality, post.wardNo && `Ward ${post.wardNo}`, post.district]
     .filter(Boolean).join(", ");
-  const whatsapp = `https://wa.me/977${phone.replace(/^977/, "")}?text=${encodeURIComponent(
+  const whatsapp = rentWhatsAppUrl(
     `Namaste GIGFINE, I'm interested in room #${post.id} "${post.title}" (Rs. ${post.rent}) in ${area}. Is it still available?`,
-  )}`;
+  );
 
   const facts = [
     ["Type", L(PROPERTY_TYPE_LABEL, post.type)],
@@ -164,6 +166,7 @@ export default function PostDetail() {
                   <FaWhatsapp /> WhatsApp GIGFINE
                 </a>
                 <span className="text-xs text-gray-500">Mention room #{post.id} when you call.</span>
+                {!isOwner && post.status === "ACTIVE" && <VisitRequest postId={post.id} user={user} />}
               </>
             ) : (
               <Link href={`/rent/login?next=${encodeURIComponent(`/rent/posts/${post.id}`)}`}
@@ -193,6 +196,11 @@ export default function PostDetail() {
               className="btn btn-green py-2 px-3 flex items-center gap-2 text-sm">
               <FaWhatsapp /> WhatsApp
             </a>
+            {!isOwner && post.status === "ACTIVE" && (
+              <a href="#visit" className="btn btn-blue py-2 px-3 flex items-center gap-2 text-sm">
+                <FaCalendarCheck /> Visit
+              </a>
+            )}
           </div>
         ) : (
           <Link href={`/rent/login?next=${encodeURIComponent(`/rent/posts/${post.id}`)}`}
