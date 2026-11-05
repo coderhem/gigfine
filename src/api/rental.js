@@ -272,6 +272,8 @@ export async function searchPosts({ sort, included, ...filters } = {}) {
 export const quickSearchPosts = (q) => get("/api/v1/posts/search", q?.trim() ? { q: q.trim() } : {});
 
 export const getPublicPost = (postId) => get(`/api/v1/posts/${postId}`);
+// Room page opened — feeds "Viewed by N" (the backend counts each viewer once a day)
+export const recordPostView = (postId) => post(`/api/v1/posts/${postId}/views`);
 
 // ---------- Field visits ----------
 

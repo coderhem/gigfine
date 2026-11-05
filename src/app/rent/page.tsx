@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FaMapMarkerAlt, FaSearch, FaTimes } from "react-icons/fa";
 import { formatRent, inputClass } from "./_components/formBits";
+import PostStats from "./_components/postStats";
 import { MediaCover } from "./_components/rentalMedia";
 import { useRentalSession } from "./_components/useRentalSession";
 
@@ -44,6 +45,9 @@ function understoodChips(r: SearchResult | null): string[] {
   ].filter((c): c is string => typeof c === "string");
 }
 
+type Kind = "" | "ROOM" | "FLAT";
+const KINDS: [Exclude<Kind, "">, string][] = [["ROOM", "ROOM"], ["FLAT", "FLAT"]];
+
 // Rooms / flats from approved houses only. Public — no login needed to browse.
 export default function FindRooms() {
   const { ready } = useRentalSession({ optional: true });
@@ -51,6 +55,8 @@ export default function FindRooms() {
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<SearchResult | null>(null);
   const [loading, setLoading] = useState(true);
+  // "" = both; otherwise only that type, with or without search text
+  const [kind, setKind] = useState<Kind>("");
 
   // Searches a moment after typing stops
   useEffect(() => {
@@ -73,14 +79,35 @@ export default function FindRooms() {
     return <LoadingSvg className="absolute left-1/2 top-1/2 -translate-1/2 size-20" />;
   }
 
-  const posts = result?.posts ?? [];
+  // The Room / Flat toggle narrows the results here, so switching it needs no new request
+  const posts = (result?.posts ?? []).filter((p) => !kind || p.type === kind);
   const chips = query ? understoodChips(result) : [];
 
   return (
     <section className="py-8 md:py-11">
       <div className="container">
-        <h1 className="h3 mb-1">Find a <span className="text-primary">room or flat</span></h1>
-        <p className="text-sm text-gray-500 mb-5">Every house here is verified by GIGFINE. Contact GIGFINE to visit a room.</p>
+        <h1 className="h3 mb-0">Flat <span className="text-primary">you can trust</span></h1>
+        {/* Faded echo of the heading, like its shadow */}
+        <p aria-hidden className="h3 mb-4 -mt-1 text-secondary/25 [text-shadow:0_3px_8px_rgba(0,0,0,0.15)] select-none">
+          Room you can trust
+        </p>
+
+        <div role="group" aria-label="Show only" className="flex gap-2 mb-3">
+          {KINDS.map(([value, label]) => {
+            const active = kind === value;
+            return (
+              <button key={value} type="button" aria-pressed={active}
+                onClick={() => setKind(active ? "" : value)}
+                className={`px-6 py-2 rounded-full font-semibold tracking-wide border transition cursor-pointer ${
+                  active
+                    ? "bg-primary border-primary text-white shadow"
+                    : "bg-white border-secondary/20 text-secondary hover:border-primary hover:text-primary"
+                }`}>
+                {label}
+              </button>
+            );
+          })}
+        </div>
 
         <div className="bg-white rounded-xl shadow p-4 mb-6 flex flex-col gap-2">
           <div className="relative">
@@ -112,7 +139,9 @@ export default function FindRooms() {
           <div className="flex justify-center py-10"><LoadingSvg /></div>
         ) : posts.length === 0 ? (
           <div className="bg-white rounded-xl shadow p-10 text-center text-gray-500">
-            No rooms match. Try a nearby area, a higher rent or fewer words.
+            {kind && result?.posts?.length
+              ? `No ${kind === "ROOM" ? "rooms" : "flats"} match. Try the other type or fewer words.`
+              : "No rooms match. Try a nearby area, a higher rent or fewer words."}
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -140,6 +169,7 @@ export default function FindRooms() {
                     <FaMapMarkerAlt className="shrink-0" />
                     {[p.tole, p.municipality, p.district].filter(Boolean).join(", ")}
                   </p>
+                  <PostStats post={p} />
                   <p className="text-xs text-gray-400 mb-0 mt-auto pt-2">
                     {[
                       p.flatType && (FLAT_TYPE_LABEL as Record<string, string>)[p.flatType],

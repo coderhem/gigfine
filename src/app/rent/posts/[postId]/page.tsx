@@ -11,8 +11,7 @@ import {
   houseFacts,
   KITCHEN_LABEL,
   PROPERTY_TYPE_LABEL,
-  RENT_CONTACT_PHONE,
-  rentWhatsAppUrl,
+  recordPostView,
 } from "@/api/rental";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import dynamic from "next/dynamic";
@@ -20,8 +19,9 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { FaCalendarCheck, FaLock, FaMapMarkerAlt, FaPhoneAlt, FaWhatsapp } from "react-icons/fa";
+import { FaCalendarCheck, FaLock, FaMapMarkerAlt } from "react-icons/fa";
 import { formatRent, StatusBadge } from "../../_components/formBits";
+import PostStats from "../../_components/postStats";
 import { MediaGallery } from "../../_components/rentalMedia";
 import { useRentalSession } from "../../_components/useRentalSession";
 import VisitRequest from "../../_components/visitRequest";
@@ -32,7 +32,7 @@ const L = (map: Record<string, string>, key?: string | null) => (key ? map[key] 
 
 export default function PostDetail() {
   const { postId } = useParams<{ postId: string }>();
-  // Public page; contacting GIGFINE about the room needs a login
+  // Public page; requesting a visit needs a login
   const { user, ready } = useRentalSession({ optional: true });
   const router = useRouter();
   const [post, setPost] = useState<any>(null);
@@ -40,7 +40,11 @@ export default function PostDetail() {
   useEffect(() => {
     if (!ready) return;
     getPublicPost(postId)
-      .then(setPost)
+      .then((p) => {
+        setPost(p);
+        // The backend skips the landlord's own views and repeat views; a failure here doesn't matter
+        recordPostView(postId).catch(() => {});
+      })
       .catch((err) => {
         toast.error(apiErrorMessage(err, "This room is no longer available"));
         router.replace("/rent");
@@ -53,12 +57,9 @@ export default function PostDetail() {
 
   // Owners and admins get the full post (exact point, their own contact); everyone else the area only
   const isOwner = !!user && post.landlordUserId === user.userId;
-  const phone = RENT_CONTACT_PHONE.replace(/\D/g, "");
   const area = [post.tole, post.municipality, post.wardNo && `Ward ${post.wardNo}`, post.district]
     .filter(Boolean).join(", ");
-  const whatsapp = rentWhatsAppUrl(
-    `Namaste GIGFINE, I'm interested in room #${post.id} "${post.title}" (Rs. ${post.rent}) in ${area}. Is it still available?`,
-  );
+  const loginHref = `/rent/login?next=${encodeURIComponent(`/rent/posts/${post.id}`)}`;
 
   const facts = [
     ["Type", L(PROPERTY_TYPE_LABEL, post.type)],
@@ -99,6 +100,7 @@ export default function PostDetail() {
                 <FaMapMarkerAlt />
                 {isOwner && post.houseName ? `${post.houseName}, ${area}` : area}
               </p>
+              <PostStats post={post} className="mb-3" />
               <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-0">
                 {facts.map(([label, value]) => (
                   <div key={label as string} className="rounded-lg bg-secondary/5 p-3">
@@ -156,22 +158,12 @@ export default function PostDetail() {
             <p className="text-sm text-gray-600 mb-0">
               Rooms are let through the GIGFINE office — we arrange the visit with the owner for you.
             </p>
+            {/* Visits only — the client asked for no call / WhatsApp buttons */}
             {user ? (
-              <>
-                <a href={`tel:${phone}`} className="btn btn-primary flex items-center justify-center gap-2">
-                  <FaPhoneAlt /> Call GIGFINE {RENT_CONTACT_PHONE}
-                </a>
-                <a href={whatsapp} target="_blank" rel="noopener noreferrer"
-                  className="btn btn-green flex items-center justify-center gap-2">
-                  <FaWhatsapp /> WhatsApp GIGFINE
-                </a>
-                <span className="text-xs text-gray-500">Mention room #{post.id} when you call.</span>
-                {!isOwner && post.status === "ACTIVE" && <VisitRequest postId={post.id} user={user} />}
-              </>
+              !isOwner && post.status === "ACTIVE" && <VisitRequest postId={post.id} user={user} />
             ) : (
-              <Link href={`/rent/login?next=${encodeURIComponent(`/rent/posts/${post.id}`)}`}
-                className="btn btn-primary flex items-center justify-center gap-2">
-                <FaLock /> Login to contact
+              <Link href={loginHref} className="btn btn-primary flex items-center justify-center gap-2">
+                <FaLock /> Login to request a visit
               </Link>
             )}
             <p className="text-xs text-gray-400 mb-0">
@@ -188,25 +180,14 @@ export default function PostDetail() {
           <span className="block text-xs font-normal text-gray-500">/month{post.negotiable && " · negotiable"}</span>
         </span>
         {user ? (
-          <div className="ml-auto flex gap-2">
-            {/* With "Request to visit" there, small phones show Call / WhatsApp as icons only */}
-            <a href={`tel:${phone}`} title="Call" className="btn btn-primary py-2 px-3 flex items-center gap-2 text-sm">
-              <FaPhoneAlt /> <span className="max-sm:hidden">Call</span>
+          !isOwner && post.status === "ACTIVE" && (
+            <a href="#visit" className="ml-auto btn btn-primary py-2 px-3 flex items-center gap-2 text-sm whitespace-nowrap">
+              <FaCalendarCheck /> Request to visit
             </a>
-            <a href={whatsapp} target="_blank" rel="noopener noreferrer" title="WhatsApp"
-              className="btn btn-green py-2 px-3 flex items-center gap-2 text-sm">
-              <FaWhatsapp /> <span className="max-sm:hidden">WhatsApp</span>
-            </a>
-            {!isOwner && post.status === "ACTIVE" && (
-              <a href="#visit" className="btn btn-blue py-2 px-3 flex items-center gap-2 text-sm whitespace-nowrap">
-                <FaCalendarCheck /> Request to visit
-              </a>
-            )}
-          </div>
+          )
         ) : (
-          <Link href={`/rent/login?next=${encodeURIComponent(`/rent/posts/${post.id}`)}`}
-            className="ml-auto btn btn-primary py-2 px-3 flex items-center gap-2 text-sm">
-            <FaLock /> Login to contact
+          <Link href={loginHref} className="ml-auto btn btn-primary py-2 px-3 flex items-center gap-2 text-sm">
+            <FaLock /> Login to request a visit
           </Link>
         )}
       </div>

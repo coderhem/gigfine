@@ -10,7 +10,6 @@ import { logout } from "@/redux/auth/authSlice";
 const NAV = [
   { href: "/rent", label: "Find rooms" },
   { href: "/rent/landlord", label: "My houses" },
-  { href: "/rent/contact", label: "Contact" },
 ];
 
 // Header for rent.gigfine.com (/rent/*)
@@ -71,12 +70,6 @@ const RentalHeader = () => {
               </>
             ) : (
               <>
-                <Link
-                  href="/rent/contact"
-                  className={`text-sm md:text-base hover:text-primary ${isActive("/rent/contact") ? "text-primary font-semibold" : "text-secondary"}`}
-                >
-                  Contact
-                </Link>
                 <Link href="/rent/login" className="btn btn-primary">
                   Login
                 </Link>
