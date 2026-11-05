@@ -4,12 +4,22 @@ import { useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { Provider } from "react-redux";
 import { persistor, store } from "@/redux/store.js";
-import { PUBLIC_ROUTES } from "@/app/seo";
+import { PUBLIC_ROUTES, RENT_PUBLIC_ROUTES } from "@/app/seo";
 
 const subscribe = (onChange: () => void) => persistor.subscribe(onChange);
 const isRehydrated = () => persistor.getState().bootstrapped;
 // On the server the persisted state never loads
 const notRehydrated = () => false;
+
+const SERVER_RENDERED = [...PUBLIC_ROUTES, ...RENT_PUBLIC_ROUTES];
+
+// For a server-rendered page whose content still needs the logged-in user (e.g. /rent:
+// useRentalSession would log the user out if it ran before the saved login loaded).
+// The page's metadata / JSON-LD and the header and footer render on the server; this part waits.
+export function RehydratedOnly({ children, fallback = null }: { children: React.ReactNode; fallback?: React.ReactNode }) {
+  const rehydrated = useSyncExternalStore(subscribe, isRehydrated, notRehydrated);
+  return <>{rehydrated ? children : fallback}</>;
+}
 
 // Replaces <PersistGate loading={null}>, which rendered nothing on the server —
 // every page shipped an empty <body> to search engines and link previews.
@@ -19,7 +29,7 @@ function RehydrationGate({ children }: { children: React.ReactNode }) {
   const pathname = decodeURIComponent(usePathname() ?? "");
   const rehydrated = useSyncExternalStore(subscribe, isRehydrated, notRehydrated);
 
-  if (!rehydrated && !PUBLIC_ROUTES.includes(pathname)) {
+  if (!rehydrated && !SERVER_RENDERED.includes(pathname)) {
     return null;
   }
   return <>{children}</>;

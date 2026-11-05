@@ -297,8 +297,13 @@ export const requestVisit = (postId, data) => post(`/api/v1/posts/${postId}/visi
 export const getMyVisitRequests = (postId) => get("/api/v1/visit-requests/mine", postId ? { postId } : {});
 export const cancelVisitRequest = (id) => put(`/api/v1/visit-requests/${id}/cancel`);
 
-// Room photos are public, but PAN / citizenship photos need the auth header — so every file
-// is fetched as a blob. Returns an object URL — revoke it when done.
+// House / room photos and videos are public: a plain URL, so the browser and Next's image
+// optimizer can cache and resize it (the backend marks it cacheable for a year).
+export const publicMediaUrl = (fileName) =>
+  `${API_BASE_URL}/api/v1/rentals/media/${encodeURIComponent(fileName)}`;
+
+// PAN / citizenship photos need the auth header, so they are fetched as a blob.
+// Returns an object URL — revoke it when done.
 export async function getRentalMediaUrl(fileName) {
   const response = await api.get(`${API_BASE_URL}/api/v1/rentals/media/${encodeURIComponent(fileName)}`, {
     headers: authHeader(),

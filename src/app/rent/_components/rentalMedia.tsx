@@ -1,9 +1,10 @@
 "use client";
 
-import { getRentalMediaUrl, IMAGE_MAX_MB, mediaFileError, VIDEO_MAX_MB } from "@/api/rental";
-import { apiErrorMessage } from "@/api/config";
+import { IMAGE_MAX_MB, mediaFileError, publicMediaUrl, VIDEO_MAX_MB } from "@/api/rental";
+import { API_BASE_URL, apiErrorMessage } from "@/api/config";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import { Fancybox as NativeFancybox } from "@fancyapps/ui";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { FaImage, FaTrash, FaUpload } from "react-icons/fa";
@@ -11,7 +12,28 @@ import { FaImage, FaTrash, FaUpload } from "react-icons/fa";
 export type Media = { id: number; type: "IMAGE" | "VIDEO"; fileName: string };
 type FetchUrl = (fileName: string) => Promise<string>;
 
-// Media needs the auth header, so each file is fetched as a blob
+// Public photos go through Next's image optimizer: resized to the size shown, WebP, lazy-loaded
+// and cached. In `next dev` the API is proxied same-origin, which the optimizer can't fetch,
+// so dev shows the originals.
+const OPTIMIZE = !!API_BASE_URL;
+
+// Lightbox: a 1920px optimized copy instead of the (often 3–5 MB) original
+const lightboxUrl = (fileName: string) =>
+  OPTIMIZE
+    ? `/_next/image?url=${encodeURIComponent(publicMediaUrl(fileName))}&w=1920&q=75`
+    : publicMediaUrl(fileName);
+
+const PublicImage = ({ fileName, sizes, preload, onError }: {
+  fileName: string;
+  sizes: string;
+  preload?: boolean;
+  onError?: () => void;
+}) => (
+  <Image src={publicMediaUrl(fileName)} alt="" fill sizes={sizes} preload={preload} unoptimized={!OPTIMIZE}
+    className="object-cover" onError={onError} />
+);
+
+// Private files (PAN / citizenship, admin views) need the auth header, so they are fetched as a blob
 function useObjectUrl(fileName: string, fetchUrl: FetchUrl) {
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -35,6 +57,50 @@ function useObjectUrl(fileName: string, fetchUrl: FetchUrl) {
   return { url, failed };
 }
 
+const LoadFailed = () => (
+  <div className="h-full flex items-center justify-center text-xs text-gray-500 p-2 text-center">
+    Could not load file
+  </div>
+);
+
+// Public file: plain URL, so the browser / optimizer cache does the work
+const PublicTileBody = ({ media, large, onOpen }: { media: Media; large?: boolean; onOpen: (url: string) => void }) => {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <LoadFailed />;
+  if (media.type === "VIDEO") {
+    return <video src={publicMediaUrl(media.fileName)} controls preload="metadata" className="w-full h-full object-cover bg-black" />;
+  }
+  return (
+    <button type="button" onClick={() => onOpen(lightboxUrl(media.fileName))}
+      className="relative block w-full h-full cursor-zoom-in">
+      {/* The big first photo is the page's main image, so it loads first */}
+      <PublicImage fileName={media.fileName} preload={large} onError={() => setFailed(true)}
+        sizes={large ? "(min-width: 1024px) 66vw, 100vw" : "(min-width: 768px) 17vw, 33vw"} />
+    </button>
+  );
+};
+
+const PrivateTileBody = ({ media, fetchUrl, onOpen }: { media: Media; fetchUrl: FetchUrl; onOpen: (url: string) => void }) => {
+  const { url, failed } = useObjectUrl(media.fileName, fetchUrl);
+  if (failed) return <LoadFailed />;
+  if (!url) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <LoadingSvg />
+      </div>
+    );
+  }
+  if (media.type === "VIDEO") {
+    return <video src={url} controls preload="metadata" className="w-full h-full object-cover bg-black" />;
+  }
+  return (
+    <button type="button" onClick={() => onOpen(url)} className="w-full h-full cursor-zoom-in">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={url} alt="" className="w-full h-full object-cover" />
+    </button>
+  );
+};
+
 const Tile = ({
   media,
   fetchUrl,
@@ -43,32 +109,19 @@ const Tile = ({
   onDelete,
 }: {
   media: Media;
-  fetchUrl: FetchUrl;
+  // Omitted for public house / room media
+  fetchUrl?: FetchUrl;
   large?: boolean;
   onOpen: (url: string) => void;
   onDelete?: () => void;
 }) => {
-  const { url, failed } = useObjectUrl(media.fileName, fetchUrl);
   const size = large ? "h-56 md:h-80" : "h-28";
 
   return (
     <div className={`relative rounded-lg overflow-hidden bg-secondary/10 ${size}`}>
-      {failed ? (
-        <div className="h-full flex items-center justify-center text-xs text-gray-500 p-2 text-center">
-          Could not load file
-        </div>
-      ) : !url ? (
-        <div className="h-full flex items-center justify-center">
-          <LoadingSvg />
-        </div>
-      ) : media.type === "VIDEO" ? (
-        <video src={url} controls preload="metadata" className="w-full h-full object-cover bg-black" />
-      ) : (
-        <button type="button" onClick={() => onOpen(url)} className="w-full h-full cursor-zoom-in">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt="" className="w-full h-full object-cover" />
-        </button>
-      )}
+      {fetchUrl
+        ? <PrivateTileBody media={media} fetchUrl={fetchUrl} onOpen={onOpen} />
+        : <PublicTileBody media={media} large={large} onOpen={onOpen} />}
       {onDelete && (
         <button
           type="button"
@@ -87,8 +140,11 @@ const Tile = ({
 export function MediaCover({ media, className = "h-44" }: { media?: Media[]; className?: string }) {
   const image = media?.find((m) => m.type === "IMAGE");
   return (
-    <div className={`bg-secondary/10 overflow-hidden ${className}`}>
-      {image ? <CoverImage fileName={image.fileName} /> : (
+    <div className={`relative bg-secondary/10 overflow-hidden ${className}`}>
+      {image ? (
+        // Card width in the 1 / 2 / 3 column grid
+        <PublicImage fileName={image.fileName} sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" />
+      ) : (
         <div className="h-full flex items-center justify-center text-secondary/30">
           <FaImage size={36} />
         </div>
@@ -97,20 +153,11 @@ export function MediaCover({ media, className = "h-44" }: { media?: Media[]; cla
   );
 }
 
-const CoverImage = ({ fileName }: { fileName: string }) => {
-  const { url } = useObjectUrl(fileName, getRentalMediaUrl);
-  return url ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={url} alt="" className="w-full h-full object-cover" />
-  ) : (
-    <div className="h-full animate-pulse bg-secondary/10" />
-  );
-};
-
 // Photos open in a lightbox; videos play inline. The first item is shown big when `hero` is set.
+// fetchUrl: only for private files (ID documents, admin) — leave it out for house / room media.
 export function MediaGallery({
   media,
-  fetchUrl = getRentalMediaUrl,
+  fetchUrl,
   onDelete,
   hero,
   emptyText = "No photos yet.",

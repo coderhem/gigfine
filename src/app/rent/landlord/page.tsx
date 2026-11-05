@@ -5,6 +5,7 @@ import {
   createLandlord,
   getMyHouses,
   getMyLandlord,
+  getRentalMediaUrl,
   mediaFileError,
   updateLandlord,
   uploadCitizenshipImage,
@@ -256,7 +257,8 @@ export default function LandlordPanel() {
               <div key={side} className="flex flex-col gap-2">
                 <span className="text-sm font-medium text-secondary">{label}</span>
                 {landlord[field] && (
-                  <MediaGallery media={[{ id: 0, type: "IMAGE", fileName: landlord[field] }]} />
+                  // ID document: private, so it is fetched with the login token
+                  <MediaGallery media={[{ id: 0, type: "IMAGE", fileName: landlord[field] }]} fetchUrl={getRentalMediaUrl} />
                 )}
                 {!approved && (
                   <MediaUploader

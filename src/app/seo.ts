@@ -42,6 +42,65 @@ export const PUBLIC_ROUTES = [
   "/terms-&-conditions",
 ];
 
+// ---------- rent.gigfine.com (APP_MODE=rental) ----------
+
+export const RENT_SITE_URL = (
+  process.env.NEXT_PUBLIC_RENT_URL || "https://rent.gigfine.com"
+).replace(/\/$/, "");
+
+export const RENT_SITE_NAME = "GIGFINE Rent";
+
+// Crawlable rent pages (the rent sitemap; the rehydration gate lets them render server-side)
+export const RENT_PUBLIC_ROUTES = ["/rent"];
+
+export const RENT_TITLE = "Rooms & Flats for Rent in Kathmandu Valley | GIGFINE Rent";
+
+export const RENT_DESCRIPTION =
+  "Verified rooms and flats for rent in Kathmandu, Lalitpur and Bhaktapur. Search by area or budget — single rooms, 1BHK, 2BHK, 3BHK — and book a visit through GIGFINE.";
+
+// Kathmandu Valley: the districts, then the areas tenants search for most
+export const RENT_DISTRICTS = ["Kathmandu", "Lalitpur", "Bhaktapur"];
+export const RENT_AREAS = [
+  "Baneshwor", "Koteshwor", "Tinkune", "Sinamangal", "Kalanki", "Balkhu", "Kalimati", "Chabahil",
+  "Boudha", "Jorpati", "Gaushala", "Maharajgunj", "Baluwatar", "Lazimpat", "Thamel", "Samakhushi",
+  "Gongabu", "Tokha", "Budhanilkantha", "Kirtipur", "Sitapaila", "Swayambhu", "Putalisadak", "Bagbazar",
+  "Jawalakhel", "Pulchowk", "Kupondole", "Sanepa", "Ekantakuna", "Satdobato", "Imadol", "Gwarko",
+  "Balkumari", "Bhaisepati", "Dhapakhel", "Thimi", "Suryabinayak", "Kausaltar", "Sallaghari",
+];
+
+// What people type, in English, Romanised Nepali and Nepali
+export const RENT_KEYWORDS = [
+  "room for rent in Kathmandu",
+  "flat for rent in Kathmandu",
+  "room rent Kathmandu",
+  "rooms for rent Kathmandu Valley",
+  "flat for rent in Lalitpur",
+  "room for rent in Lalitpur",
+  "room for rent in Bhaktapur",
+  "flat for rent in Bhaktapur",
+  "1BHK flat for rent Kathmandu",
+  "2BHK flat for rent Kathmandu",
+  "3BHK flat for rent Kathmandu",
+  "single room for rent Kathmandu",
+  "cheap room in Kathmandu",
+  "room for students in Kathmandu",
+  "room for bachelor Kathmandu",
+  "family flat for rent Kathmandu",
+  "shutter for rent Kathmandu",
+  "house for rent Kathmandu",
+  "verified rooms Kathmandu",
+  "room with attached bathroom Kathmandu",
+  "kotha bhada",
+  "kotha bhada Kathmandu",
+  "kotha bhadama",
+  "flat bhada Kathmandu",
+  "कोठा भाडामा",
+  "कोठा भाडामा काठमाडौं",
+  "फ्ल्याट भाडामा",
+  "घर भाडामा काठमाडौं",
+  "GIGFINE Rent",
+];
+
 // Shown on the landing page and emitted as FAQPage structured data
 export const FAQS = [
   {
