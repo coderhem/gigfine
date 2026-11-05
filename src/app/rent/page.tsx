@@ -1,13 +1,13 @@
 "use client";
 
 import { apiErrorMessage } from "@/api/config";
-import { BATHROOM_LABEL, BILL_LABEL, FLAT_TYPE_LABEL, KITCHEN_LABEL, PROPERTY_TYPE_LABEL, searchPosts } from "@/api/rental";
+import { BATHROOM_LABEL, BILL_LABEL, FLAT_TYPE_LABEL, KITCHEN_LABEL, PROPERTY_TYPE_LABEL, quickSearchPosts } from "@/api/rental";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { FaMapMarkerAlt, FaSearch } from "react-icons/fa";
-import { formatRent, inputClass, Pills } from "./_components/formBits";
+import { FaMapMarkerAlt, FaSearch, FaTimes } from "react-icons/fa";
+import { formatRent, inputClass } from "./_components/formBits";
 import { MediaCover } from "./_components/rentalMedia";
 import { useRentalSession } from "./_components/useRentalSession";
 
@@ -15,63 +15,66 @@ const TYPES = PROPERTY_TYPE_LABEL as Record<string, string>;
 const BATHROOMS = BATHROOM_LABEL as Record<string, string>;
 const KITCHENS = KITCHEN_LABEL as Record<string, string>;
 const BILLS = BILL_LABEL as Record<string, string>;
+const FLAT_TYPES = FLAT_TYPE_LABEL as Record<string, string>;
 
-const SORTS: Record<string, string> = {
-  "createdAt:desc": "Newest first",
-  "rent:asc": "Rent: low to high",
-  "rent:desc": "Rent: high to low",
-  "availableFrom:asc": "Available soonest",
-  "billsIncluded:desc": "Most bills included",
+// GET /api/v1/posts/search — how the text was read + the ranked posts
+type SearchResult = {
+  type?: string; flatType?: string; minRent?: number; maxRent?: number; targetRent?: number; cheap?: boolean;
+  bedrooms?: number; wardNo?: number; floorNo?: number; keywords?: string[]; ignored?: string[];
+  posts: any[];
 };
 
-type Filters = {
-  type: string;
-  district: string;
-  municipality: string;
-  minRent: string;
-  maxRent: string;
-  bathroom: string;
-  kitchen: string;
-  included: string[];
-  sort: string;
-};
-
-const EMPTY: Filters = {
-  type: "", district: "", municipality: "", minRent: "", maxRent: "", bathroom: "", kitchen: "", included: [],
-  sort: "createdAt:desc",
-};
+// How the backend read the search text, as short chips: "Room", "Up to Rs. 15,000", "baneshwor"
+function understoodChips(r: SearchResult | null): string[] {
+  if (!r) return [];
+  const rent =
+    r.minRent != null && r.maxRent != null ? `${formatRent(r.minRent)} – ${formatRent(r.maxRent)}`
+    : r.maxRent != null ? `Up to ${formatRent(r.maxRent)}`
+    : r.minRent != null ? `From ${formatRent(r.minRent)}`
+    : r.targetRent != null ? `Around ${formatRent(r.targetRent)}`
+    : null;
+  return [
+    r.flatType ? FLAT_TYPES[r.flatType] : r.type && TYPES[r.type],
+    rent,
+    r.cheap && "Cheapest first",
+    r.bedrooms != null && `${r.bedrooms} room(s)`,
+    r.wardNo != null && `Ward ${r.wardNo}`,
+    r.floorNo != null && (r.floorNo === 0 ? "Ground floor" : `Floor ${r.floorNo}`),
+    ...(r.keywords ?? []),
+  ].filter((c): c is string => typeof c === "string");
+}
 
 // Rooms / flats from approved houses only. Public — no login needed to browse.
 export default function FindRooms() {
   const { ready } = useRentalSession({ optional: true });
-  const [draft, setDraft] = useState<Filters>(EMPTY);
-  const [filters, setFilters] = useState<Filters>(EMPTY);
-  const [posts, setPosts] = useState<any[]>([]);
+  const [draft, setDraft] = useState("");
+  const [query, setQuery] = useState("");
+  const [result, setResult] = useState<SearchResult | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Text / number inputs apply a moment after typing stops
+  // Searches a moment after typing stops
   useEffect(() => {
-    const timer = setTimeout(() => setFilters(draft), 400);
+    const timer = setTimeout(() => setQuery(draft.trim()), 400);
     return () => clearTimeout(timer);
   }, [draft]);
 
   useEffect(() => {
     if (!ready) return;
+    let stale = false; // an older, slower response must not overwrite a newer one
     setLoading(true);
-    searchPosts(filters)
-      .then(setPosts)
-      .catch((err) => toast.error(apiErrorMessage(err, "Failed to load rooms")))
-      .finally(() => setLoading(false));
-  }, [ready, filters]);
+    quickSearchPosts(query)
+      .then((r) => !stale && setResult(r))
+      .catch((err) => !stale && toast.error(apiErrorMessage(err, "Failed to load rooms")))
+      .finally(() => !stale && setLoading(false));
+    return () => { stale = true; };
+  }, [ready, query]);
 
   if (!ready) {
     return <LoadingSvg className="absolute left-1/2 top-1/2 -translate-1/2 size-20" />;
   }
 
-  const set = (key: Exclude<keyof Filters, "included">, value: string) => setDraft((f) => ({ ...f, [key]: value }));
-  const toggleBill = (b: string) =>
-    setDraft((f) => ({ ...f, included: f.included.includes(b) ? f.included.filter((x) => x !== b) : [...f.included, b] }));
-  const changed = JSON.stringify(draft) !== JSON.stringify(EMPTY);
+  const posts = result?.posts ?? [];
+  const chips = query ? understoodChips(result) : [];
 
   return (
     <section className="py-8 md:py-11">
@@ -79,43 +82,29 @@ export default function FindRooms() {
         <h1 className="h3 mb-1">Find a <span className="text-primary">room or flat</span></h1>
         <p className="text-sm text-gray-500 mb-5">Every house here is verified by GIGFINE. Contact GIGFINE to visit a room.</p>
 
-        <div className="bg-white rounded-xl shadow p-4 mb-6 flex flex-col gap-3">
-          <Pills options={TYPES} value={draft.type} onChange={(v) => set("type", v)} allowEmpty />
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 text-sm">
-            <div className="relative col-span-2 md:col-span-1 lg:col-span-2">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input className={`${inputClass} pl-9!`} placeholder="District" value={draft.district}
-                onChange={(e) => set("district", e.target.value)} />
-            </div>
-            <input className={`${inputClass} col-span-2 md:col-span-1`} placeholder="Municipality / area"
-              value={draft.municipality} onChange={(e) => set("municipality", e.target.value)} />
-            <input type="number" min={0} className={inputClass} placeholder="Min rent" value={draft.minRent}
-              onChange={(e) => set("minRent", e.target.value)} />
-            <input type="number" min={0} className={inputClass} placeholder="Max rent" value={draft.maxRent}
-              onChange={(e) => set("maxRent", e.target.value)} />
-            <select className={inputClass} value={draft.bathroom} onChange={(e) => set("bathroom", e.target.value)}>
-              <option value="">Bathroom</option>
-              {Object.entries(BATHROOMS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
-            <select className={inputClass} value={draft.kitchen} onChange={(e) => set("kitchen", e.target.value)}>
-              <option value="">Kitchen</option>
-              {Object.entries(KITCHENS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
+        <div className="bg-white rounded-xl shadow p-4 mb-6 flex flex-col gap-2">
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input type="search" enterKeyHint="search" autoFocus
+              className={`${inputClass} pl-9! pr-9! py-3! text-base`}
+              placeholder="City, area, rent… e.g. Baneshwor room 12000"
+              value={draft} onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && setQuery(draft.trim())} />
+            {draft && (
+              <button type="button" aria-label="Clear search" onClick={() => setDraft("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer">
+                <FaTimes />
+              </button>
+            )}
           </div>
-          <div className="flex flex-col gap-1.5 text-sm">
-            <span className="text-gray-500">Rent includes</span>
-            <Pills options={BILLS} values={draft.included} onToggle={toggleBill} />
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-            <span className="text-gray-500">{loading ? "Searching…" : `${posts.length} result(s)`}</span>
-            <div className="flex items-center gap-3">
-              {changed && (
-                <button type="button" className="underline cursor-pointer" onClick={() => setDraft(EMPTY)}>Clear</button>
-              )}
-              <select className={`${inputClass} w-auto!`} value={draft.sort} onChange={(e) => set("sort", e.target.value)}>
-                {Object.entries(SORTS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
-            </div>
+          <div className="flex flex-wrap items-center gap-1.5 text-sm">
+            <span className="text-gray-500 mr-1">{loading ? "Searching…" : `${posts.length} result(s)`}</span>
+            {chips.map((c) => (
+              <span key={c} className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{c}</span>
+            ))}
+            {query && !!result?.ignored?.length && (
+              <span className="text-xs text-gray-400">No match for “{result.ignored.join(", ")}”, skipped</span>
+            )}
           </div>
         </div>
 
@@ -123,7 +112,7 @@ export default function FindRooms() {
           <div className="flex justify-center py-10"><LoadingSvg /></div>
         ) : posts.length === 0 ? (
           <div className="bg-white rounded-xl shadow p-10 text-center text-gray-500">
-            No rooms match. Try a nearby district or a higher max rent.
+            No rooms match. Try a nearby area, a higher rent or fewer words.
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

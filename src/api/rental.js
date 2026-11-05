@@ -266,6 +266,11 @@ export async function searchPosts({ sort, included, ...filters } = {}) {
   return get("/api/v1/posts", params);
 }
 
+// One-box search: "2bhk baneshwor under 25k", "room ktm 12000". Ranked by relevance.
+// Returns { posts, keywords, ignored, type, flatType, minRent, maxRent, targetRent, cheap, ... }
+// — how the text was read, so the page can show it.
+export const quickSearchPosts = (q) => get("/api/v1/posts/search", q?.trim() ? { q: q.trim() } : {});
+
 export const getPublicPost = (postId) => get(`/api/v1/posts/${postId}`);
 
 // ---------- Field visits ----------

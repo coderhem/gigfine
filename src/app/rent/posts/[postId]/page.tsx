@@ -189,16 +189,17 @@ export default function PostDetail() {
         </span>
         {user ? (
           <div className="ml-auto flex gap-2">
-            <a href={`tel:${phone}`} className="btn btn-primary py-2 px-3 flex items-center gap-2 text-sm">
-              <FaPhoneAlt /> Call
+            {/* With "Request to visit" there, small phones show Call / WhatsApp as icons only */}
+            <a href={`tel:${phone}`} title="Call" className="btn btn-primary py-2 px-3 flex items-center gap-2 text-sm">
+              <FaPhoneAlt /> <span className="max-sm:hidden">Call</span>
             </a>
-            <a href={whatsapp} target="_blank" rel="noopener noreferrer"
+            <a href={whatsapp} target="_blank" rel="noopener noreferrer" title="WhatsApp"
               className="btn btn-green py-2 px-3 flex items-center gap-2 text-sm">
-              <FaWhatsapp /> WhatsApp
+              <FaWhatsapp /> <span className="max-sm:hidden">WhatsApp</span>
             </a>
             {!isOwner && post.status === "ACTIVE" && (
-              <a href="#visit" className="btn btn-blue py-2 px-3 flex items-center gap-2 text-sm">
-                <FaCalendarCheck /> Visit
+              <a href="#visit" className="btn btn-blue py-2 px-3 flex items-center gap-2 text-sm whitespace-nowrap">
+                <FaCalendarCheck /> Request to visit
               </a>
             )}
           </div>

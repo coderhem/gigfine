@@ -105,7 +105,7 @@ export default function VisitRequest({ postId, user }: { postId: number; user: a
     return (
       <button id="visit" type="button" onClick={() => setShowForm(true)}
         className="btn btn-blue flex items-center justify-center gap-2">
-        <FaCalendarCheck /> Request a visit
+        <FaCalendarCheck /> Request to visit
       </button>
     );
   }
