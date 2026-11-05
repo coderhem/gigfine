@@ -29,6 +29,13 @@ const Notifications = () => {
   const mode = getUserMode(user);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // Re-render every minute so "Just now" / "5 min ago" keep up while the page stays open
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!user) {
