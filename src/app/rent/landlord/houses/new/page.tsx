@@ -1,7 +1,7 @@
 "use client";
 
 import { apiErrorMessage } from "@/api/config";
-import { createHouse, getMyHouses, getMyLandlord } from "@/api/rental";
+import { createHouse, getMyHouses, getMyLister } from "@/api/rental";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,22 +14,27 @@ export default function NewHouse() {
   const { user, ready } = useRentalSession();
   const router = useRouter();
   const [allowed, setAllowed] = useState(false);
+  const [isAgent, setIsAgent] = useState(false);
 
-  // Needs a landlord profile with both citizenship photos first. One house per landlord
-  // for now (the backend allows more) — someone who has one is sent to it.
+  // Needs a landlord / agent profile with both citizenship photos first. One house per landlord
+  // for now (the backend allows more) — a landlord who has one is sent to it. Agents add many.
   useEffect(() => {
     if (!ready) return;
-    Promise.all([getMyLandlord(user.userId), getMyHouses(user.userId)])
-      .then(([landlord, houses]) => {
-        if (!landlord) router.replace("/rent/landlord");
-        else if (!landlord.citizenshipFrontImage || !landlord.citizenshipBackImage) {
+    Promise.all([getMyLister(user.userId), getMyHouses(user.userId)])
+      .then(([profile, houses]) => {
+        const agent = profile?.type === "AGENT";
+        if (!profile) router.replace("/rent/landlord");
+        else if (!profile.citizenshipFrontImage || !profile.citizenshipBackImage) {
           toast.error("Upload both sides of your citizenship before adding a house.");
           router.replace("/rent/landlord");
         }
-        else if (houses?.length) router.replace(`/rent/landlord/houses/${houses[0].id}`);
-        else setAllowed(true);
+        else if (!agent && houses?.length) router.replace(`/rent/landlord/houses/${houses[0].id}`);
+        else {
+          setIsAgent(agent);
+          setAllowed(true);
+        }
       })
-      .catch((err) => toast.error(apiErrorMessage(err, "Failed to load your landlord profile")));
+      .catch((err) => toast.error(apiErrorMessage(err, "Failed to load your profile")));
   }, [ready]);
 
   if (!allowed) {
@@ -39,7 +44,7 @@ export default function NewHouse() {
   return (
     <section className="py-8 md:py-11">
       <div className="container max-w-3xl">
-        <Link href="/rent/landlord" className="text-sm underline">← My houses</Link>
+        <Link href="/rent/landlord" className="text-sm underline">← {isAgent ? "My listings" : "My houses"}</Link>
         <h2 className="h3 mt-3 mb-1">Add a house</h2>
         <p className="text-sm text-gray-500 mb-6">
           After saving, upload a photo of the house and a photo of the road in front of it. An admin reviews
@@ -47,6 +52,7 @@ export default function NewHouse() {
         </p>
         <div className="bg-white rounded-xl shadow p-5">
           <HouseForm
+            agent={isAgent}
             submitLabel="Save house"
             onSubmit={async (data) => {
               try {

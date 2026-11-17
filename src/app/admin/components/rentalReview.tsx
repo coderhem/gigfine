@@ -1,9 +1,11 @@
 "use client";
 
 import {
+  getAgents,
   getHousesForReview,
   getLandlords,
   getRentalMediaUrlAdmin,
+  reviewAgent,
   reviewHouse,
   reviewLandlord,
 } from "@/api/admin";
@@ -22,8 +24,12 @@ import toast from "react-hot-toast";
 
 const LocationMap = dynamic(() => import("@/app/rent/_components/locationMap"), { ssr: false });
 
-type Tab = "landlords" | "houses" | "posts" | "visits";
-// What the detail panel shows: a landlord with all their houses, or one house
+type Tab = "landlords" | "agents" | "houses" | "posts" | "visits";
+// Landlords and agents are reviewed the same way, each through its own API
+const isListerTab = (t: Tab) => t === "landlords" || t === "agents";
+type ListerProfile = { userId: number; type?: string };
+const isAgentProfile = (l?: { type?: string } | null) => l?.type === "AGENT";
+// What the detail panel shows: a landlord / agent with all their houses, or one house
 type Selected = { userId: number; landlord?: any; houseId?: number };
 const STATUSES = APPROVAL_LABEL as Record<string, string>;
 const AMENITIES = AMENITY_LABEL as Record<string, string>;
@@ -105,7 +111,9 @@ export default function RentalReview() {
   const fetchItems = async () => {
     setLoading(true);
     try {
-      setItems(tab === "landlords" ? await getLandlords(status) : await getHousesForReview({ status }));
+      setItems(tab === "landlords" ? await getLandlords(status)
+        : tab === "agents" ? await getAgents(status)
+        : await getHousesForReview({ status }));
     } catch (err) {
       toast.error(apiErrorMessage(err, `Failed to load ${tab}`));
     } finally {
@@ -114,18 +122,23 @@ export default function RentalReview() {
   };
 
   useEffect(() => {
-    if (tab === "landlords" || tab === "houses") fetchItems();
+    if (isListerTab(tab) || tab === "houses") fetchItems();
   }, [tab, status]);
 
-  const handleLandlord = async (userId: number, next: string, note?: string) => {
+  // profile: a landlord or agent (profile.type) — APPROVED gives ROLE_LANDLORD / ROLE_AGENT
+  const handleLandlord = async (profile: ListerProfile, next: string, note?: string) => {
+    const agent = isAgentProfile(profile);
+    const label = agent ? "Agent" : "Landlord";
+    const { userId } = profile;
     try {
-      const updated = await reviewLandlord(userId, { status: next, note });
-      setSelected((s) => (s?.landlord?.userId === userId ? { ...s, landlord: { ...s.landlord, ...updated } } : s));
+      const review = { status: next, note };
+      const updated = agent ? await reviewAgent(userId, review) : await reviewLandlord(userId, review);
+      setSelected((s) => (s && s.landlord?.userId === userId ? { ...s, landlord: { ...s.landlord, ...updated } } : s));
       setVersion((v) => v + 1);
-      toast.success(`Landlord ${STATUSES[next].toLowerCase()}.`);
+      toast.success(`${label} ${STATUSES[next].toLowerCase()}.`);
       await fetchItems();
     } catch (err) {
-      toast.error(apiErrorMessage(err, "Failed to update landlord"));
+      toast.error(apiErrorMessage(err, `Failed to update ${label.toLowerCase()}`));
     }
   };
 
@@ -143,7 +156,8 @@ export default function RentalReview() {
   const houseActions = (h: any) => (
     <ReviewActions
       status={h.status}
-      approveDisabledReason={h.landlordStatus !== "APPROVED" ? "Approve the landlord first" : undefined}
+      approveDisabledReason={h.landlordStatus !== "APPROVED"
+        ? `Approve the ${h.listerType === "AGENT" ? "agent" : "landlord"} first` : undefined}
       onReview={(s, n) => handleHouse(h.id, s, n)}
     />
   );
@@ -159,18 +173,19 @@ export default function RentalReview() {
     <>
       <h1 className="mb-2 pt-24 text-3xl font-bold text-secondary">Rentals</h1>
       <p className="text-sm text-gray-500 mb-6">
-        Approve the landlord first (citizenship check), then each of their houses. Landlords can post rooms only under
-        approved houses.
+        Approve the landlord or agent first (citizenship check), then each of their houses — for an agent&apos;s house,
+        call the owner listed on it. Rooms can be posted only under approved houses.
       </p>
 
       <div className="flex flex-wrap gap-2 items-center justify-between mb-4">
         <div className="flex flex-wrap gap-2">
           {tabBtn("landlords", "Landlords")}
+          {tabBtn("agents", "Agents")}
           {tabBtn("houses", "Houses")}
           {tabBtn("posts", "Rooms / flats")}
           {tabBtn("visits", "Visit requests")}
         </div>
-        {(tab === "landlords" || tab === "houses") && (
+        {(isListerTab(tab) || tab === "houses") && (
           <select className="form-control py-2! h-11! w-auto!" value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">All</option>
             {Object.entries(STATUSES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -186,7 +201,7 @@ export default function RentalReview() {
         <div className="flex justify-center py-8"><LoadingSvg /></div>
       ) : items.length === 0 ? (
         <div className="bg-white rounded-xl shadow p-8 text-center text-gray-500">Nothing here.</div>
-      ) : tab === "landlords" ? (
+      ) : isListerTab(tab) ? (
         <div className="flex flex-col gap-3">
           {items.map((l) => (
             <div key={l.id} onClick={() => setSelected({ userId: l.userId, landlord: l })}
@@ -198,14 +213,15 @@ export default function RentalReview() {
                   <span className="text-xs text-gray-400">User #{l.userId} · applied {formatDate(l.createdAt)}</span>
                 </div>
                 <dl className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm mb-0">
-                  {[["Phone", l.mobile], ["Email", l.email], ["PAN", l.panNo], ["Citizenship", l.citizenshipNo],
-                    ["Address", l.permanentAddress]].map(([k, v]) => (
+                  {[["Phone", l.mobile], ["Email", l.email],
+                    ...(isAgentProfile(l) ? [["Agency", l.agencyName], ["Office", l.officeAddress], ["Areas", l.workingAreas]] : []),
+                    ["PAN", l.panNo], ["Citizenship", l.citizenshipNo], ["Address", l.permanentAddress]].map(([k, v]) => (
                     <div key={k}><dt className="text-xs text-gray-500">{k}</dt><dd className="mb-0 break-words">{v || "-"}</dd></div>
                   ))}
                 </dl>
                 {l.reviewNote && <p className="text-xs text-gray-500 mb-0">Note: {l.reviewNote}</p>}
                 <div className="flex flex-wrap items-center gap-3" onClick={stop}>
-                  <ReviewActions status={l.status} onReview={(s, n) => handleLandlord(l.userId, s, n)} />
+                  <ReviewActions status={l.status} onReview={(s, n) => handleLandlord(l, s, n)} />
                   <button className="text-sm underline text-secondary cursor-pointer"
                     onClick={() => setSelected({ userId: l.userId, landlord: l })}>
                     View houses, photos, videos &amp; location →
@@ -247,8 +263,15 @@ export default function RentalReview() {
                     .filter(Boolean).join(", ")}
                 </p>
                 <p className="text-sm text-gray-500 mb-0">
-                  Landlord: {h.landlordName} ({h.landlordMobile}) — <StatusBadge status={h.landlordStatus} />
+                  {h.listerType === "AGENT" ? "Agent" : "Landlord"}: {h.landlordName} ({h.landlordMobile}) —{" "}
+                  <StatusBadge status={h.landlordStatus} />
                 </p>
+                {h.ownerName && (
+                  // Agent-listed house: confirm with the owner by phone instead of a field visit
+                  <p className="text-sm mb-0" onClick={stop}>
+                    Owner: {h.ownerName} (<a href={`tel:${h.ownerMobile}`} className="underline">{h.ownerMobile}</a>)
+                  </p>
+                )}
                 <p className="text-xs text-gray-400 mb-0">
                   {h.totalFloors ? `${h.totalFloors} floor(s) · ` : ""}{h.postCount} post(s) · updated {formatDate(h.updatedAt)}
                 </p>
@@ -299,7 +322,7 @@ export default function RentalReview() {
           version={version}
           reviewSlot={selected.landlord && (
             <ReviewActions status={selected.landlord.status}
-              onReview={(s, n) => handleLandlord(selected.landlord.userId, s, n)} />
+              onReview={(s, n) => handleLandlord(selected.landlord, s, n)} />
           )}
           houseReviewSlot={houseActions}
           onClose={() => setSelected(null)}

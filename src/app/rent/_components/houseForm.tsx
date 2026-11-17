@@ -39,6 +39,9 @@ export type HouseFormData = {
   amenities: string[];
   nearby: string[];
   noParking: boolean;
+  // Agents only: the real owner, so GIGFINE can verify by phone
+  ownerName: string;
+  ownerMobile: string;
 };
 
 const fromHouse = (h: any): HouseFormData => ({
@@ -64,6 +67,8 @@ const fromHouse = (h: any): HouseFormData => ({
   nearby: h?.nearby ?? [],
   // Saved with this form (water is set) and no parking picked
   noParking: !!h?.water && !h?.amenities?.some((a: string) => PARKING_AMENITIES.includes(a)),
+  ownerName: h?.ownerName ?? "",
+  ownerMobile: h?.ownerMobile ?? "",
 });
 
 const toNumber = (v: string) => (v ? Number(v) : null);
@@ -93,15 +98,20 @@ const REQUIRED: [keyof HouseFormData, string][] = [
   ["gateClosingTime", "gate closing time"],
 ];
 
+// agent: an agent listing someone else's house — also asks for the owner's name and phone
+// (editing an existing house works it out from house.listerType)
 export default function HouseForm({
   house,
+  agent,
   onSubmit,
   submitLabel,
 }: {
   house?: any;
+  agent?: boolean;
   onSubmit: (data: ReturnType<typeof toRequest>) => Promise<void>;
   submitLabel: string;
 }) {
+  const forAgent = agent ?? house?.listerType === "AGENT";
   const [form, setForm] = useState<HouseFormData>(() => fromHouse(house));
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof HouseFormData>(key: K, value: HouseFormData[K]) =>
@@ -125,6 +135,8 @@ export default function HouseForm({
     e.preventDefault();
     const missing = REQUIRED.filter(([key]) => !String(form[key] ?? "").trim()).map(([, label]) => label);
     if (form.ownerLivesHere == null) missing.push("owner lives here");
+    if (forAgent && !form.ownerName.trim()) missing.push("owner's name");
+    if (forAgent && !form.ownerMobile.trim()) missing.push("owner's phone");
     if (!parkingValues.length) missing.push("parking");
     if (missing.length) {
       toast.error(`Please fill: ${missing.join(", ")}.`);
@@ -153,6 +165,25 @@ export default function HouseForm({
           This house is approved. Saving changes sends it back for admin review, and its rooms are hidden until
           it is approved again.
         </p>
+      )}
+
+      {forAgent && (
+        <div className="grid sm:grid-cols-2 gap-4 rounded-lg bg-secondary/5 p-4">
+          <div className="sm:col-span-2">
+            <h4 className="h6 mb-0">House owner</h4>
+            <p className="text-xs text-gray-500 mb-0">
+              Only GIGFINE sees this — we call the owner to confirm the house before it goes live.
+            </p>
+          </div>
+          <Field label="Owner's name *">
+            <input className={inputClass} maxLength={100} value={form.ownerName}
+              onChange={(e) => set("ownerName", e.target.value)} />
+          </Field>
+          <Field label="Owner's phone *">
+            <input type="tel" className={inputClass} maxLength={20} placeholder="98XXXXXXXX" value={form.ownerMobile}
+              onChange={(e) => set("ownerMobile", e.target.value)} />
+          </Field>
+        </div>
       )}
 
       <div className="grid sm:grid-cols-2 gap-4">

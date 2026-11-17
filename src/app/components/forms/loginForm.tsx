@@ -13,7 +13,7 @@ import { loggedUser } from "@/redux/auth/authActions";
 import { logout } from "@/redux/auth/authSlice";
 import { ADMIN_URL, isAdmin } from "@/api/admin";
 import { BUSINESS_URL, isBusiness } from "@/api/business";
-import { isLandlord } from "@/api/rental";
+import { isLister } from "@/api/rental";
 import LoadingSvg from "../loader/loadingSvg";
 
 // variant "business": the form on business.gigfine.com/business/login
@@ -59,7 +59,7 @@ const LoginForm = ({ variant = "user" }: { variant?: "user" | "business" | "rent
         // Back to the page that sent them to login (only rental pages)
         const next = new URLSearchParams(window.location.search).get("next");
         toast.success("Login successful!");
-        router.push(next?.startsWith("/rent") ? next : isLandlord(user) ? "/rent/landlord" : "/rent");
+        router.push(next?.startsWith("/rent") ? next : isLister(user) ? "/rent/landlord" : "/rent");
         return;
       }
 

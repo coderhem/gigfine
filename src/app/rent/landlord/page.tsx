@@ -2,13 +2,14 @@
 
 import { apiErrorMessage } from "@/api/config";
 import {
-  createLandlord,
+  createLister,
   getMyHouses,
-  getMyLandlord,
+  getMyLister,
   getRentalMediaUrl,
+  LISTER_TYPE_LABEL,
   mediaFileError,
-  updateLandlord,
-  uploadCitizenshipImage,
+  updateLister,
+  uploadListerCitizenship,
 } from "@/api/rental";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import Link from "next/link";
@@ -26,18 +27,39 @@ const CITIZENSHIP_SIDES = [
   { side: "back", field: "citizenshipBackImage", label: "Citizenship — back *" },
 ] as const;
 
-// citizenshipNo isn't asked any more; an old profile's number is sent back unchanged
-type ProfileForm = { panNo: string; citizenshipNo: string; permanentAddress: string };
+type ListerType = "LANDLORD" | "AGENT";
+const TYPE_LABEL = LISTER_TYPE_LABEL as Record<ListerType, string>;
+
+// citizenshipNo isn't asked any more; an old profile's number is sent back unchanged.
+// The agency fields are only shown (and only stored) for agents.
+type ProfileForm = {
+  panNo: string;
+  citizenshipNo: string;
+  permanentAddress: string;
+  agencyName: string;
+  officeAddress: string;
+  workingAreas: string;
+};
 
 const toForm = (l: any): ProfileForm => ({
   panNo: l?.panNo ?? "",
   citizenshipNo: l?.citizenshipNo ?? "",
   permanentAddress: l?.permanentAddress ?? "",
+  agencyName: l?.agencyName ?? "",
+  officeAddress: l?.officeAddress ?? "",
+  workingAreas: l?.workingAreas ?? "",
 });
 
-// Logged-in user who isn't a landlord yet: PAN + both citizenship photos in one go.
-// Photos need the profile to exist, so it is created first and the photos uploaded right after.
-function BecomeLandlord({ user, onDone }: { user: any; onDone: (landlord: any) => void }) {
+// ?as=agent from the register page / a "become an agent" link
+const typeFromQuery = (): ListerType =>
+  new URLSearchParams(window.location.search).get("as") === "agent" ? "AGENT" : "LANDLORD";
+
+// Logged-in user who is neither a landlord nor an agent yet: pick which, then PAN (+ agency) and
+// both citizenship photos in one go. Photos need the profile to exist, so it is created first.
+function BecomeLister({ user, onDone }: { user: any; onDone: (profile: any) => void }) {
+  const [type, setType] = useState<ListerType>(typeFromQuery);
+  const [agencyName, setAgencyName] = useState("");
+  const [workingAreas, setWorkingAreas] = useState("");
   const [panNo, setPanNo] = useState("");
   const [files, setFiles] = useState<Record<string, File | null>>({ front: null, back: null });
   const [previews, setPreviews] = useState<Record<string, string>>({});
@@ -65,16 +87,19 @@ function BecomeLandlord({ user, onDone }: { user: any; onDone: (landlord: any) =
     }
     setSaving(true);
     try {
-      let landlord = await createLandlord(user.userId, { panNo });
+      let profile = await createLister(type, user.userId,
+        type === "AGENT" ? { panNo, agencyName, workingAreas } : { panNo });
       for (const side of ["front", "back"]) {
-        landlord = await uploadCitizenshipImage(user.userId, side, files[side]);
+        profile = await uploadListerCitizenship(type, user.userId, side, files[side]);
       }
-      toast.success("Registered as landlord. Now add your house.");
-      onDone(landlord);
+      toast.success(type === "AGENT"
+        ? "Registered as agent. Add the houses you represent."
+        : "Registered as landlord. Now add your house.");
+      onDone(profile);
     } catch (err) {
       toast.error(apiErrorMessage(err, "Failed to register"));
       // The profile may exist without photos — the panel shows what is still missing
-      getMyLandlord(user.userId).then((l) => l && onDone(l)).catch(() => {});
+      getMyLister(user.userId).then((l) => l && onDone(l)).catch(() => {});
     } finally {
       setSaving(false);
     }
@@ -82,6 +107,25 @@ function BecomeLandlord({ user, onDone }: { user: any; onDone: (landlord: any) =
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
+      <div role="group" aria-label="Register as" className="flex flex-wrap gap-2 text-sm">
+        {(["LANDLORD", "AGENT"] as const).map((t) => (
+          <button key={t} type="button" aria-pressed={type === t} onClick={() => setType(t)}
+            className={`px-3 py-1.5 rounded-full cursor-pointer ${type === t ? "bg-secondary text-white" : "bg-secondary/10 text-secondary"}`}>
+            {t === "AGENT" ? "I'm an agent" : "I own the house"}
+          </button>
+        ))}
+      </div>
+      {type === "AGENT" && (
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Agency / company name (optional)">
+            <input className={inputClass} maxLength={150} value={agencyName} onChange={(e) => setAgencyName(e.target.value)} />
+          </Field>
+          <Field label="Areas you cover (optional)">
+            <input className={inputClass} maxLength={500} placeholder="e.g. Baneshwor, Koteshwor" value={workingAreas}
+              onChange={(e) => setWorkingAreas(e.target.value)} />
+          </Field>
+        </div>
+      )}
       <Field label="PAN number (optional)">
         <input className={inputClass} value={panNo} onChange={(e) => setPanNo(e.target.value)} />
       </Field>
@@ -99,13 +143,14 @@ function BecomeLandlord({ user, onDone }: { user: any; onDone: (landlord: any) =
         ))}
       </div>
       <button type="submit" className="btn btn-primary self-start" disabled={saving}>
-        {saving ? <LoadingSvg /> : "Register as landlord"}
+        {saving ? <LoadingSvg /> : `Register as ${TYPE_LABEL[type].toLowerCase()}`}
       </button>
     </form>
   );
 }
 
-// Landlord panel: profile (step 1-2), houses (step 3), approval status (step 4)
+// Listings panel for landlords and agents: profile (step 1-2), houses (step 3), approval (step 4).
+// `landlord` is the user's profile of either type (landlord.type).
 export default function LandlordPanel() {
   const { user, ready } = useRentalSession();
   const [landlord, setLandlord] = useState<any>(undefined);
@@ -116,24 +161,27 @@ export default function LandlordPanel() {
 
   useEffect(() => {
     if (!ready) return;
-    Promise.all([getMyLandlord(user.userId), getMyHouses(user.userId).catch(() => [])])
+    Promise.all([getMyLister(user.userId), getMyHouses(user.userId).catch(() => [])])
       .then(([l, h]) => {
         setLandlord(l);
         setForm(toForm(l));
         setHouses(Array.isArray(h) ? h : []);
       })
-      .catch((err) => toast.error(apiErrorMessage(err, "Failed to load your landlord profile")));
+      .catch((err) => toast.error(apiErrorMessage(err, "Failed to load your profile")));
   }, [ready]);
 
   if (!ready || landlord === undefined) {
     return <LoadingSvg className="absolute left-1/2 top-1/2 -translate-1/2 size-20" />;
   }
 
+  const type: ListerType = landlord?.type === "AGENT" ? "AGENT" : "LANDLORD";
+  const isAgent = type === "AGENT";
+
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      setLandlord(await updateLandlord(user.userId, form));
+      setLandlord(await updateLister(type, user.userId, form));
       setEditing(false);
       toast.success("Details saved.");
     } catch (err) {
@@ -145,6 +193,22 @@ export default function LandlordPanel() {
 
   const profileForm = (
     <form onSubmit={saveProfile} className="grid sm:grid-cols-2 gap-4 items-end">
+      {isAgent && (
+        <>
+          <Field label="Agency / company name (optional)">
+            <input className={inputClass} maxLength={150} value={form.agencyName}
+              onChange={(e) => setForm({ ...form, agencyName: e.target.value })} />
+          </Field>
+          <Field label="Office address (optional)">
+            <input className={inputClass} maxLength={255} value={form.officeAddress}
+              onChange={(e) => setForm({ ...form, officeAddress: e.target.value })} />
+          </Field>
+          <Field label="Areas you cover (optional)" className="sm:col-span-2">
+            <input className={inputClass} maxLength={500} placeholder="e.g. Baneshwor, Koteshwor" value={form.workingAreas}
+              onChange={(e) => setForm({ ...form, workingAreas: e.target.value })} />
+          </Field>
+        </>
+      )}
       <Field label="PAN number (optional)">
         <input className={inputClass} value={form.panNo} onChange={(e) => setForm({ ...form, panNo: e.target.value })} />
       </Field>
@@ -163,18 +227,19 @@ export default function LandlordPanel() {
     </form>
   );
 
-  // Not a landlord yet (account made on the main site)
+  // Neither a landlord nor an agent yet (account made on the main site)
   if (!landlord) {
     return (
       <section className="py-8 md:py-11">
         <div className="container max-w-3xl">
-          <h2 className="h3 mb-1">List your <span className="text-primary">house</span></h2>
+          <h2 className="h3 mb-1">List <span className="text-primary">houses</span> on GIGFINE</h2>
           <p className="text-sm text-gray-500 mb-6">
-            Add your citizenship photos to become a landlord. Your name and phone come from your GIGFINE account
-            ({user.name}, {user.mobile}). An admin checks them before your house goes live.
+            Own the house, or an agent listing houses for their owners? Add your citizenship photos to get started.
+            Your name and phone come from your GIGFINE account ({user.name}, {user.mobile}). An admin checks them
+            before anything goes live.
           </p>
           <div className="bg-white rounded-xl shadow p-5">
-            <BecomeLandlord user={user} onDone={(l) => { setLandlord(l); setForm(toForm(l)); }} />
+            <BecomeLister user={user} onDone={(l) => { setLandlord(l); setForm(toForm(l)); }} />
           </div>
         </div>
       </section>
@@ -186,9 +251,11 @@ export default function LandlordPanel() {
   const steps = [
     { done: true, label: "Your details" },
     { done: hasCitizenship, label: "Citizenship photos uploaded" },
-    { done: houses.length > 0, label: "House added" },
+    { done: houses.length > 0, label: isAgent ? "First house added" : "House added" },
     { done: approved, label: "Approved by admin" },
   ];
+  // Landlords: one house for now. Agents represent many owners, so they can keep adding.
+  const canAddMore = isAgent && hasCitizenship && houses.length > 0;
 
   return (
     <section className="py-8 md:py-11">
@@ -196,14 +263,21 @@ export default function LandlordPanel() {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
             <h2 className="h3 mb-1">
-              <span className="text-primary">{user.name}</span> — My houses
+              <span className="text-primary">{user.name}</span> — {isAgent ? "My listings" : "My houses"}
             </h2>
             <p className="text-sm text-gray-500 mb-0">
-              Your house is checked by an admin. You can post rooms / flats once a house is approved.
+              {isAgent
+                ? "Each house is checked by an admin, who calls its owner. You can post its rooms / flats once it is approved."
+                : "Your house is checked by an admin. You can post rooms / flats once a house is approved."}
             </p>
           </div>
-          {/* One house per landlord for now (the backend allows more) — the only
-              "Add house" is the empty state below */}
+          {/* Landlords: one house for now (the backend allows more) — their only "Add house" is
+              the empty state below. Agents can add as many as they represent. */}
+          {canAddMore && (
+            <Link href="/rent/landlord/houses/new" className="btn btn-primary inline-flex items-center gap-2">
+              <FaPlus /> Add house
+            </Link>
+          )}
         </div>
 
         {/* Progress */}
@@ -222,7 +296,7 @@ export default function LandlordPanel() {
           {/* Profile */}
           <div className="bg-white rounded-xl shadow p-5 flex flex-col gap-4">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="h5 mb-0">Landlord profile</h3>
+              <h3 className="h5 mb-0">{TYPE_LABEL[type]} profile</h3>
               <StatusBadge status={landlord.status} />
             </div>
             {landlord.status === "REJECTED" && (
@@ -243,6 +317,13 @@ export default function LandlordPanel() {
               <dl className="text-sm grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 mb-0">
                 <dt className="text-gray-500">Name</dt><dd className="mb-0">{landlord.name}</dd>
                 <dt className="text-gray-500">Phone</dt><dd className="mb-0">{landlord.mobile}</dd>
+                {isAgent && (
+                  <>
+                    <dt className="text-gray-500">Agency</dt><dd className="mb-0">{landlord.agencyName || "-"}</dd>
+                    <dt className="text-gray-500">Office</dt><dd className="mb-0">{landlord.officeAddress || "-"}</dd>
+                    <dt className="text-gray-500">Areas</dt><dd className="mb-0">{landlord.workingAreas || "-"}</dd>
+                  </>
+                )}
                 <dt className="text-gray-500">PAN</dt><dd className="mb-0">{landlord.panNo || "-"}</dd>
                 <dt className="text-gray-500">Address</dt><dd className="mb-0">{landlord.permanentAddress || "-"}</dd>
               </dl>
@@ -265,7 +346,7 @@ export default function LandlordPanel() {
                     imagesOnly
                     label={landlord[field] ? "Replace photo" : "Upload photo"}
                     upload={async (file) => {
-                      const saved = await uploadCitizenshipImage(user.userId, side, file);
+                      const saved = await uploadListerCitizenship(type, user.userId, side, file);
                       setLandlord(saved);
                       return { id: 0, type: "IMAGE", fileName: saved[field] };
                     }}
@@ -283,7 +364,11 @@ export default function LandlordPanel() {
                 <FaHome className="mx-auto mb-3 text-4xl text-secondary/30" />
                 {hasCitizenship ? (
                   <>
-                    <p>No houses yet. Add your house with photos and its location on the map.</p>
+                    <p>
+                      {isAgent
+                        ? "No houses yet. Add a house you represent — with photos, its location and the owner's name and phone."
+                        : "No houses yet. Add your house with photos and its location on the map."}
+                    </p>
                     <Link href="/rent/landlord/houses/new" className="btn btn-primary inline-flex items-center gap-2">
                       <FaPlus /> Add house
                     </Link>
@@ -306,6 +391,7 @@ export default function LandlordPanel() {
                     </p>
                     <p className="text-xs text-gray-400 mb-0">
                       {h.media?.length ?? 0} photo/video · {h.postCount} room/flat post(s)
+                      {h.ownerName && ` · Owner: ${h.ownerName}`}
                     </p>
                     {h.status === "REJECTED" && h.reviewNote && (
                       <p className="text-xs text-red-700 mt-1 mb-0">Rejected: {h.reviewNote}</p>

@@ -20,6 +20,11 @@ export function rentWhatsAppUrl(message) {
 
 export const isLandlord = (user) => !!user?.roles?.includes(LANDLORD_ROLE);
 
+export const AGENT_ROLE = "ROLE_AGENT";
+export const isAgent = (user) => !!user?.roles?.includes(AGENT_ROLE);
+// Approved landlord or agent: lands on the listings dashboard after login
+export const isLister = (user) => isLandlord(user) || isAgent(user);
+
 // ---------- Labels (mirror the backend enums) ----------
 
 export const APPROVAL_LABEL = { PENDING: "Pending review", APPROVED: "Approved", REJECTED: "Rejected" };
@@ -197,6 +202,14 @@ export async function registerLandlord(data) {
   return response.data; // { token, user }
 }
 
+// Account + PENDING agent in one request; logs in.
+// data: { name, email, mobile, password, panNo?, agencyName?, officeAddress?, workingAreas? }
+export async function registerAgent(data) {
+  const response = await axios.post(`${API_BASE_URL}/api/v1/auth/register-agent`, data);
+  localStorage.setItem("token", response.data.token);
+  return response.data; // { token, user }
+}
+
 // Token handed over from the main site (/rent/login#token=...)
 export async function rentalLoginWithToken(token) {
   const response = await axios.get(`${API_BASE_URL}/api/v1/users/me`, {
@@ -226,6 +239,32 @@ export const uploadPanImage = (userId, file) => upload(`/api/v1/landlords/${user
 // side: "front" | "back"
 export const uploadCitizenshipImage = (userId, side, file) =>
   upload(`/api/v1/landlords/${userId}/citizenship/${side}`, file);
+
+// ---------- Lister profile: landlord or agent ----------
+// Agents list other people's houses with the same house / room pages; each profile type has its
+// own API (/landlords, /agents) and a profile is only found through its own type's API.
+
+export const LISTER_TYPE_LABEL = { LANDLORD: "Landlord", AGENT: "Agent" };
+const listerPath = (type, userId) => `/api/v1/${type === "AGENT" ? "agents" : "landlords"}/${userId}`;
+
+// The user's landlord or agent profile (with .type), or null if they are neither yet
+export async function getMyLister(userId) {
+  const landlord = await getMyLandlord(userId);
+  if (landlord) return landlord;
+  try {
+    return await get(listerPath("AGENT", userId));
+  } catch (error) {
+    if (error.response?.status === 404) return null;
+    throw error;
+  }
+}
+
+// type: "LANDLORD" | "AGENT". data: { panNo?, permanentAddress?, citizenshipNo? } and, for an agent,
+// { agencyName?, officeAddress?, workingAreas? }
+export const createLister = (type, userId, data) => post(listerPath(type, userId), data);
+export const updateLister = (type, userId, data) => put(listerPath(type, userId), data);
+export const uploadListerCitizenship = (type, userId, side, file) =>
+  upload(`${listerPath(type, userId)}/citizenship/${side}`, file);
 
 // ---------- Houses ----------
 

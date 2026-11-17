@@ -1,6 +1,6 @@
 "use client";
 import { apiErrorMessage } from "@/api/config";
-import { isLandlord, rentalLoginWithToken } from "@/api/rental";
+import { isLister, rentalLoginWithToken } from "@/api/rental";
 import LoginForm from "@/app/components/forms/loginForm";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import { setUser } from "@/redux/auth/authSlice";
@@ -27,7 +27,7 @@ const RentalLogin = () => {
     rentalLoginWithToken(token)
       .then((user) => {
         dispatch(setUser(user));
-        router.replace(isLandlord(user) ? "/rent/landlord" : "/rent");
+        router.replace(isLister(user) ? "/rent/landlord" : "/rent");
       })
       .catch((err) => {
         toast.error(apiErrorMessage(err, "Login failed"));

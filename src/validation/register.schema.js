@@ -97,6 +97,9 @@ export const rentalRegisterValidation = z.object({
     "Please enter a valid email address.",
   ),
   panNo: z.string().trim().optional(),
+  // Agent sign-up only
+  agencyName: z.string().trim().max(150, "Maximum 150 characters.").optional(),
+  workingAreas: z.string().trim().max(500, "Maximum 500 characters.").optional(),
   password: required("Password").min(8, "Password must be at least 8 characters."),
 });
 

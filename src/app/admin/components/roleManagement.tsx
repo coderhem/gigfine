@@ -16,6 +16,7 @@ const ASSIGNABLE_ROLES: Record<string, string> = {
   RIDER: "Rider",
   BUSINESS: "Business",
   LANDLORD: "Landlord",
+  AGENT: "Agent",
 };
 
 const ROLE_LABEL: Record<string, string> = {
@@ -24,6 +25,7 @@ const ROLE_LABEL: Record<string, string> = {
   ROLE_PASSENGER: "Passenger",
   ROLE_BUSINESS: "Business",
   ROLE_LANDLORD: "Landlord",
+  ROLE_AGENT: "Agent",
 };
 
 export default function RoleManagement() {

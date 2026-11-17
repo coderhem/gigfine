@@ -162,7 +162,9 @@ export default function HouseDetail() {
                 <div className="flex flex-col gap-3 text-sm">
                   {house.totalFloors && <p className="mb-0">{house.totalFloors} floor(s)</p>}
                   <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 mb-0">
-                    {houseFacts(house).filter(([, v]) => v != null && v !== "").map(([k, v]) => (
+                    {/* Agent-listed house: the real owner (only the agent and GIGFINE see it) */}
+                    {[...(house.ownerName ? [["Owner", `${house.ownerName}, ${house.ownerMobile}`]] : []), ...houseFacts(house)]
+                      .filter(([, v]) => v != null && v !== "").map(([k, v]) => (
                       <div key={k}>
                         <dt className="text-xs text-gray-500">{k}</dt>
                         <dd className="mb-0">{v}</dd>

@@ -17,6 +17,7 @@ const LINKS = [
 const RENT_LINKS = [
   { href: "/rent", label: "Find rooms" },
   { href: "/rent/register?as=landlord", label: "List your house" },
+  { href: "/rent/register?as=agent", label: "Become an agent" },
   { href: "/privacy-policy", label: "Privacy Policy" },
   { href: "/terms-&-conditions", label: "Terms & Conditions" },
 ];

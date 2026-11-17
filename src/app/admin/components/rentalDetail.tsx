@@ -116,7 +116,11 @@ export function HouseDetail({ house: h, reviewSlot }: { house: any; reviewSlot?:
           ["Latitude", h.latitude],
           ["Longitude", h.longitude],
           ["Posts", h.postCount],
-          ["Landlord", <>{h.landlordName} ({h.landlordMobile}) <StatusBadge status={h.landlordStatus} /></>],
+          [h.listerType === "AGENT" ? "Agent" : "Landlord",
+            <>{h.landlordName} ({h.landlordMobile}) <StatusBadge status={h.landlordStatus} /></>],
+          // Agent-listed: the real owner, to confirm the house by phone
+          ...(h.ownerName ? [["Owner", <a key="owner" href={`tel:${h.ownerMobile}`} className="underline">
+            {h.ownerName} ({h.ownerMobile})</a>] as [string, React.ReactNode]] : []),
           ["Created", formatDate(h.createdAt)],
           ["Updated", formatDate(h.updatedAt)],
           ["Reviewed", formatDate(h.reviewedAt)],
@@ -204,7 +208,9 @@ export default function RentalDetail({
       });
   }, [userId, houseId, version]);
 
-  const title = landlord ? `Landlord: ${landlord.name}` : `House: ${houses?.[0]?.name ?? ""}`;
+  const title = landlord
+    ? `${landlord.type === "AGENT" ? "Agent" : "Landlord"}: ${landlord.name}`
+    : `House: ${houses?.[0]?.name ?? ""}`;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -235,6 +241,11 @@ export default function RentalDetail({
                 rows={[
                   ["Phone", landlord.mobile],
                   ["Email", landlord.email],
+                  ...(landlord.type === "AGENT" ? [
+                    ["Agency", landlord.agencyName],
+                    ["Office", landlord.officeAddress],
+                    ["Areas", landlord.workingAreas],
+                  ] as [string, string][] : []),
                   ["PAN", landlord.panNo],
                   ["Citizenship", landlord.citizenshipNo],
                   ["Address", landlord.permanentAddress],

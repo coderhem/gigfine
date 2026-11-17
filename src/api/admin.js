@@ -171,6 +171,13 @@ export const getLandlords = async (status) =>
 export const reviewLandlord = async (userId, review) =>
   (await adminApi.put(`/api/v1/landlords/${userId}/status`, review)).data;
 
+// Agents list other people's houses — same review, APPROVED gives ROLE_AGENT
+export const getAgents = async (status) =>
+  (await adminApi.get("/api/v1/agents", { params: status ? { status } : {} })).data;
+
+export const reviewAgent = async (userId, review) =>
+  (await adminApi.put(`/api/v1/agents/${userId}/status`, review)).data;
+
 // filters: { status, userId } — oldest first
 export const getHousesForReview = async ({ status, userId } = {}) => {
   const params = {};
