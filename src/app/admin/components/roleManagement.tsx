@@ -7,9 +7,9 @@ import LoadingSvg from "@/app/components/loader/loadingSvg";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-type ListRole = "admin" | "business" | "landlord";
+type ListRole = "admin" | "business" | "landlord" | "agent";
 
-// Roles an admin can hand out by phone number. Business / landlord are normally given by
+// Roles an admin can hand out by phone number. Business / landlord / agent are normally given by
 // approving them in the Businesses / Rentals tabs; assigning them here approves them too.
 const ASSIGNABLE_ROLES: Record<string, string> = {
   ADMIN: "Admin",
@@ -163,10 +163,11 @@ export default function RoleManagement() {
         </form>
       </div>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         {tabBtn("admin", "Admins")}
         {tabBtn("business", "Businesses")}
         {tabBtn("landlord", "Landlords")}
+        {tabBtn("agent", "Agents")}
       </div>
 
       <div className="relative rounded-xl bg-white px-3 lg:px-6 pt-6 pb-6 shadow">
