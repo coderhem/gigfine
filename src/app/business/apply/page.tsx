@@ -1,6 +1,7 @@
 "use client";
 import {
   BUSINESS_STATUS_LABEL,
+  BUSINESS_TYPE_LABEL,
   createBusiness,
   getMyBusiness,
   imageFileError,
@@ -8,6 +9,7 @@ import {
 } from "@/api/business";
 import { apiErrorMessage } from "@/api/config";
 import BusinessLogo from "@/app/components/businessLogo";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,8 +17,13 @@ import toast from "react-hot-toast";
 import { FaCheckCircle } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
+import { mapsLink } from "@/app/rent/_components/locationMap";
+
+// Leaflet needs `window`: client only
+const LocationMap = dynamic(() => import("@/app/rent/_components/locationMap"), { ssr: false });
 
 const STATUS_LABEL = BUSINESS_STATUS_LABEL as Record<string, string>;
+const TYPE_LABEL = BUSINESS_TYPE_LABEL as Record<string, string>;
 
 const EMPTY_FORM = {
   registrationNo: "",
@@ -50,6 +57,10 @@ const BusinessApply = () => {
   const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(EMPTY_FORM);
+  // Optional, from the <select> only ("" = not chosen; an admin sets it later)
+  const [type, setType] = useState("");
+  // Map pin: "Use my location" or a tap on the map. Optional.
+  const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
 
@@ -72,7 +83,14 @@ const BusinessApply = () => {
     }
     setSaving(true);
     try {
-      setBusiness(await createBusiness(user.userId, form));
+      setBusiness(
+        await createBusiness(user.userId, {
+          ...form,
+          type: type || null,
+          latitude: pin?.lat ?? null,
+          longitude: pin?.lng ?? null,
+        }),
+      );
       toast.success("Application submitted. Now upload your documents.");
     } catch (err) {
       toast.error(apiErrorMessage(err, "Failed to submit application"));
@@ -131,6 +149,30 @@ const BusinessApply = () => {
                   />
                 </div>
               ))}
+              <div className="form-group">
+                <select className="form-control" value={type} onChange={(e) => setType(e.target.value)}>
+                  <option value="">Business type (optional)</option>
+                  {Object.entries(TYPE_LABEL).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <p className="text-sm text-secondary mb-1">Business location on the map (optional)</p>
+                <LocationMap
+                  latitude={pin?.lat}
+                  longitude={pin?.lng}
+                  onChange={(lat, lng) => setPin({ lat, lng })}
+                  className="h-56"
+                />
+                <p className="text-xs px-1 text-secondary/70 mb-0 mt-1">
+                  {pin
+                    ? `Pinned: ${pin.lat}, ${pin.lng}. Drag the pin to the exact spot if needed.`
+                    : 'Tap "Use my location" at your business, or tap the map. Riders use it to find you.'}
+                </p>
+              </div>
               <button type="submit" className="btn btn-primary" disabled={saving}>
                 {saving ? "Submitting..." : "Submit application"}
               </button>
@@ -151,6 +193,18 @@ const BusinessApply = () => {
               </div>
 
               <dl className="grid grid-cols-2 gap-2 text-sm mb-6">
+                <dt className="text-gray-500">Business type</dt>
+                <dd>{TYPE_LABEL[business.type] ?? "Not set yet (GIGFINE sets it)"}</dd>
+                <dt className="text-gray-500">Map location</dt>
+                <dd>
+                  {business.latitude != null ? (
+                    <a href={mapsLink(business.latitude, business.longitude)} target="_blank" rel="noreferrer">
+                      View on map
+                    </a>
+                  ) : (
+                    "Not set yet (GIGFINE sets it)"
+                  )}
+                </dd>
                 {FIELDS.map(({ key, label }) => (
                   <div key={key} className="contents">
                     <dt className="text-gray-500">{label}</dt>

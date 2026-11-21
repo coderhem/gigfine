@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/contact-for-business", label: "Partner With Us" },
   { href: "/privacy-policy", label: "Privacy Policy" },
   { href: "/terms-&-conditions", label: "Terms & Conditions" },
+  { href: "/delete-account", label: "Delete account" },
 ];
 
 // rent.gigfine.com only serves /rent/* and the legal pages (see src/proxy.ts)
@@ -20,6 +21,7 @@ const RENT_LINKS = [
   { href: "/rent/register?as=agent", label: "Become an agent" },
   { href: "/privacy-policy", label: "Privacy Policy" },
   { href: "/terms-&-conditions", label: "Terms & Conditions" },
+  { href: "/delete-account?app=RENTAL", label: "Delete account" },
 ];
 
 const Footer = () => {

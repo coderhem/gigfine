@@ -118,6 +118,8 @@ export const businessRegisterValidation = z.object({
   // Any format; the same number may be used by other businesses/users
   ownerPhone: required("Owner phone"),
   password: required("Password").min(8, "Password must be at least 8 characters."),
+  // Optional, from the <select> only ("" = not chosen; an admin sets it later)
+  type: z.enum(["", "RIDE_SHARING", "DELIVERY", "GARAGE", "OTHER"]).optional(),
 });
 
 export const loginValidation = z.object({

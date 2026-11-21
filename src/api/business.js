@@ -11,7 +11,8 @@ export const BUSINESS_URL =
   (process.env.NODE_ENV === "development" ? "" : "https://business.gigfine.com");
 
 // Creates the account and a PENDING business in one request, and logs in
-// data: { name, email, mobile, password, registrationNo, panNo, businessLocation, ownerName, ownerPhone }
+// data: { name, email, mobile, password, registrationNo, panNo, businessLocation, ownerName, ownerPhone,
+//         type?, latitude?, longitude? } (type from a select; the pin from the map, both or neither)
 export async function registerBusiness(data) {
   const response = await axios.post(`${API_BASE_URL}/api/v1/auth/register-business`, data);
   localStorage.setItem("token", response.data.token);
@@ -28,6 +29,15 @@ export async function businessLoginWithToken(token) {
 }
 
 export const isBusiness = (user) => !!user?.roles?.includes(BUSINESS_ROLE);
+
+// Business.type in the backend (an enum: only these values are accepted, anything else is a 400).
+// Always picked from a <select>, never typed. Optional at sign-up; an admin sets it later.
+export const BUSINESS_TYPE_LABEL = {
+  RIDE_SHARING: "Ride sharing",
+  DELIVERY: "Delivery",
+  GARAGE: "Garage / Workshop",
+  OTHER: "Other",
+};
 
 export const BUSINESS_STATUS_LABEL = {
   PENDING: "Pending",

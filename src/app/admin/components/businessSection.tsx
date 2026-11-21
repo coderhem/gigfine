@@ -3,19 +3,29 @@
 import {
   getBusinessDocUrlAdmin,
   searchBusinesses,
+  updateBusinessLocation,
   updateBusinessStatus,
+  updateBusinessType,
 } from "@/api/admin";
-import { BUSINESS_STATUS_LABEL } from "@/api/business";
+import { BUSINESS_STATUS_LABEL, BUSINESS_TYPE_LABEL } from "@/api/business";
 import { apiErrorMessage } from "@/api/config";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import Pagination from "@/app/components/paginationUI/pagination";
+import { mapsLink } from "@/app/rent/_components/locationMap";
 import { Fancybox as NativeFancybox } from "@fancyapps/ui";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const PER_PAGE = 10;
 
+// Leaflet needs `window`: client only
+const LocationMap = dynamic(() => import("@/app/rent/_components/locationMap"), { ssr: false });
+
+type PinEdit = { userId: number; name: string; lat: number | null; lng: number | null };
+
 const STATUS_LABEL = BUSINESS_STATUS_LABEL as Record<string, string>;
+const TYPE_LABEL = BUSINESS_TYPE_LABEL as Record<string, string>;
 
 const STATUS_BADGE: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
@@ -62,6 +72,9 @@ export default function BusinessSection() {
   const [businesses, setBusinesses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  // Business whose map pin the admin is setting / fixing
+  const [pinEdit, setPinEdit] = useState<PinEdit | null>(null);
+  const [savingPin, setSavingPin] = useState(false);
 
   const fetchBusinesses = async () => {
     setLoading(true);
@@ -95,6 +108,33 @@ export default function BusinessSection() {
       );
     } catch (err) {
       toast.error(apiErrorMessage(err, "Failed to update status"));
+    }
+  };
+
+  // Picked from a <select> only, so the value always matches the backend enum. "" clears it.
+  const handleType = async (userId: number, type: string) => {
+    try {
+      const updated = await updateBusinessType(userId, type || null);
+      setBusinesses((prev) => prev.map((b) => (b.userId === userId ? updated : b)));
+      toast.success(type ? `Type set to ${TYPE_LABEL[type]}.` : "Type cleared.");
+    } catch (err) {
+      toast.error(apiErrorMessage(err, "Failed to update type"));
+    }
+  };
+
+  // lat / lng null clears the pin
+  const savePin = async (lat: number | null, lng: number | null) => {
+    if (!pinEdit) return;
+    setSavingPin(true);
+    try {
+      const updated = await updateBusinessLocation(pinEdit.userId, lat, lng);
+      setBusinesses((prev) => prev.map((b) => (b.userId === pinEdit.userId ? updated : b)));
+      toast.success(lat == null ? "Map pin removed." : "Map pin saved.");
+      setPinEdit(null);
+    } catch (err) {
+      toast.error(apiErrorMessage(err, "Failed to save the map pin"));
+    } finally {
+      setSavingPin(false);
     }
   };
 
@@ -185,6 +225,7 @@ export default function BusinessSection() {
               <tr>
                 <th className="px-4 py-3 text-start">S.No.</th>
                 <th className="px-4 py-3 text-start">Business</th>
+                <th className="px-4 py-3 text-start">Type</th>
                 <th className="px-4 py-3 text-start">Phone</th>
                 <th className="px-4 py-3 text-start">Reg. No.</th>
                 <th className="px-4 py-3 text-start">PAN/VAT No.</th>
@@ -198,7 +239,7 @@ export default function BusinessSection() {
             <tbody className="text-gray-700">
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="py-6">
+                  <td colSpan={11} className="py-6">
                     <div className="flex justify-center">
                       <LoadingSvg />
                     </div>
@@ -206,7 +247,7 @@ export default function BusinessSection() {
                 </tr>
               ) : businesses.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="pt-6 text-center text-gray-500">
+                  <td colSpan={11} className="pt-6 text-center text-gray-500">
                     No businesses found.
                   </td>
                 </tr>
@@ -223,10 +264,51 @@ export default function BusinessSection() {
                         {b.businessName}
                         <div className="text-xs text-gray-500">{b.email}</div>
                       </td>
+                      <td className="px-4 py-3">
+                        {/* Empty at sign-up is allowed; the admin sets it here */}
+                        <select
+                          className={`form-control py-1! text-xs! min-w-32 ${
+                            b.type ? "" : "border-yellow-500! bg-yellow-50!"
+                          }`}
+                          value={b.type ?? ""}
+                          onChange={(e) => handleType(b.userId, e.target.value)}
+                        >
+                          <option value="">Not set</option>
+                          {Object.entries(TYPE_LABEL).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
                       <td className="px-4 py-3">{b.businessPhone}</td>
                       <td className="px-4 py-3">{b.registrationNo}</td>
                       <td className="px-4 py-3">{b.panNo}</td>
-                      <td className="px-4 py-3">{b.businessLocation}</td>
+                      <td className="px-4 py-3">
+                        {b.businessLocation}
+                        <div className="flex gap-2 text-xs">
+                          {b.latitude != null ? (
+                            <a href={mapsLink(b.latitude, b.longitude)} target="_blank" rel="noreferrer">
+                              View pin
+                            </a>
+                          ) : (
+                            <span className="text-yellow-700">No pin</span>
+                          )}
+                          <button
+                            className="underline text-secondary hover:text-primary cursor-pointer"
+                            onClick={() =>
+                              setPinEdit({
+                                userId: b.userId,
+                                name: b.businessName,
+                                lat: b.latitude ?? null,
+                                lng: b.longitude ?? null,
+                              })
+                            }
+                          >
+                            {b.latitude != null ? "Edit pin" : "Set pin"}
+                          </button>
+                        </div>
+                      </td>
                       <td className="px-4 py-3">
                         {b.ownerName}
                         <div className="text-xs text-gray-500">{b.ownerPhone}</div>
@@ -278,6 +360,42 @@ export default function BusinessSection() {
           />
         </div>
       </div>
+
+      {pinEdit && (
+        <div className="fixed inset-0 z-[1000] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-4">
+            <h3 className="h6 mb-1">Map pin: {pinEdit.name}</h3>
+            <p className="text-xs text-gray-500 mb-2">
+              Tap the map or drag the pin to the business&apos;s exact spot.
+            </p>
+            <LocationMap
+              latitude={pinEdit.lat}
+              longitude={pinEdit.lng}
+              onChange={(lat, lng) => setPinEdit((p) => (p ? { ...p, lat, lng } : p))}
+              className="h-72"
+            />
+            <div className="flex flex-wrap gap-2 justify-end mt-3">
+              <button className="btn py-1! px-3! text-sm" onClick={() => setPinEdit(null)} disabled={savingPin}>
+                Cancel
+              </button>
+              <button
+                className="btn py-1! px-3! text-sm text-red"
+                onClick={() => savePin(null, null)}
+                disabled={savingPin}
+              >
+                Remove pin
+              </button>
+              <button
+                className="btn btn-primary py-1! px-3! text-sm"
+                onClick={() => savePin(pinEdit.lat, pinEdit.lng)}
+                disabled={savingPin || pinEdit.lat == null}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

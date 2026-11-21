@@ -22,7 +22,7 @@ import { REPORT_STATUS_LABEL } from "@/api/problem";
 import ReportAttachments from "@/app/components/reportAttachments";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { FaBell, FaBiking, FaBuilding, FaHome, FaUser, FaUserShield } from "react-icons/fa";
+import { FaBell, FaBiking, FaBuilding, FaHome, FaTools, FaTrashAlt, FaUser, FaUserShield } from "react-icons/fa";
 import { MdOutlineReportProblem } from "react-icons/md";
 import LoadingSvg from "../../components/loader/loadingSvg";
 import DeleteBtn from "../../components/crudOperationBtns/deleteBtn";
@@ -31,10 +31,12 @@ import { HiShieldCheck } from "react-icons/hi2";
 import Pagination from "@/app/components/paginationUI/pagination";
 import BusinessSection from "../components/businessSection";
 import RoleManagement from "../components/roleManagement";
+import GarageHelp from "../components/garageHelp";
+import AccountDeletion from "../components/accountDeletion";
 import NotificationManager, { type NotificationApi } from "@/app/components/notificationManager";
 import RentalReview from "../components/rentalReview";
 
-type MenuType = "riders" | "passengers" | "reports" | "businesses" | "roles" | "notifications" | "rentals";
+type MenuType = "riders" | "passengers" | "reports" | "businesses" | "roles" | "notifications" | "rentals" | "garage" | "deletion";
 
 const PER_PAGE = 10;
 
@@ -66,10 +68,12 @@ const MENU_TITLE: Record<MenuType, string> = {
   roles: "Role Management",
   notifications: "Notifications",
   rentals: "Rentals",
+  garage: "Garage help",
+  deletion: "Account deletion",
 };
 
 // These sections have their own filters and counts
-const SELF_CONTAINED: MenuType[] = ["businesses", "roles", "notifications", "rentals"];
+const SELF_CONTAINED: MenuType[] = ["businesses", "roles", "notifications", "rentals", "garage", "deletion"];
 
 const NOTIFICATION_API: NotificationApi = {
   list: getAdminNotifications,
@@ -383,6 +387,8 @@ export default function Dashboard() {
           {menuBtn("roles", <FaUserShield />, "Role Management")}
           {menuBtn("notifications", <FaBell />, "Notifications")}
           {menuBtn("rentals", <FaHome />, "Rentals")}
+          {menuBtn("garage", <FaTools />, "Garage help")}
+          {menuBtn("deletion", <FaTrashAlt />, "Account deletion")}
         </nav>
 
         <div className="shrink-0 border-t border-white/20 p-4">
@@ -861,6 +867,10 @@ export default function Dashboard() {
         )}
 
         {activeMenu === "rentals" && <RentalReview />}
+
+        {activeMenu === "garage" && <GarageHelp />}
+
+        {activeMenu === "deletion" && <AccountDeletion />}
       </div>
     </div>
   );

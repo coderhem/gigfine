@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -7,12 +8,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { imageFileError, registerBusiness } from "@/api/business";
+import { BUSINESS_TYPE_LABEL, imageFileError, registerBusiness } from "@/api/business";
 import { apiErrorMessage } from "@/api/config";
 import { uploadProfileImage } from "@/api/user";
 import { setUser } from "@/redux/auth/authSlice";
 import { businessRegisterValidation } from "@/validation/register.schema.js";
 import LoadingSvg from "../loader/loadingSvg";
+
+// Leaflet needs `window`: client only
+const LocationMap = dynamic(() => import("@/app/rent/_components/locationMap"), { ssr: false });
 
 const FIELDS = [
   { name: "name", placeholder: "Business Name" },
@@ -33,6 +37,8 @@ const BusinessRegisterForm = () => {
   const [loading, setLoading] = useState(false);
   // Optional; uploaded as the account's profile image after sign-up
   const [logo, setLogo] = useState<File | null>(null);
+  // Map pin: "Use my location" (asks the browser for permission) or a tap on the map. Optional.
+  const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
 
   const pickLogo = (file: File | undefined) => {
     if (!file) return setLogo(null);
@@ -53,8 +59,15 @@ const BusinessRegisterForm = () => {
   async function submitForm(data: any) {
     setLoading(true);
     try {
-      const { phone, ...rest } = data;
-      const result = await registerBusiness({ ...rest, mobile: phone });
+      const { phone, type, ...rest } = data;
+      // "" = not chosen: sent as null, an admin sets the type later
+      const result = await registerBusiness({
+        ...rest,
+        mobile: phone,
+        type: type || null,
+        latitude: pin?.lat ?? null,
+        longitude: pin?.lng ?? null,
+      });
       let user = result.user;
       if (logo) {
         // The account exists already, so a failed logo upload only warns; it can be added later
@@ -91,6 +104,36 @@ const BusinessRegisterForm = () => {
               )}
             </div>
           ))}
+
+          {/* Business type (optional). A select only, so the value always matches the backend */}
+          <div className="form-group mb-4">
+            <select className="form-control" defaultValue="" {...register("type")}>
+              <option value="">Business type (optional)</option>
+              {Object.entries(BUSINESS_TYPE_LABEL).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Map pin (optional) */}
+          <div className="form-group mb-4">
+            <p className="text-sm text-secondary mb-1">
+              Business location on the map (optional)
+            </p>
+            <LocationMap
+              latitude={pin?.lat}
+              longitude={pin?.lng}
+              onChange={(lat, lng) => setPin({ lat, lng })}
+              className="h-56"
+            />
+            <p className="text-xs px-1 text-secondary/70 mb-0 mt-1">
+              {pin
+                ? `Pinned: ${pin.lat}, ${pin.lng}. Drag the pin to the exact spot if needed.`
+                : "Tap \"Use my location\" at your business, or tap the map. Riders use it to find you."}
+            </p>
+          </div>
 
           {/* Password */}
           <div className="form-group mb-4">

@@ -6,7 +6,8 @@ import { NextResponse, type NextRequest } from "next/server";
 //   APP_MODE=business -> business site (port 8090), only /business/* and legal pages
 //   APP_MODE=rental   -> rent.gigfine.com (port 8091), only /rent/* and legal pages
 // `next dev` (no APP_MODE) serves everything from one server.
-const BUSINESS_SHARED = ["/privacy-policy", "/terms-&-conditions"];
+// /delete-account: the Google Play "Delete account URL" works on every site (rent.gigfine.com too)
+const BUSINESS_SHARED = ["/privacy-policy", "/terms-&-conditions", "/delete-account"];
 
 const under = (pathname: string, base: string) =>
   pathname === base || pathname.startsWith(`${base}/`);

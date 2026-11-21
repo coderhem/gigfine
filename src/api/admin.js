@@ -117,6 +117,14 @@ export const searchBusinesses = async (filters = {}) => {
   return (await adminApi.get("/api/v1/businesses", { params })).data;
 };
 
+// Map pin; both null clears it
+export const updateBusinessLocation = async (userId, latitude, longitude) =>
+  (await adminApi.put(`/api/v1/businesses/${userId}/location`, { latitude, longitude })).data;
+
+// type: one of BUSINESS_TYPE_LABEL's keys (from a <select>), or null to clear it
+export const updateBusinessType = async (userId, type) =>
+  (await adminApi.put(`/api/v1/businesses/${userId}/type`, { type })).data;
+
 // "APPROVED" gives the user ROLE_BUSINESS, "PENDING" takes it away
 export const updateBusinessStatus = async (userId, status) =>
   (await adminApi.put(`/api/v1/businesses/${userId}/status`, { status })).data;
@@ -222,3 +230,44 @@ export const getRentalMediaUrlAdmin = async (fileName) => {
 };
 
 export { NEXT_STATUSES } from "./problem.js";
+
+// ---------- Garage help (breakdowns; the app's Garage tab) ----------
+
+// status optional: OPEN | ACCEPTED | COMPLETED | CANCELLED | EXPIRED. Both sides' contact, radius, rating.
+export const getGarageRequests = async (status) =>
+  (await adminApi.get("/api/v1/garage-help/admin/requests", { params: status ? { status } : {} })).data;
+
+// Every garage / workshop: pin, online now, rating, jobs done
+export const getGarages = async () => (await adminApi.get("/api/v1/garage-help/admin/garages")).data;
+
+// { OPEN, ACCEPTED, COMPLETED, CANCELLED, EXPIRED } counts
+export const getGarageStats = async () => (await adminApi.get("/api/v1/garage-help/admin/stats")).data;
+
+// Request photo / voice (needs the admin token): a blob: URL to show or play
+export const getGarageMediaUrl = async (fileName) => {
+  const res = await adminApi.get(`/api/v1/garage-help/media/${encodeURIComponent(fileName)}`, {
+    responseType: "blob",
+  });
+  return URL.createObjectURL(res.data);
+};
+
+// Rider <-> garage chat history of one help request: Redis keeps it 7 days after the accept
+// (the two sides see it for 1 day only). [{ id, senderId, kind TEXT|VOICE, text, voice, sentAt }]
+export const getGarageChat = async (requestId) =>
+  (await adminApi.get(`/api/v1/chats/admin/${requestId}/messages`)).data;
+
+// A chat voice message (admin token) as a blob: URL to play
+export const getChatVoiceUrl = async (fileName) => {
+  const res = await adminApi.get(`/api/v1/chats/media/${encodeURIComponent(fileName)}`, { responseType: "blob" });
+  return URL.createObjectURL(res.data);
+};
+
+// ---------- Account deletion requests (gigfine.com/delete-account) ----------
+
+// [{ id, status NEW|DONE|REJECTED, name, phone, email, app, reason, adminNote, createdAt, closedAt,
+//    matchedUserId, matchedUserName, matchedUserEmail, matchedUserMobile, accountExists }]
+export const getAccountDeletionRequests = async (status) =>
+  (await adminApi.get("/api/v1/account-deletion", { params: status ? { status } : {} })).data;
+
+export const updateAccountDeletionStatus = async (id, status, adminNote) =>
+  (await adminApi.put(`/api/v1/account-deletion/${id}/status`, { status, adminNote })).data;
