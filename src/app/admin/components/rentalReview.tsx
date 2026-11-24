@@ -14,7 +14,7 @@ import { AMENITY_LABEL, APPROVAL_LABEL, houseFacts } from "@/api/rental";
 import LoadingSvg from "@/app/components/loader/loadingSvg";
 import { formatDate, StatusBadge } from "@/app/rent/_components/formBits";
 import { mapsLink } from "@/app/rent/_components/locationMap";
-import { MediaGallery } from "@/app/rent/_components/rentalMedia";
+import { LazyMount, MediaGallery } from "@/app/rent/_components/rentalMedia";
 import RentalDetail from "./rentalDetail";
 import RentalPosts from "./rentalPosts";
 import VisitRequests from "./visitRequests";
@@ -304,7 +304,10 @@ export default function RentalReview() {
               </div>
               <div className="flex flex-col gap-3" onClick={stop}>
                 <MediaGallery media={h.media} fetchUrl={getRentalMediaUrlAdmin} emptyText="No photos uploaded." />
-                <LocationMap latitude={h.latitude} longitude={h.longitude} className="h-48" />
+                {/* One Leaflet map per card is heavy — mount it only when scrolled near */}
+                <LazyMount className="h-48 rounded-lg bg-secondary/10">
+                  <LocationMap latitude={h.latitude} longitude={h.longitude} className="h-48" />
+                </LazyMount>
                 <a href={mapsLink(h.latitude, h.longitude)} target="_blank" rel="noopener noreferrer" className="text-sm underline">
                   Open in Google Maps
                 </a>

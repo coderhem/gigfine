@@ -7,9 +7,10 @@ import { Fancybox as NativeFancybox } from "@fancyapps/ui";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { FaImage, FaTrash, FaUpload } from "react-icons/fa";
+import { FaImage, FaPlay, FaTrash, FaUpload } from "react-icons/fa";
 
-export type Media = { id: number; type: "IMAGE" | "VIDEO"; fileName: string };
+// thumbnailFileName: VIDEO only, a small JPEG the backend makes after upload (null until ready)
+export type Media = { id: number; type: "IMAGE" | "VIDEO"; fileName: string; thumbnailFileName?: string | null };
 type FetchUrl = (fileName: string) => Promise<string>;
 
 // Public photos go through Next's image optimizer: resized to the size shown, WebP, lazy-loaded
@@ -33,12 +34,47 @@ const PublicImage = ({ fileName, sizes, preload, onError }: {
     className="object-cover" onError={onError} />
 );
 
-// Private files (PAN / citizenship, admin views) need the auth header, so they are fetched as a blob
-function useObjectUrl(fileName: string, fetchUrl: FetchUrl) {
+// True once the element has come near the viewport (stays true afterwards)
+export function useInView<T extends Element>(rootMargin = "300px") {
+  const ref = useRef<T>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    if (inView || !ref.current) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin },
+    );
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, [inView, rootMargin]);
+
+  return { ref, inView };
+}
+
+// Renders children only once scrolled near — for heavy things like maps in long lists
+export function LazyMount({ className, children }: { className?: string; children: React.ReactNode }) {
+  const { ref, inView } = useInView<HTMLDivElement>();
+  return (
+    <div ref={ref} className={inView ? undefined : className}>
+      {inView ? children : null}
+    </div>
+  );
+}
+
+// Private files (PAN / citizenship, admin views) need the auth header, so they are fetched as a blob.
+// The whole file is held in memory, so fetch only when `enabled` (visible / asked for).
+function useObjectUrl(fileName: string, fetchUrl: FetchUrl, enabled = true) {
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    if (!enabled) return;
     let objectUrl: string | null = null;
     let cancelled = false;
     fetchUrl(fileName)
@@ -52,7 +88,7 @@ function useObjectUrl(fileName: string, fetchUrl: FetchUrl) {
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [fileName, fetchUrl]);
+  }, [fileName, fetchUrl, enabled]);
 
   return { url, failed };
 }
@@ -63,12 +99,44 @@ const LoadFailed = () => (
   </div>
 );
 
+// Video tile before playing: the thumbnail (a ~20 KB public JPEG) with a play button.
+// Without a thumbnail yet (old video, still being made) just a dark tile.
+const VideoPoster = ({ media, onPlay }: { media: Media; onPlay: () => void }) => {
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const thumb = media.thumbnailFileName && !thumbFailed ? publicMediaUrl(media.thumbnailFileName) : null;
+  return (
+    <button type="button" onClick={onPlay} title="Play video"
+      className="group relative w-full h-full bg-black cursor-pointer">
+      {thumb && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={thumb} alt="" loading="lazy" onError={() => setThumbFailed(true)}
+          className="absolute inset-0 w-full h-full object-cover" />
+      )}
+      <span className="absolute inset-0 flex items-center justify-center bg-black/25 group-hover:bg-black/40 transition-colors">
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-secondary shadow group-hover:scale-110 transition-transform">
+          <FaPlay size={14} className="ml-0.5" />
+        </span>
+      </span>
+      <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+        VIDEO
+      </span>
+    </button>
+  );
+};
+
 // Public file: plain URL, so the browser / optimizer cache does the work
 const PublicTileBody = ({ media, large, onOpen }: { media: Media; large?: boolean; onOpen: (url: string) => void }) => {
   const [failed, setFailed] = useState(false);
+  const [playing, setPlaying] = useState(false);
   if (failed) return <LoadFailed />;
   if (media.type === "VIDEO") {
-    return <video src={publicMediaUrl(media.fileName)} controls preload="metadata" className="w-full h-full object-cover bg-black" />;
+    // The video file is requested only after a click
+    return playing ? (
+      <video src={publicMediaUrl(media.fileName)} controls autoPlay className="w-full h-full object-cover bg-black"
+        onError={() => setFailed(true)} />
+    ) : (
+      <VideoPoster media={media} onPlay={() => setPlaying(true)} />
+    );
   }
   return (
     <button type="button" onClick={() => onOpen(lightboxUrl(media.fileName))}
@@ -80,25 +148,29 @@ const PublicTileBody = ({ media, large, onOpen }: { media: Media; large?: boolea
   );
 };
 
+// Private files are photos only (ID documents, admin views of photos): fetched as a blob once visible
 const PrivateTileBody = ({ media, fetchUrl, onOpen }: { media: Media; fetchUrl: FetchUrl; onOpen: (url: string) => void }) => {
-  const { url, failed } = useObjectUrl(media.fileName, fetchUrl);
-  if (failed) return <LoadFailed />;
-  if (!url) {
-    return (
+  const { ref, inView } = useInView<HTMLDivElement>();
+  const { url, failed } = useObjectUrl(media.fileName, fetchUrl, inView);
+
+  let body: React.ReactNode;
+  if (failed) body = <LoadFailed />;
+  else if (!url) {
+    body = (
       <div className="h-full flex items-center justify-center">
-        <LoadingSvg />
+        {inView && <LoadingSvg />}
       </div>
     );
+  } else {
+    body = (
+      <button type="button" onClick={() => onOpen(url)} className="w-full h-full cursor-zoom-in">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={url} alt="" className="w-full h-full object-cover" />
+      </button>
+    );
   }
-  if (media.type === "VIDEO") {
-    return <video src={url} controls preload="metadata" className="w-full h-full object-cover bg-black" />;
-  }
-  return (
-    <button type="button" onClick={() => onOpen(url)} className="w-full h-full cursor-zoom-in">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={url} alt="" className="w-full h-full object-cover" />
-    </button>
-  );
+
+  return <div ref={ref} className="w-full h-full">{body}</div>;
 };
 
 const Tile = ({
@@ -119,7 +191,8 @@ const Tile = ({
 
   return (
     <div className={`relative rounded-lg overflow-hidden bg-secondary/10 ${size}`}>
-      {fetchUrl
+      {/* Videos are always public rental media: streamed by URL (Range requests), never as a blob */}
+      {fetchUrl && media.type !== "VIDEO"
         ? <PrivateTileBody media={media} fetchUrl={fetchUrl} onOpen={onOpen} />
         : <PublicTileBody media={media} large={large} onOpen={onOpen} />}
       {onDelete && (
@@ -138,12 +211,14 @@ const Tile = ({
 
 // First photo as a card cover
 export function MediaCover({ media, className = "h-44" }: { media?: Media[]; className?: string }) {
-  const image = media?.find((m) => m.type === "IMAGE");
+  // No photo: a video's thumbnail is better than an empty card
+  const cover = media?.find((m) => m.type === "IMAGE")?.fileName
+    ?? media?.find((m) => m.type === "VIDEO" && m.thumbnailFileName)?.thumbnailFileName;
   return (
     <div className={`relative bg-secondary/10 overflow-hidden ${className}`}>
-      {image ? (
+      {cover ? (
         // Card width in the 1 / 2 / 3 column grid
-        <PublicImage fileName={image.fileName} sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" />
+        <PublicImage fileName={cover} sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" />
       ) : (
         <div className="h-full flex items-center justify-center text-secondary/30">
           <FaImage size={36} />
