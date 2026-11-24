@@ -104,7 +104,6 @@ export default function AccountDeletion() {
 
   return (
     <>
-      <h1 className="mb-6 pt-24 text-3xl font-bold text-secondary">Account deletion</h1>
       <p className="text-sm text-gray-600 mb-4">
         From the public page <b>gigfine.com/delete-account</b>. Call the number to confirm it is the owner, then
         delete the account. Promise on the page: done within 7 days.

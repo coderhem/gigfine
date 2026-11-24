@@ -104,8 +104,6 @@ export default function RoleManagement() {
 
   return (
     <>
-      <h1 className="mb-6 pt-24 text-3xl font-bold text-secondary">Role Management</h1>
-
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         {/* Assign */}
         <form onSubmit={handleAssign} className="bg-white p-4 rounded-xl shadow flex flex-col gap-3">

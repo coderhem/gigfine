@@ -178,7 +178,6 @@ export default function RentalReview() {
 
   return (
     <>
-      <h1 className="mb-2 pt-24 text-3xl font-bold text-secondary">Rentals</h1>
       <p className="text-sm text-gray-500 mb-6">
         Approve the landlord or agent first (citizenship check), then each of their houses — for an agent&apos;s house,
         call the owner listed on it. Rooms can be posted only under approved houses.

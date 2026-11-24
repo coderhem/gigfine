@@ -167,8 +167,6 @@ export default function GarageHelp() {
 
   return (
     <>
-      <h1 className="mb-6 pt-24 text-3xl font-bold text-secondary">Garage help</h1>
-
       {/* Counts per status: a tap filters the requests */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
         {STATUSES.map((s) => (

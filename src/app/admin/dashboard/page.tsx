@@ -21,20 +21,44 @@ import { apiErrorMessage } from "@/api/config";
 import { REPORT_STATUS_LABEL } from "@/api/problem";
 import ReportAttachments from "@/app/components/reportAttachments";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { FaBell, FaBiking, FaBuilding, FaHome, FaTools, FaTrashAlt, FaUser, FaUserShield } from "react-icons/fa";
-import { MdOutlineReportProblem } from "react-icons/md";
+import { MdLogout, MdMenu, MdMenuOpen, MdOutlineReportProblem } from "react-icons/md";
 import LoadingSvg from "../../components/loader/loadingSvg";
 import DeleteBtn from "../../components/crudOperationBtns/deleteBtn";
 import toast from "react-hot-toast";
 import { HiShieldCheck } from "react-icons/hi2";
 import Pagination from "@/app/components/paginationUI/pagination";
+import AdminFooter from "@/app/components/footer/adminFooter";
 import BusinessSection from "../components/businessSection";
 import RoleManagement from "../components/roleManagement";
 import GarageHelp from "../components/garageHelp";
 import AccountDeletion from "../components/accountDeletion";
 import NotificationManager, { type NotificationApi } from "@/app/components/notificationManager";
 import RentalReview from "../components/rentalReview";
+
+// Sidebar: "collapsed" (icons only) / "expanded", saved in localStorage. null = automatic:
+// icons only below lg, full width from lg. Read with useSyncExternalStore (no setState in an effect).
+type SidebarPref = "collapsed" | "expanded" | null;
+const SIDEBAR_KEY = "adminSidebar";
+const SIDEBAR_EVENT = "admin-sidebar";
+const subscribeSidebar = (cb: () => void) => {
+  window.addEventListener(SIDEBAR_EVENT, cb);
+  window.addEventListener("storage", cb);
+  return () => {
+    window.removeEventListener(SIDEBAR_EVENT, cb);
+    window.removeEventListener("storage", cb);
+  };
+};
+const readSidebar = (): SidebarPref => {
+  const v = localStorage.getItem(SIDEBAR_KEY);
+  return v === "collapsed" || v === "expanded" ? v : null;
+};
+const saveSidebar = (v: SidebarPref) => {
+  if (v) localStorage.setItem(SIDEBAR_KEY, v);
+  else localStorage.removeItem(SIDEBAR_KEY);
+  window.dispatchEvent(new Event(SIDEBAR_EVENT));
+};
 
 type MenuType = "riders" | "passengers" | "reports" | "businesses" | "roles" | "notifications" | "rentals" | "garage" | "deletion";
 
@@ -115,6 +139,7 @@ export default function Dashboard() {
   const [authorized, setAuthorized] = useState(false);
   const [activeMenu, setActiveMenu] = useState<MenuType>("riders");
   const [search, setSearch] = useState("");
+  const sidebarPref = useSyncExternalStore(subscribeSidebar, readSidebar, () => null);
   const [page, setPage] = useState(1);
 
   const [users, setUsers] = useState<any[]>([]);
@@ -323,19 +348,46 @@ export default function Dashboard() {
     );
   }
 
+  // Classes for each sidebar state (see SidebarPref)
+  const collapsed = sidebarPref === "collapsed";
+  const expanded = sidebarPref === "expanded";
+  const sb = {
+    width: collapsed ? "w-16" : expanded ? "w-64 lg:w-72" : "w-16 lg:w-72",
+    offset: collapsed ? "ml-16" : "ml-16 lg:ml-72",
+    left: collapsed ? "left-16" : "left-16 lg:left-72",
+    label: collapsed ? "hidden" : expanded ? "inline" : "hidden lg:inline",
+    center: collapsed ? "justify-center" : expanded ? "" : "max-lg:justify-center",
+  };
+  // Opened on a small screen it lies over the page; a narrow screen can't fit it beside the content
+  const overlayOpen = expanded;
+  const isWide = () => window.matchMedia("(min-width: 1024px)").matches;
+  const toggleSidebar = () => {
+    const showing = expanded || (sidebarPref === null && isWide());
+    saveSidebar(showing ? "collapsed" : "expanded");
+  };
+
   const menuBtn = (menu: MenuType, icon: ReactNode, label: string, badge = 0) => (
     <button
-      onClick={() => setActiveMenu(menu)}
-      className={`w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex flex-wrap gap-2 items-center ${
+      title={label}
+      onClick={() => {
+        setActiveMenu(menu);
+        // Picking a page on a small screen closes the menu again
+        if (expanded && !isWide()) saveSidebar(null);
+      }}
+      className={`relative w-full rounded-lg p-3 text-left transition cursor-pointer bg-gray-200/20 text-white flex gap-3 items-center ${sb.center} ${
         activeMenu === menu ? "bg-primary" : "hover:bg-white/10"
       }`}
     >
-      {icon}
-      <span>{label}</span>
+      <span className="shrink-0 text-lg">{icon}</span>
+      <span className={`${sb.label} truncate`}>{label}</span>
       {badge > 0 && (
-        <span className="ml-auto min-w-6 h-6 px-1.5 rounded-full bg-white text-primary text-xs font-bold flex items-center justify-center">
-          {badge > 99 ? "99+" : badge}
-        </span>
+        <>
+          <span className={`${collapsed ? "hidden" : expanded ? "inline-flex" : "hidden lg:inline-flex"} ml-auto min-w-6 h-6 px-1.5 rounded-full bg-white text-primary text-xs font-bold items-center justify-center`}>
+            {badge > 99 ? "99+" : badge}
+          </span>
+          {/* Icons only: a dot on the icon instead of the count */}
+          <span className={`${collapsed ? "" : expanded ? "hidden" : "lg:hidden"} absolute top-1.5 right-1.5 size-2.5 rounded-full bg-white ring-2 ring-primary`} />
+        </>
       )}
     </button>
   );
@@ -364,22 +416,19 @@ export default function Dashboard() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      {/* Column: header, scrollable menu, logout pinned at the bottom (h-dvh = mobile-safe height) */}
-      <aside className="fixed z-100 left-0 top-0 h-dvh w-40 lg:w-72 bg-secondary text-white shadow-lg flex flex-col">
-        <div className="shrink-0 border-b border-white/20 p-3 md:p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <HiShieldCheck className="text-xl md:text-3xl text-white" />
-            <h2 className="text-lg md:text-2xl font-bold mb-0">
-              Admin Dashboard
-            </h2>
-          </div>
-          <p className="mt-1 text-sm text-gray-200 pl-5 md:pl-9">
-            Welcome back! Manage users, reports, and system operations.
-          </p>
+      {/* Sidebar: brand, scrollable menu, logout pinned at the bottom (h-dvh = mobile-safe height) */}
+      {overlayOpen && (
+        <div className="lg:hidden fixed inset-0 z-90 bg-black/40" onClick={() => saveSidebar(null)} />
+      )}
+      <aside className={`fixed z-100 left-0 top-0 h-dvh ${sb.width} bg-secondary text-white shadow-lg flex flex-col transition-[width] duration-200`}>
+        <div className={`shrink-0 h-[73px] border-b border-white/20 px-4 flex items-center gap-2 ${sb.center}`}>
+          <HiShieldCheck className="text-2xl shrink-0" />
+          <span className={`${sb.label} text-lg font-bold whitespace-nowrap`}>
+            GIGFINE <span className="font-normal text-white/70">Admin</span>
+          </span>
         </div>
 
-        <nav className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+        <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-2 lg:p-3 space-y-2">
           {menuBtn("riders", <FaBiking />, "Rider Details")}
           {menuBtn("passengers", <FaUser />, "Passenger Details")}
           {menuBtn("reports", <MdOutlineReportProblem />, "User Reports", unseenCount)}
@@ -391,44 +440,60 @@ export default function Dashboard() {
           {menuBtn("deletion", <FaTrashAlt />, "Account deletion")}
         </nav>
 
-        <div className="shrink-0 border-t border-white/20 p-4">
-          <button className="w-full btn btn-primary" onClick={handleLogout}>
-            Logout
+        <div className="shrink-0 border-t border-white/20 p-2 lg:p-3">
+          <button title="Logout" onClick={handleLogout}
+            className={`w-full btn btn-primary flex items-center gap-2 justify-center px-2`}>
+            <MdLogout className="shrink-0 text-lg" />
+            <span className={sb.label}>Logout</span>
           </button>
         </div>
       </aside>
 
       {/* Content */}
-      <div className="ml-40 lg:ml-72 flex-1 p-4 overflow-hidden">
-        <div className="mb-5 fixed z-20 left-40 lg:left-72 p-5 bg-white shadow right-0 top-0 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-xl font-semibold text-secondary">
-            {MENU_TITLE[activeMenu]}{" "}
-            {showSearch && (
-              <span className="text-primary">({activeCount[activeMenu]})</span>
-            )}
-          </h2>
+      <div className={`${sb.offset} flex-1 min-w-0 p-4 overflow-hidden flex flex-col transition-[margin] duration-200`}>
+        <div className={`mb-5 fixed z-20 ${sb.left} right-0 top-0 h-[73px] px-3 lg:px-5 bg-white shadow flex items-center justify-between gap-3 transition-[left] duration-200`}>
+          <div className="flex min-w-0 items-center gap-2 lg:gap-3">
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              title="Show / hide menu"
+              aria-label="Show / hide menu"
+              className="shrink-0 rounded-lg p-2 text-2xl text-secondary hover:bg-gray-100 cursor-pointer"
+            >
+              {collapsed ? <MdMenu /> : expanded ? <MdMenuOpen /> : (
+                // Automatic: closed below lg, open from lg
+                <>
+                  <MdMenu className="lg:hidden" />
+                  <MdMenuOpen className="max-lg:hidden" />
+                </>
+              )}
+            </button>
+            <h2 className="truncate text-lg md:text-xl font-semibold text-secondary mb-0">
+              {MENU_TITLE[activeMenu]}{" "}
+              {showSearch && (
+                <span className="text-primary">({activeCount[activeMenu]})</span>
+              )}
+            </h2>
+          </div>
 
-          <div className={`relative w-full md:w-80 ${showSearch ? "" : "invisible"}`}>
+          <div className={`relative w-36 shrink-0 sm:w-56 md:w-80 ${showSearch ? "" : "hidden"}`}>
             <input
               type="text"
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 pr-10 outline-none transition focus:border-secondary"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 pr-9 outline-none transition focus:border-secondary"
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
               🔍
             </span>
           </div>
         </div>
 
+        <div className="flex-1">
         {/* Riders */}
         {activeMenu === "riders" && (
           <>
-            <h1 className="h2 pt-24 mb-6 text-3xl font-bold text-secondary">
-              Rider Details
-            </h1>
-
             <div className="relative rounded-xl bg-white px-3 lg:px-6 pt-6 pb-14 shadow">
               <div className="overflow-x-auto">
                 <table className="min-w-full">
@@ -487,10 +552,6 @@ export default function Dashboard() {
         {/* Passengers */}
         {activeMenu === "passengers" && (
           <>
-            <h1 className="h2 pt-24 mb-6 text-3xl font-bold text-secondary">
-              Passenger Details
-            </h1>
-
             <div className="relative rounded-xl bg-white px-3 lg:px-6 pt-6 pb-14 shadow">
               <div className="overflow-x-auto">
                 <table className="min-w-full">
@@ -541,10 +602,6 @@ export default function Dashboard() {
         {/* Reports */}
         {activeMenu === "reports" && (
           <>
-            <h1 className="mb-6 pt-24 text-3xl font-bold text-secondary">
-              User Reports
-            </h1>
-
             <div className="mb-4 flex flex-wrap gap-3 items-end bg-white p-4 rounded-xl shadow">
               <label className="flex flex-col text-sm">
                 Status
@@ -861,7 +918,6 @@ export default function Dashboard() {
 
         {activeMenu === "notifications" && (
           <>
-            <h1 className="mb-6 pt-24 text-3xl font-bold text-secondary">Notifications</h1>
             <NotificationManager api={NOTIFICATION_API} showCreator />
           </>
         )}
@@ -871,6 +927,9 @@ export default function Dashboard() {
         {activeMenu === "garage" && <GarageHelp />}
 
         {activeMenu === "deletion" && <AccountDeletion />}
+        </div>
+
+        <AdminFooter className="mt-10 border-t border-gray-200" />
       </div>
     </div>
   );

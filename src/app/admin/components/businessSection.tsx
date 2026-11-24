@@ -164,9 +164,9 @@ export default function BusinessSection() {
 
   return (
     <>
-      <h1 className="mb-6 pt-24 text-3xl font-bold text-secondary">
-        Businesses <span className="text-primary">({businesses.length})</span>
-      </h1>
+      <p className="mb-3 text-sm text-gray-500">
+        Total: <span className="font-semibold text-primary">{businesses.length}</span> businesses
+      </p>
 
       <div className="mb-4 flex flex-wrap gap-3 items-end bg-white p-4 rounded-xl shadow">
         <label className="flex flex-col text-sm">

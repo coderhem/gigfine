@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RIDE_SHARING_APPS } from "@/app/seo";
+import AdminFooter from "./adminFooter";
 
 // Absolute hrefs: relative ones broke on nested routes (/client/profile → /client/contact-us)
 const LINKS = [
@@ -26,7 +27,11 @@ const RENT_LINKS = [
 
 const Footer = () => {
   const year = new Date().getFullYear();
-  const isRent = usePathname()?.startsWith("/rent") ?? false;
+  const pathname = usePathname() ?? "";
+  const isRent = pathname.startsWith("/rent");
+  // Admin: a one-line footer; the dashboard draws it itself, beside its fixed sidebar
+  if (pathname.startsWith("/admin/dashboard")) return null;
+  if (pathname.startsWith("/admin")) return <AdminFooter />;
   const links = isRent ? RENT_LINKS : LINKS;
   return (
     <footer className="bg-secondary text-white [&_p]:mb-0 pt-8 pb-5">
