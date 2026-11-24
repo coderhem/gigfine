@@ -19,7 +19,7 @@ import RentalDetail from "./rentalDetail";
 import RentalPosts from "./rentalPosts";
 import VisitRequests from "./visitRequests";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 const LocationMap = dynamic(() => import("@/app/rent/_components/locationMap"), { ssr: false });
@@ -103,25 +103,32 @@ function ReviewActions({
 export default function RentalReview() {
   const [tab, setTab] = useState<Tab>("landlords");
   const [status, setStatus] = useState("PENDING");
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // The list remembers which tab + filter it belongs to. Right after a tab switch the old tab's list
+  // is still here; rendering agents as house cards (no `media`) crashed the whole page.
+  const [loaded, setLoaded] = useState<{ key: string; items: any[] } | null>(null);
   const [selected, setSelected] = useState<Selected | null>(null);
   const [version, setVersion] = useState(0);
+  const key = `${tab}|${status}`;
+  // Only the newest request may set the list (a slow agents reply must not land on the houses tab)
+  const latestKey = useRef(key);
+  const loading = loaded?.key !== key;
+  const items = loading ? [] : loaded.items;
 
   const fetchItems = async () => {
-    setLoading(true);
+    const forKey = key;
+    let list: any[] = [];
     try {
-      setItems(tab === "landlords" ? await getLandlords(status)
+      list = tab === "landlords" ? await getLandlords(status)
         : tab === "agents" ? await getAgents(status)
-        : await getHousesForReview({ status }));
+        : await getHousesForReview({ status });
     } catch (err) {
       toast.error(apiErrorMessage(err, `Failed to load ${tab}`));
-    } finally {
-      setLoading(false);
     }
+    if (latestKey.current === forKey) setLoaded({ key: forKey, items: Array.isArray(list) ? list : [] });
   };
 
   useEffect(() => {
+    latestKey.current = key;
     if (isListerTab(tab) || tab === "houses") fetchItems();
   }, [tab, status]);
 
@@ -303,7 +310,7 @@ export default function RentalReview() {
                 </div>
               </div>
               <div className="flex flex-col gap-3" onClick={stop}>
-                <MediaGallery media={h.media} fetchUrl={getRentalMediaUrlAdmin} emptyText="No photos uploaded." />
+                <MediaGallery media={h.media ?? []} fetchUrl={getRentalMediaUrlAdmin} emptyText="No photos uploaded." />
                 {/* One Leaflet map per card is heavy — mount it only when scrolled near */}
                 <LazyMount className="h-48 rounded-lg bg-secondary/10">
                   <LocationMap latitude={h.latitude} longitude={h.longitude} className="h-48" />

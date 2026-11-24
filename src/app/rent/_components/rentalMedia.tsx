@@ -231,19 +231,21 @@ export function MediaCover({ media, className = "h-44" }: { media?: Media[]; cla
 // Photos open in a lightbox; videos play inline. The first item is shown big when `hero` is set.
 // fetchUrl: only for private files (ID documents, admin) — leave it out for house / room media.
 export function MediaGallery({
-  media,
+  media: mediaProp,
   fetchUrl,
   onDelete,
   hero,
   emptyText = "No photos yet.",
 }: {
-  media: Media[];
+  media?: Media[] | null;
   fetchUrl?: FetchUrl;
   onDelete?: (m: Media) => void;
   hero?: boolean;
   emptyText?: string;
 }) {
   const urls = useRef(new Map<number, string>());
+  // A missing list shows the empty state instead of crashing the page
+  const media = mediaProp ?? [];
 
   if (media.length === 0) {
     return (
