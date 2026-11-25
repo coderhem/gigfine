@@ -23,7 +23,7 @@ import ReportAttachments from "@/app/components/reportAttachments";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { FaBell, FaBiking, FaBuilding, FaHome, FaTools, FaTrashAlt, FaUser, FaUserShield } from "react-icons/fa";
-import { MdLogout, MdMenu, MdMenuOpen, MdOutlineReportProblem } from "react-icons/md";
+import { MdLogout, MdMenu, MdMenuOpen, MdOutlineReportProblem, MdVerified } from "react-icons/md";
 import LoadingSvg from "../../components/loader/loadingSvg";
 import DeleteBtn from "../../components/crudOperationBtns/deleteBtn";
 import toast from "react-hot-toast";
@@ -34,6 +34,7 @@ import BusinessSection from "../components/businessSection";
 import RoleManagement from "../components/roleManagement";
 import GarageHelp from "../components/garageHelp";
 import AccountDeletion from "../components/accountDeletion";
+import VerifiedUsers, { VerifyUserModal } from "../components/verifiedUsers";
 import NotificationManager, { type NotificationApi } from "@/app/components/notificationManager";
 import RentalReview from "../components/rentalReview";
 
@@ -60,7 +61,7 @@ const saveSidebar = (v: SidebarPref) => {
   window.dispatchEvent(new Event(SIDEBAR_EVENT));
 };
 
-type MenuType = "riders" | "passengers" | "reports" | "businesses" | "roles" | "notifications" | "rentals" | "garage" | "deletion";
+type MenuType = "riders" | "passengers" | "reports" | "businesses" | "roles" | "notifications" | "rentals" | "garage" | "deletion" | "verified";
 
 const PER_PAGE = 10;
 
@@ -94,10 +95,11 @@ const MENU_TITLE: Record<MenuType, string> = {
   rentals: "Rentals",
   garage: "Garage help",
   deletion: "Account deletion",
+  verified: "Verified (blue tick)",
 };
 
 // These sections have their own filters and counts
-const SELF_CONTAINED: MenuType[] = ["businesses", "roles", "notifications", "rentals", "garage", "deletion"];
+const SELF_CONTAINED: MenuType[] = ["businesses", "roles", "notifications", "rentals", "garage", "deletion", "verified"];
 
 const NOTIFICATION_API: NotificationApi = {
   list: getAdminNotifications,
@@ -146,6 +148,8 @@ export default function Dashboard() {
   const [riders, setRiders] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
+  // Blue tick form opened from a rider / passenger row
+  const [verifying, setVerifying] = useState<{ userId: number; name: string } | null>(null);
   const [reportsLoading, setReportsLoading] = useState(true);
   // Approved businesses a report can be forwarded to
   const [approvedBusinesses, setApprovedBusinesses] = useState<any[]>([]);
@@ -438,6 +442,7 @@ export default function Dashboard() {
           {menuBtn("rentals", <FaHome />, "Rentals")}
           {menuBtn("garage", <FaTools />, "Garage help")}
           {menuBtn("deletion", <FaTrashAlt />, "Account deletion")}
+          {menuBtn("verified", <MdVerified />, "Verified")}
         </nav>
 
         <div className="shrink-0 border-t border-white/20 p-2 lg:p-3">
@@ -530,10 +535,20 @@ export default function Dashboard() {
                                 {phoneCell(item.mobile, welcomeMessage(item.name))}
                               </td>
                               <td className="p-2 lg:p-3">
-                                <DeleteBtn
-                                  deleteIcon
-                                  onConfirm={() => handleDeleteUser(item.userId)}
-                                />
+                                <div className="flex items-center gap-2">
+                                  <DeleteBtn
+                                    deleteIcon
+                                    onConfirm={() => handleDeleteUser(item.userId)}
+                                  />
+                                  <button
+                                    type="button"
+                                    title="Blue tick (verify)"
+                                    className="text-xl text-[#1D9BF0] hover:opacity-70 cursor-pointer"
+                                    onClick={() => setVerifying({ userId: item.userId, name: item.name })}
+                                  >
+                                    <MdVerified />
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -580,10 +595,20 @@ export default function Dashboard() {
                                 {phoneCell(item.mobile, welcomeMessage(item.name))}
                               </td>
                               <td className="p-2 lg:p-3">
-                                <DeleteBtn
-                                  deleteIcon
-                                  onConfirm={() => handleDeleteUser(item.userId)}
-                                />
+                                <div className="flex items-center gap-2">
+                                  <DeleteBtn
+                                    deleteIcon
+                                    onConfirm={() => handleDeleteUser(item.userId)}
+                                  />
+                                  <button
+                                    type="button"
+                                    title="Blue tick (verify)"
+                                    className="text-xl text-[#1D9BF0] hover:opacity-70 cursor-pointer"
+                                    onClick={() => setVerifying({ userId: item.userId, name: item.name })}
+                                  >
+                                    <MdVerified />
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -927,7 +952,18 @@ export default function Dashboard() {
         {activeMenu === "garage" && <GarageHelp />}
 
         {activeMenu === "deletion" && <AccountDeletion />}
+
+        {activeMenu === "verified" && <VerifiedUsers />}
         </div>
+
+        {verifying && (
+          <VerifyUserModal
+            userId={verifying.userId}
+            userName={verifying.name}
+            onClose={() => setVerifying(null)}
+            onSaved={() => setVerifying(null)}
+          />
+        )}
 
         <AdminFooter className="mt-10 border-t border-gray-200" />
       </div>

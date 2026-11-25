@@ -271,3 +271,35 @@ export const getAccountDeletionRequests = async (status) =>
 
 export const updateAccountDeletionStatus = async (id, status, adminNote) =>
   (await adminApi.put(`/api/v1/account-deletion/${id}/status`, { status, adminNote })).data;
+
+// ---------- Verified (blue tick) profiles ----------
+
+// [{ userId, name, photo, designation, organization, bio, facebookUrl, youtubeUrl, linkedinUrl, instagramUrl,
+//    tiktokUrl, twitterUrl, websiteUrl, verified, followerCount, postCount, verifiedAt, status, adminNote,
+//    updatedAt, email, mobile }]; status PENDING | VERIFIED | REJECTED | REVOKED, empty = all
+export const getVerifiedProfiles = async (status) =>
+  (await adminApi.get("/api/v1/verified/admin", { params: status ? { status } : {} })).data;
+
+// null when the user has no profile yet (204)
+export const getVerifiedProfile = async (userId) =>
+  (await adminApi.get(`/api/v1/verified/admin/${userId}`)).data || null;
+
+// Creates or edits; with status "VERIFIED" it also gives the blue tick
+export const saveVerifiedProfile = async (userId, body) =>
+  (await adminApi.put(`/api/v1/verified/admin/${userId}`, body)).data;
+
+export const setVerifiedStatus = async (userId, status, adminNote) =>
+  (await adminApi.put(`/api/v1/verified/admin/${userId}/status`, { status, adminNote })).data;
+
+// The user's profile photo (shown with the blue tick); jpg / png under 5 MB
+export const uploadUserPhotoAdmin = async (userId, file) => {
+  const form = new FormData();
+  form.append("file", file);
+  return (await adminApi.post(`/api/v1/users/file/upload/${userId}`, form)).data;
+};
+
+// Any user's photo needs the token, so it is fetched as a blob. Revoke the URL when done.
+export const getUserPhotoUrlAdmin = async (fileName) => {
+  const res = await adminApi.get(`/api/v1/users/image/${encodeURIComponent(fileName)}`, { responseType: "blob" });
+  return URL.createObjectURL(res.data);
+};
